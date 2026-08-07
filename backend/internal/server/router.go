@@ -23,11 +23,13 @@ import (
 	"github.com/aeroxe/approval-flow/internal/modules/approval"
 	"github.com/aeroxe/approval-flow/internal/modules/application"
 	"github.com/aeroxe/approval-flow/internal/modules/escalation"
+	"github.com/aeroxe/approval-flow/internal/modules/login_log"
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
 	"github.com/aeroxe/approval-flow/internal/modules/rbac"
 	"github.com/aeroxe/approval-flow/internal/modules/report"
 	"github.com/aeroxe/approval-flow/internal/modules/template"
 	"github.com/aeroxe/approval-flow/internal/modules/workflow"
+	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
 	"github.com/aeroxe/approval-flow/internal/pkg/auth"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/database"
@@ -103,8 +105,10 @@ func (s *Server) registerMiddleware() {
 	s.engine.Use(middleware.SecurityHeaders())
 	s.engine.Use(middleware.RateLimiter(s.redis, 100, time.Minute, s.cfg))
 	s.engine.Use(middleware.BodySizeLimit(middleware.MaxBodySize, s.cfg))
+	s.engine.Use(middleware.TimeoutMiddleware(s.cfg))
 	s.engine.Use(middleware.PrometheusMiddleware(s.cfg))
 	s.engine.Use(middleware.DistributedLockMiddleware(s.redis, s.cfg))
+	s.engine.Use(middleware.AuditMiddleware(s.db.Conn, s.cfg))
 
 	// Initialize circuit breakers
 	middleware.InitCircuitBreakers(s.cfg)
@@ -129,7 +133,13 @@ func (s *Server) registerRoutes() {
 	analyticsSvc := analytics.NewService(analyticsRepo, s.cfg)
 	reportSvc := report.NewService(reportRepo, s.redis, s.cfg)
 
-	authHandler := handler.NewAuthHandler(s.rbacSvc, s.cfg)
+	// Initialize audit & login log services
+	loginLogRepo := login_log.NewRepository(s.db.Conn)
+	loginLogSvc := login_log.NewService(loginLogRepo, s.redis, s.cfg)
+	auditSvc := auditmod.NewService(s.db.Conn, s.cfg)
+
+	authHandler := handler.NewAuthHandler(s.rbacSvc, loginLogSvc, auditSvc, s.db.Conn, s.cfg)
+	loginLogHandler := handler.NewLoginLogHandler(loginLogSvc, s.cfg)
 	rbacHandler := handler.NewRBACHandler(s.rbacSvc, s.cfg)
 	approvalHandler := handler.NewApprovalHandler(approvalSvc, s.cfg)
 	applicationHandler := handler.NewApplicationHandler(applicationSvc, s.cfg)
@@ -172,6 +182,9 @@ func (s *Server) registerRoutes() {
 	s.engine.POST("/api/v1/auth/login", authHandler.Login)
 	s.engine.POST("/api/v1/auth/register", authHandler.Register)
 	s.engine.POST("/api/v1/auth/refresh", authHandler.RefreshToken)
+	s.engine.POST("/api/v1/auth/login-history", loginLogHandler.GetLoginHistory)
+	s.engine.POST("/api/v1/auth/login-history/email", loginLogHandler.GetLoginHistoryByEmail)
+	s.engine.POST("/api/v1/auth/login-stats", loginLogHandler.GetLoginStats)
 
 	// ==================== Protected Routes ====================
 	v1 := s.engine.Group("/api/v1")
@@ -216,6 +229,9 @@ func (s *Server) registerRoutes() {
 	admin.POST("/permissions/create", rbacHandler.CreatePermission)
 	admin.POST("/permissions/update", rbacHandler.UpdatePermission)
 	admin.POST("/permissions/delete", rbacHandler.DeletePermission)
+
+	// Login Logs (admin)
+	admin.POST("/login-logs", loginLogHandler.GetLoginLogs)
 
 	// ==================== Applications ====================
 	v1.POST("/applications", applicationHandler.GetApplications)
@@ -442,6 +458,8 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func (s *Server) Migrate() error {
 	s.cfg.Info("running auto-migration")
 	return s.db.AutoMigrate(
+		// Note: For production, use golang-migrate instead. See internal/config/migration.go
+		&domain.LoginLog{},
 		&domain.Workflow{},
 		&domain.WorkflowStep{},
 		&domain.Template{},
@@ -459,4 +477,17 @@ func (s *Server) Migrate() error {
 		&domain.UserRole{},
 		&domain.RolePermission{},
 	)
+}
+
+// RunMigrations runs golang-migrate migrations if available, falls back to AutoMigrate
+func (s *Server) RunMigrations(migrationsDir string) error {
+	// Try golang-migrate first
+	if err := config.RunMigrationsFromMain(s.cfg, migrationsDir); err != nil {
+		s.cfg.Warn("golang-migrate failed, falling back to AutoMigrate", zap.Error(err))
+		return s.Migrate()
+	}
+
+	// Always run AutoMigrate to ensure all models are registered
+	// This is safe - AutoMigrate won't drop columns or change types
+	return s.Migrate()
 }

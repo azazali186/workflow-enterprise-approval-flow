@@ -463,6 +463,51 @@ func (p *PaginationRequest) Validate() {
 	}
 }
 
+// ==================== Login Log Requests ====================
+
+type GetLoginHistoryRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+	Limit  int    `json:"limit"`
+}
+
+type GetLoginHistoryByEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	Limit int    `json:"limit"`
+}
+
+type GetLoginStatsRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
+type GetLoginLogsRequest struct {
+	Email     string `json:"email"`
+	Status    string `json:"status"`
+	UserID    string `json:"user_id"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
+	Page      int    `json:"page"`
+	Limit     int    `json:"limit"`
+}
+
+// ==================== Audit Log Requests ====================
+
+type GetAuditLogsRequest struct {
+	EntityType string `json:"entity_type"`
+	EntityID   string `json:"entity_id"`
+	Page       int    `json:"page"`
+	Limit      int    `json:"limit"`
+}
+
+type GetEntityHistoryRequest struct {
+	EntityType string `json:"entity_type" binding:"required"`
+	EntityID   string `json:"entity_id" binding:"required"`
+}
+
+type GetUserActivityRequest struct {
+	ActorID string `json:"actor_id" binding:"required"`
+	Limit   int    `json:"limit"`
+}
+
 // ==================== Helper: Parse UUID ====================
 
 func ParseUUID(s string) (uuid.UUID, error) {

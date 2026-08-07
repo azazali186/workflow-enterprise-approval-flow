@@ -80,7 +80,9 @@ func (cb *CircuitBreaker) RecordSuccess() {
 		if cb.successCount >= cb.successThreshold {
 			cb.state = CircuitClosed
 			cb.failureCount = 0
-			cb.logger.Info("circuit breaker closed (service recovered)")
+			if cb.logger != nil {
+				cb.logger.Info("circuit breaker closed (service recovered)")
+			}
 		}
 	}
 }
@@ -96,12 +98,16 @@ func (cb *CircuitBreaker) RecordFailure() {
 		if cb.failureCount >= cb.failureThreshold {
 			cb.state = CircuitOpen
 			cb.lastFailureTime = time.Now()
-			cb.logger.Warn("circuit breaker opened (service failing)")
+			if cb.logger != nil {
+				cb.logger.Warn("circuit breaker opened (service failing)")
+			}
 		}
 	case CircuitHalfOpen:
 		cb.state = CircuitOpen
 		cb.lastFailureTime = time.Now()
-		cb.logger.Warn("circuit breaker re-opened (recovery failed)")
+		if cb.logger != nil {
+			cb.logger.Warn("circuit breaker re-opened (recovery failed)")
+		}
 	}
 }
 

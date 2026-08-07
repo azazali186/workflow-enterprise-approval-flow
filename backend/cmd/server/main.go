@@ -34,8 +34,9 @@ func main() {
 		cfg.Fatal("failed to create server", zap.Error(err))
 	}
 
-	if err := srv.Migrate(); err != nil {
-		cfg.Fatal("failed to run auto-migration", zap.Error(err))
+	// Run migrations: golang-migrate first, fallback to AutoMigrate
+	if err := srv.RunMigrations("./migrations"); err != nil {
+		cfg.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	go func() {
