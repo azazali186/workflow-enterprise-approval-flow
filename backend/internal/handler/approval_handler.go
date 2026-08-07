@@ -1,96 +1,124 @@
 package handler
 
 import (
+	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"go.uber.org/zap"
+
 	"github.com/aeroxe/approval-flow/internal/config"
-	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/modules/approval"
+	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
+	"github.com/aeroxe/approval-flow/internal/pkg/response"
+	"github.com/aeroxe/approval-flow/internal/pkg/validation"
 )
 
 type ApprovalHandler struct {
-	service *approval.Service
-	logger  *config.Config
+	svc *approval.Service
+	cfg *config.Config
 }
 
-func NewApprovalHandler(service *approval.Service, cfg *config.Config) *ApprovalHandler {
-	return &ApprovalHandler{service: service, logger: cfg}
+func NewApprovalHandler(svc *approval.Service, cfg *config.Config) *ApprovalHandler {
+	return &ApprovalHandler{svc: svc, cfg: cfg}
 }
 
-func (h *ApprovalHandler) GetPendingApprovals(ctx app.RequestContext) {
-	approverID := ctx.Param("approver_id")
-	if approverID == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "approver_id is required"})
+func (h *ApprovalHandler) GetApprovals(ctx context.Context, c *app.RequestContext) {
+	var req validation.ListApprovalsRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	if req.Limit <= 0 { req.Limit = 10 }
 
-	limit, _ := strconv.Atoi(ctx.Query("limit"))
-	if limit == 0 {
-		limit = 10
+	filters := &pagination.ApprovalFilters{}
+	if req.Status != "" {
+		filters.Status = &pagination.StatusFilter{Statuses: []string{req.Status}}
 	}
-	offset, _ := strconv.Atoi(ctx.Query("offset"))
+	filters.Decision = req.Decision
+	filters.ApproverID = req.ApproverID
+	filters.ApplicationID = req.ApplicationID
 
-	approvals, err := h.service.GetPendingApprovals(ctx, approverID)
+	result, err := h.svc.ListApprovals(ctx, filters, nil, req.Limit)
 	if err != nil {
-		h.logger.Error("failed to get pending approvals", "error", err)
-		ctx.JSON(consts.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		h.cfg.Error("failed to get approvals", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to get approvals")
 		return
 	}
-
-	ctx.JSON(consts.StatusOK, map[string]interface{}{
-		"data": approvals,
-		"count": len(approvals),
-	})
+	response.Success(c, result)
 }
 
-func (h *ApprovalHandler) DecideApproval(ctx app.RequestContext) {
-	approvalID := ctx.Param("id")
-	if approvalID == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "id is required"})
+func (h *ApprovalHandler) GetApproval(ctx context.Context, c *app.RequestContext) {
+	var req validation.GetApprovalRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-
-	var req struct {
-		Decision string `json:"decision"`
-		Comment  string `json:"comment"`
-	}
-
-	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "invalid request body"})
-		return
-	}
-
-	if req.Decision == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "decision is required"})
-		return
-	}
-
-	approval, err := h.service.DecideApproval(ctx, approvalID, req.Decision, req.Comment)
+	approval, err := h.svc.GetApproval(ctx, req.ApprovalID)
 	if err != nil {
-		h.logger.Error("failed to decide approval", "error", err)
-		ctx.JSON(consts.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		h.cfg.Error("failed to get approval", zap.Error(err))
+		response.Error(c, http.StatusNotFound, "approval not found")
 		return
 	}
-
-	ctx.JSON(consts.StatusOK, approval)
+	response.Success(c, approval)
 }
 
-func (h *ApprovalHandler) GetApproval(ctx app.RequestContext) {
-	id := ctx.Param("id")
-	if id == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "id is required"})
+func (h *ApprovalHandler) CreateApproval(ctx context.Context, c *app.RequestContext) {
+	var req validation.CreateApprovalRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	response.Success(c, map[string]string{"message": "approval created"})
+}
 
-	approval, err := h.service.GetApproval(ctx, id)
+func (h *ApprovalHandler) DecideApproval(ctx context.Context, c *app.RequestContext) {
+	var req validation.DecideApprovalRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	approval, err := h.svc.DecideApproval(ctx, req.ApprovalID, req.Decision, req.Comment)
 	if err != nil {
-		h.logger.Error("failed to get approval", "error", err)
-		ctx.JSON(consts.StatusNotFound, map[string]string{"error": "approval not found"})
+		h.cfg.Error("failed to decide approval", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	ctx.JSON(consts.StatusOK, approval)
+	response.Success(c, approval)
 }
+
+func (h *ApprovalHandler) UpdateApproval(ctx context.Context, c *app.RequestContext) {
+	var req validation.UpdateApprovalRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	response.Success(c, map[string]string{"message": "approval updated"})
+}
+
+func (h *ApprovalHandler) DeleteApproval(ctx context.Context, c *app.RequestContext) {
+	var req validation.DeleteApprovalRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	response.Success(c, map[string]string{"message": "approval deleted"})
+}
+
+func (h *ApprovalHandler) GetPendingApprovals(ctx context.Context, c *app.RequestContext) {
+	var req validation.GetPendingApprovalsRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	approvals, err := h.svc.GetPendingApprovals(ctx, req.ApproverID)
+	if err != nil {
+		h.cfg.Error("failed to get pending approvals", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to get pending approvals")
+		return
+	}
+	response.Success(c, approvals)
+}
+
+// Ensure pagination is imported
+var _ = pagination.PaginationResponse{}

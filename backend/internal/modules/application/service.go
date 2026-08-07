@@ -11,16 +11,18 @@ import (
 	"github.com/aeroxe/approval-flow/internal/modules/approval"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
+	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
+	"go.uber.org/zap"
 )
 
 type Service struct {
-	Repo      *Repository
-	Cache     *cache.Redis
-	NATS      *messaging.NATS
-	Hub       *websocket.Hub
+	Repo        *Repository
+	Cache       *cache.Redis
+	NATS        *messaging.NATS
+	Hub         *websocket.Hub
 	ApprovalSvc *approval.Service
-	Logger    *config.Config
+	Logger      *config.Config
 }
 
 func NewService(repo *Repository, cache *cache.Redis, nats *messaging.NATS, hub *websocket.Hub, approvalSvc *approval.Service, cfg *config.Config) *Service {
@@ -40,7 +42,10 @@ func (s *Service) SubmitApplication(ctx context.Context, app *domain.Application
 		"status":         app.Status,
 	})
 
-	s.Logger.Info("application submitted", "application_id", app.ID, "applicant_id", app.ApplicantID)
+	s.Logger.Info("application submitted",
+		zap.String("application_id", app.ID.String()),
+		zap.String("applicant_id", app.ApplicantID.String()),
+	)
 	return nil
 }
 
@@ -74,6 +79,62 @@ func (s *Service) UpdateApplication(ctx context.Context, app *domain.Application
 	}
 
 	s.Cache.Delete(ctx, fmt.Sprintf("application:%s", app.ID))
-	s.Logger.Info("application updated", "application_id", app.ID)
+	s.Logger.Info("application updated", zap.String("application_id", app.ID.String()))
 	return nil
+}
+
+// ListApplications returns paginated applications with filters and sorting
+func (s *Service) ListApplications(
+	ctx context.Context,
+	filters *pagination.ApplicationFilters,
+	cursor *pagination.Cursor,
+	limit int,
+) (*pagination.ListResponse, error) {
+	// Get paginated results
+	apps, totalCount, err := s.Repo.ListWithPagination(ctx, filters, cursor, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list applications: %w", err)
+	}
+
+	// Determine if there are more results
+	hasMore := len(apps) > limit
+	if hasMore {
+		// Remove the extra item
+		apps = apps[:limit]
+	}
+
+	// Build next cursor
+	var nextCursor string
+	if hasMore && len(apps) > 0 {
+		lastApp := apps[len(apps)-1]
+		nextCursor = pagination.EncodeCursor(&pagination.Cursor{
+			ID:        lastApp.ID.String(),
+			CreatedAt: lastApp.CreatedAt,
+		})
+	}
+
+	// Build pagination response
+	paginationResp := &pagination.PaginationResponse{
+		NextCursor:    nextCursor,
+		HasMore:       hasMore,
+		TotalCount:    totalCount,
+		PageSize:      limit,
+	}
+
+	// Get summary
+	summary, err := s.Repo.GetSummary(ctx, filters.DateRange)
+	if err != nil {
+		s.Logger.Error("failed to get summary", zap.Error(err))
+	}
+
+	return &pagination.ListResponse{
+		Data:       apps,
+		Pagination: paginationResp,
+		Summary:    summary,
+	}, nil
+}
+
+// GetApplicationSummary returns application summary statistics
+func (s *Service) GetApplicationSummary(ctx context.Context, dateRange *pagination.DateRangeFilter) (*pagination.ApplicationSummary, error) {
+	return s.Repo.GetSummary(ctx, dateRange)
 }

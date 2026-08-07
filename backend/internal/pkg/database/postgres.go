@@ -8,7 +8,6 @@ import (
 	"github.com/aeroxe/approval-flow/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/plugin/soft_delete"
 )
 
 type DB struct {
@@ -55,4 +54,13 @@ func (d *DB) Close() error {
 
 func (d *DB) AutoMigrate(dst ...interface{}) error {
 	return d.Conn.AutoMigrate(dst...)
+}
+
+// Ping checks if the database connection is alive
+func (d *DB) Ping(ctx context.Context) error {
+	sqlDB, err := d.Conn.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.PingContext(ctx)
 }

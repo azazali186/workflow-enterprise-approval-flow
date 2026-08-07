@@ -10,7 +10,9 @@ import (
 	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
+	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -32,7 +34,7 @@ func (s *Service) CreateWorkflow(ctx context.Context, workflow *domain.Workflow)
 
 	s.Cache.Delete(ctx, fmt.Sprintf("workflow:%s", workflow.ID))
 	s.NATS.Publish("workflow.created", []byte(fmt.Sprintf(`{"workflow_id":"%s"}`, workflow.ID)))
-	s.Logger.Info("workflow created", "workflow_id", workflow.ID)
+	s.Logger.Info("workflow created", zap.String("workflow_id", workflow.ID.String()))
 	return nil
 }
 
@@ -69,6 +71,62 @@ func (s *Service) AddWorkflowStep(ctx context.Context, step *domain.WorkflowStep
 		return fmt.Errorf("failed to create workflow step: %w", err)
 	}
 	s.Cache.Delete(ctx, fmt.Sprintf("workflow:%s", step.WorkflowID))
-	s.Logger.Info("workflow step created", "step_id", step.ID)
+	s.Logger.Info("workflow step created", zap.String("step_id", step.ID.String()))
 	return nil
+}
+
+// ListWorkflows returns paginated workflows with filters and sorting
+func (s *Service) ListWorkflows(
+	ctx context.Context,
+	filters *pagination.WorkflowFilters,
+	cursor *pagination.Cursor,
+	limit int,
+) (*pagination.ListResponse, error) {
+	// Get paginated results
+	workflows, totalCount, err := s.Repo.ListWithPagination(ctx, filters, cursor, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list workflows: %w", err)
+	}
+
+	// Determine if there are more results
+	hasMore := len(workflows) > limit
+	if hasMore {
+		// Remove the extra item
+		workflows = workflows[:limit]
+	}
+
+	// Build next cursor
+	var nextCursor string
+	if hasMore && len(workflows) > 0 {
+		lastWorkflow := workflows[len(workflows)-1]
+		nextCursor = pagination.EncodeCursor(&pagination.Cursor{
+			ID:        lastWorkflow.ID.String(),
+			CreatedAt: lastWorkflow.CreatedAt,
+		})
+	}
+
+	// Build pagination response
+	paginationResp := &pagination.PaginationResponse{
+		NextCursor:    nextCursor,
+		HasMore:       hasMore,
+		TotalCount:    totalCount,
+		PageSize:      limit,
+	}
+
+	// Get summary
+	summary, err := s.Repo.GetSummary(ctx, filters.DateRange)
+	if err != nil {
+		s.Logger.Error("failed to get summary", zap.Error(err))
+	}
+
+	return &pagination.ListResponse{
+		Data:       workflows,
+		Pagination: paginationResp,
+		Summary:    summary,
+	}, nil
+}
+
+// GetWorkflowSummary returns workflow summary statistics
+func (s *Service) GetWorkflowSummary(ctx context.Context, dateRange *pagination.DateRangeFilter) (*pagination.WorkflowSummary, error) {
+	return s.Repo.GetSummary(ctx, dateRange)
 }

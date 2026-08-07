@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -76,4 +77,55 @@ func (r *Redis) Publish(ctx context.Context, channel string, message interface{}
 
 func (r *Redis) Subscribe(ctx context.Context, channels ...string) *redis.PubSub {
 	return r.Client.Subscribe(ctx, channels...)
+}
+
+// SetJSON marshals a value to JSON and stores it in Redis
+func (r *Redis) SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	return r.Client.Set(ctx, key, data, ttl).Err()
+}
+
+// GetJSON retrieves a JSON value from Redis and unmarshals it
+func (r *Redis) GetJSON(ctx context.Context, key string, dest interface{}) error {
+	data, err := r.Client.Get(ctx, key).Result()
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal([]byte(data), dest)
+}
+
+// GetWithTTL retrieves a value and its TTL from Redis
+func (r *Redis) GetWithTTL(ctx context.Context, key string) (string, time.Duration, error) {
+	result := r.Client.Get(ctx, key)
+	if result.Err() != nil {
+		return "", 0, result.Err()
+	}
+	ttl, err := r.Client.TTL(ctx, key).Result()
+	if err != nil {
+		return "", 0, err
+	}
+	return result.Val(), ttl, nil
+}
+
+// Incr increments a key's value
+func (r *Redis) Incr(ctx context.Context, key string) error {
+	return r.Client.Incr(ctx, key).Err()
+}
+
+// Expire sets a TTL on a key
+func (r *Redis) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	return r.Client.Expire(ctx, key, expiration).Err()
+}
+
+// Ping checks if Redis connection is alive
+func (r *Redis) Ping(ctx context.Context) error {
+	return r.Client.Ping(ctx).Err()
+}
+
+// TTL returns the remaining TTL for a key
+func (r *Redis) TTL(ctx context.Context, key string) (time.Duration, error) {
+	return r.Client.TTL(ctx, key).Result()
 }

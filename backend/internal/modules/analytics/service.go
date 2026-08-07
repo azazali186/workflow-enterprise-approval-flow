@@ -7,16 +7,16 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
-	"github.com/aeroxe/approval-flow/internal/modules/analytics/repository"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Service struct {
-	Repo   *repository.Repository
+	Repo   *Repository
 	Logger *config.Config
 }
 
-func NewService(repo *repository.Repository, cfg *config.Config) *Service {
+func NewService(repo *Repository, cfg *config.Config) *Service {
 	return &Service{Repo: repo, Logger: cfg}
 }
 
@@ -34,7 +34,7 @@ func (s *Service) GetWorkflowPerformance(ctx context.Context, workflowID string)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get workflow performance: %w", err)
 	}
-	s.Logger.Info("workflow performance retrieved", "workflow_id", workflowID)
+	s.Logger.Info("workflow performance retrieved", zap.String("workflow_id", workflowID))
 	return perf, nil
 }
 
@@ -43,7 +43,7 @@ func (s *Service) GetApproverPerformance(ctx context.Context, approverID string)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get approver performance: %w", err)
 	}
-	s.Logger.Info("approver performance retrieved", "approver_id", approverID)
+	s.Logger.Info("approver performance retrieved", zap.String("approver_id", approverID))
 	return perf, nil
 }
 
@@ -56,10 +56,15 @@ func (s *Service) GetEscalationMetrics(ctx context.Context, startDate, endDate t
 	return metrics, nil
 }
 
-func (s *Service) CreateAuditLog(ctx context.Context, entityType, entityID, action string, actorID *uuid.UUID, changes map[string]interface{}, ipAddress, userAgent *string) error {
+func (s *Service) CreateAuditLog(ctx context.Context, entityType, entityID string, action string, actorID *uuid.UUID, changes map[string]interface{}, ipAddress, userAgent *string) error {
+	parsedEntityID, err := uuid.Parse(entityID)
+	if err != nil {
+		return fmt.Errorf("invalid entity ID: %w", err)
+	}
+
 	log := &domain.AuditLog{
 		EntityType: entityType,
-		EntityID:   entityID,
+		EntityID:   parsedEntityID,
 		Action:     action,
 		ActorID:    actorID,
 		Changes:    changes,

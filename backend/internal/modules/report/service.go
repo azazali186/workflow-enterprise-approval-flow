@@ -3,21 +3,20 @@ package report
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
-	"github.com/aeroxe/approval-flow/internal/modules/report/repository"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
+	"go.uber.org/zap"
 )
 
 type Service struct {
-	Repo   *repository.Repository
+	Repo   *Repository
 	Cache  *cache.Redis
 	Logger *config.Config
 }
 
-func NewService(repo *repository.Repository, cache *cache.Redis, cfg *config.Config) *Service {
+func NewService(repo *Repository, cache *cache.Redis, cfg *config.Config) *Service {
 	return &Service{Repo: repo, Cache: cache, Logger: cfg}
 }
 
@@ -25,7 +24,7 @@ func (s *Service) CreateStatus(ctx context.Context, status *domain.Status) error
 	if err := s.Repo.Create(ctx, status); err != nil {
 		return fmt.Errorf("failed to create status: %w", err)
 	}
-	s.Logger.Info("status created", "status_id", status.ID)
+	s.Logger.Info("status created", zap.String("status_id", status.ID.String()))
 	return nil
 }
 
@@ -41,7 +40,7 @@ func (s *Service) CreateComment(ctx context.Context, comment *domain.Comment) er
 	if err := s.Repo.CreateComment(ctx, comment); err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)
 	}
-	s.Logger.Info("comment created", "comment_id", comment.ID)
+	s.Logger.Info("comment created", zap.String("comment_id", comment.ID.String()))
 	return nil
 }
 
@@ -53,7 +52,7 @@ func (s *Service) CreateDocument(ctx context.Context, document *domain.Document)
 	if err := s.Repo.CreateDocument(ctx, document); err != nil {
 		return fmt.Errorf("failed to create document: %w", err)
 	}
-	s.Logger.Info("document created", "document_id", document.ID)
+	s.Logger.Info("document created", zap.String("document_id", document.ID.String()))
 	return nil
 }
 

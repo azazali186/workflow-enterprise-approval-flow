@@ -74,3 +74,22 @@ func (t *TokenService) Refresh(tokenString string) (string, error) {
 	}
 	return t.Generate(claims.UserID, claims.Email, claims.Roles)
 }
+
+// GenerateRefresh generates a refresh token with longer expiry
+func (t *TokenService) GenerateRefresh(userID, email string, roles []string) (string, error) {
+	claims := Claims{
+		UserID: userID,
+		Email:  email,
+		Roles:  roles,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)), // 7 days
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Subject:   "refresh-token",
+			ID:        uuid.New().String(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(t.secret)
+}

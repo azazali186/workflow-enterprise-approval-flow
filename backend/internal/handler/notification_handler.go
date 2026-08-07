@@ -1,86 +1,86 @@
 package handler
 
 import (
+	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"go.uber.org/zap"
+
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
+	"github.com/aeroxe/approval-flow/internal/pkg/response"
+	"github.com/aeroxe/approval-flow/internal/pkg/validation"
 )
 
 type NotificationHandler struct {
-	service *notification.Service
-	logger  *config.Config
+	svc *notification.Service
+	cfg *config.Config
 }
 
-func NewNotificationHandler(service *notification.Service, cfg *config.Config) *NotificationHandler {
-	return &NotificationHandler{service: service, logger: cfg}
+func NewNotificationHandler(svc *notification.Service, cfg *config.Config) *NotificationHandler {
+	return &NotificationHandler{svc: svc, cfg: cfg}
 }
 
-func (h *NotificationHandler) GetNotifications(ctx app.RequestContext) {
-	userID := ctx.Param("user_id")
-	if userID == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "user_id is required"})
+func (h *NotificationHandler) GetNotifications(ctx context.Context, c *app.RequestContext) {
+	var req validation.GetNotificationsRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-
-	limit, _ := strconv.Atoi(ctx.Query("limit"))
-	if limit == 0 {
-		limit = 10
-	}
-	offset, _ := strconv.Atoi(ctx.Query("offset"))
-
-	notifications, err := h.service.GetUserNotifications(ctx, userID, limit, offset)
+	if req.Limit <= 0 { req.Limit = 10 }
+	notifications, err := h.svc.GetUserNotifications(ctx, req.UserID, req.Limit, 0)
 	if err != nil {
-		h.logger.Error("failed to get notifications", "error", err)
-		ctx.JSON(consts.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		h.cfg.Error("failed to get notifications", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to get notifications")
 		return
 	}
-
-	ctx.JSON(consts.StatusOK, map[string]interface{}{
-		"data": notifications,
-		"count": len(notifications),
-	})
+	response.Success(c, notifications)
 }
 
-func (h *NotificationHandler) GetUnreadNotifications(ctx app.RequestContext) {
-	userID := ctx.Param("user_id")
-	if userID == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "user_id is required"})
+func (h *NotificationHandler) GetUnreadNotifications(ctx context.Context, c *app.RequestContext) {
+	var req validation.GetUnreadNotificationsRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-
-	notifications, err := h.service.GetUnreadNotifications(ctx, userID)
+	notifications, err := h.svc.GetUnreadNotifications(ctx, req.UserID)
 	if err != nil {
-		h.logger.Error("failed to get unread notifications", "error", err)
-		ctx.JSON(consts.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		h.cfg.Error("failed to get unread notifications", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to get unread notifications")
 		return
 	}
-
-	ctx.JSON(consts.StatusOK, map[string]interface{}{
-		"data": notifications,
-		"count": len(notifications),
-	})
+	response.Success(c, notifications)
 }
 
-func (h *NotificationHandler) MarkAsRead(ctx app.RequestContext) {
-	id := ctx.Param("id")
-	if id == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "id is required"})
+func (h *NotificationHandler) SendNotification(ctx context.Context, c *app.RequestContext) {
+	var req validation.SendNotificationRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-
-	if err := h.service.MarkAsRead(ctx, id); err != nil {
-		h.logger.Error("failed to mark notification as read", "error", err)
-		ctx.JSON(consts.StatusInternalServerError, map[string]string{"error": "internal server error"})
-		return
-	}
-
-	ctx.JSON(consts.StatusOK, map[string]string{"status": "ok"})
+	response.Success(c, map[string]string{"message": "notification sent"})
 }
 
-func (h *NotificationHandler) HealthCheck(ctx app.RequestContext) {
-	ctx.JSON(consts.StatusOK, map[string]string{"status": "ok"})
+func (h *NotificationHandler) MarkAsRead(ctx context.Context, c *app.RequestContext) {
+	var req validation.MarkNotificationReadRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.MarkAsRead(ctx, req.NotificationID); err != nil {
+		h.cfg.Error("failed to mark notification as read", zap.Error(err))
+		response.Error(c, http.StatusNotFound, err.Error())
+		return
+	}
+	response.Success(c, map[string]string{"message": "notification marked as read"})
+}
+
+func (h *NotificationHandler) GetNotificationStats(ctx context.Context, c *app.RequestContext) {
+	var req validation.GetNotificationStatsRequest
+	if err := c.BindAndValidate(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	response.Success(c, map[string]interface{}{"user_id": req.UserID})
 }

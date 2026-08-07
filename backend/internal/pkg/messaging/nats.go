@@ -1,7 +1,6 @@
 package messaging
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -62,9 +61,9 @@ func (n *NATS) PublishAsync(subject string, data []byte) (nats.PubAckFuture, err
 	return n.Jet.PublishAsync(subject, data)
 }
 
-func (n *NATS) CreateStream(name, subjects []string) error {
+func (n *NATS) CreateStream(name string, subjects []string) error {
 	_, err := n.Jet.AddStream(&nats.StreamConfig{
-		Name:     name[0],
+		Name:     name,
 		Subjects: subjects,
 	})
 	return err
@@ -78,11 +77,22 @@ func (n *NATS) EnsureStream(name string, subjects []string) error {
 	return err
 }
 
-func (n *NATS) CreateConsumer(stream, consumer string, opts ...nats.ConsumerOpts) error {
+func (n *NATS) CreateConsumer(stream, consumer string) error {
 	_, err := n.Jet.AddConsumer(stream, &nats.ConsumerConfig{
 		Durable:    consumer,
 		AckPolicy:  nats.AckExplicitPolicy,
 		MaxDeliver: 3,
-	}, opts...)
+	})
 	return err
+}
+
+// Ping checks if NATS connection is alive
+func (n *NATS) Ping() error {
+	if n.Conn == nil {
+		return fmt.Errorf("nats connection is nil")
+	}
+	if !n.Conn.IsConnected() {
+		return fmt.Errorf("nats not connected")
+	}
+	return nil
 }

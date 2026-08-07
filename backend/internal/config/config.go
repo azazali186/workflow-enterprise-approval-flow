@@ -23,6 +23,11 @@ type Config struct {
 	RateLimitBurst   int
 	WSMaxConnections int
 	WSPingInterval   int
+	LogFilePath      string
+	LogMaxSize       int
+	LogMaxBackups    int
+	LogMaxAge        int
+	LogCompress      bool
 	*zap.Logger
 }
 
@@ -36,15 +41,25 @@ func Load() *Config {
 		DatabaseURL:      getEnv("DATABASE_URL", "postgres://aeroxe:secret@localhost:5432/approval-flow?sslmode=disable"),
 		RedisURL:         getEnv("REDIS_URL", "redis://localhost:6379"),
 		NATSURL:          getEnv("NATS_URL", "nats://localhost:4222"),
-		JWTSecret:        getEnv("JWT_SECRET", "your-secret-key"),
+		JWTSecret:        getEnv("JWT_SECRET", ""),
 		JWTExpiry:        getEnv("JWT_EXPIRY", "24h"),
 		RateLimitRPS:     getEnvAsInt("RATE_LIMIT_RPS", 100),
 		RateLimitBurst:   getEnvAsInt("RATE_LIMIT_BURST", 200),
 		WSMaxConnections: getEnvAsInt("WS_MAX_CONNECTIONS", 1000),
 		WSPingInterval:   getEnvAsInt("WS_PING_INTERVAL", 30),
+		LogFilePath:      getEnv("LOG_FILE_PATH", "logs/approval-flow.log"),
+		LogMaxSize:       getEnvAsInt("LOG_MAX_SIZE", 100),
+		LogMaxBackups:    getEnvAsInt("LOG_MAX_BACKUPS", 10),
+		LogMaxAge:        getEnvAsInt("LOG_MAX_AGE", 30),
+		LogCompress:      getEnvAsBool("LOG_COMPRESS", true),
 	}
 
-	logger, err := NewLogger(cfg.Env, cfg.LogLevel)
+	// Validate required secrets
+	if cfg.JWTSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is required")
+	}
+
+	logger, err := NewLogger(cfg.Env, cfg.LogLevel, cfg)
 	if err != nil {
 		log.Fatalf("failed to init logger: %v", err)
 	}
@@ -64,6 +79,15 @@ func getEnvAsInt(key string, defaultVal int) int {
 	if val := os.Getenv(key); val != "" {
 		if i, err := strconv.Atoi(val); err == nil {
 			return i
+		}
+	}
+	return defaultVal
+}
+
+func getEnvAsBool(key string, defaultVal bool) bool {
+	if val := os.Getenv(key); val != "" {
+		if b, err := strconv.ParseBool(val); err == nil {
+			return b
 		}
 	}
 	return defaultVal

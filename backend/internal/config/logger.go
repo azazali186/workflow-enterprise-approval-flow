@@ -2,38 +2,72 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
+	"gopkg.in/natefinch/lumberjack.v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func NewLogger(env, level string) (*zap.Logger, error) {
-	var cfg zap.Config
-
-	if env == "production" {
-		cfg = zap.NewProductionConfig()
-	} else {
-		cfg = zap.NewDevelopmentConfig()
-	}
-
-	cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-
+func NewLogger(env, level string, cfg *Config) (*zap.Logger, error) {
+	var zapLevel zapcore.Level
 	switch level {
 	case "debug":
-		cfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+		zapLevel = zap.DebugLevel
 	case "info":
-		cfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+		zapLevel = zap.InfoLevel
 	case "warn":
-		cfg.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+		zapLevel = zap.WarnLevel
 	case "error":
-		cfg.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
+		zapLevel = zap.ErrorLevel
+	default:
+		zapLevel = zap.InfoLevel
 	}
 
-	if env == "production" {
-		return cfg.Build()
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "timestamp",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "message",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
-	return cfg.Build(zap.AddStacktrace(zap.ErrorLevel))
+
+	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
+
+	logDir := filepath.Dir(cfg.LogFilePath)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, err
+	}
+
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   cfg.LogFilePath,
+		MaxSize:    cfg.LogMaxSize,
+		MaxBackups: cfg.LogMaxBackups,
+		MaxAge:     cfg.LogMaxAge,
+		Compress:   cfg.LogCompress,
+	}
+
+	fileWriteSyncer := zapcore.AddSync(lumberjackLogger)
+	consoleWriteSyncer := zapcore.AddSync(os.Stdout)
+
+	core := zapcore.NewTee(
+		zapcore.NewCore(fileEncoder, fileWriteSyncer, zapLevel),
+		zapcore.NewCore(consoleEncoder, consoleWriteSyncer, zapLevel),
+	)
+
+	logger := zap.New(core)
+	if env == "development" {
+		logger = logger.WithOptions(zap.AddStacktrace(zap.ErrorLevel))
+	}
+
+	return logger, nil
 }
 
 func NewNopLogger() *zap.Logger {

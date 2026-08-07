@@ -11,6 +11,7 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/server"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -30,16 +31,16 @@ func main() {
 
 	srv, err := server.NewServer(cfg)
 	if err != nil {
-		cfg.Fatal("failed to create server", "error", err)
+		cfg.Fatal("failed to create server", zap.Error(err))
 	}
 
 	if err := srv.Migrate(); err != nil {
-		cfg.Fatal("failed to run auto-migration", "error", err)
+		cfg.Fatal("failed to run auto-migration", zap.Error(err))
 	}
 
 	go func() {
 		if err := srv.Start(); err != nil && err != http.ErrServerClosed {
-			cfg.Fatal("server error", "error", err)
+			cfg.Fatal("server error", zap.Error(err))
 		}
 	}()
 
@@ -50,7 +51,7 @@ func main() {
 	defer shutdownCancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		cfg.Error("server shutdown error", "error", err)
+		cfg.Error("server shutdown error", zap.Error(err))
 	}
 
 	cfg.Info("server stopped")

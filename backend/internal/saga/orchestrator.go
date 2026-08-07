@@ -10,6 +10,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
 	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 )
 
 type SagaState struct {
@@ -55,7 +56,7 @@ func (o *Orchestrator) StartSaga(ctx context.Context, sagaID, sagaType string, d
 		return fmt.Errorf("failed to save saga state: %w", err)
 	}
 
-	o.logger.Info("saga started", "saga_id", sagaID, "saga_type", sagaType)
+	o.logger.Info("saga started", zap.String("saga_id", sagaID), zap.String("saga_type", sagaType))
 	return nil
 }
 
@@ -128,7 +129,6 @@ func (o *Orchestrator) handleApplicationSubmitted(msg *nats.Msg) {
 func (o *Orchestrator) handleApprovalDecided(msg *nats.Msg) {
 	var data map[string]interface{}
 	json.Unmarshal(msg.Data, &data)
-	approvalID := data["approval_id"].(string)
 	decision := data["decision"].(string)
 
 	if decision == "rejected" {
@@ -140,5 +140,5 @@ func (o *Orchestrator) handleEscalationCreated(msg *nats.Msg) {
 	var data map[string]interface{}
 	json.Unmarshal(msg.Data, &data)
 	escalationID := data["escalation_id"].(string)
-	o.logger.Info("escalation event received", "escalation_id", escalationID)
+	o.logger.Info("escalation event received", zap.String("escalation_id", escalationID))
 }

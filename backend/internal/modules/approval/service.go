@@ -10,7 +10,9 @@ import (
 	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
+	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
+	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -38,7 +40,10 @@ func (s *Service) CreateApproval(ctx context.Context, approval *domain.Approval)
 		"status":      approval.Status,
 	})
 
-	s.Logger.Info("approval created", "approval_id", approval.ID, "approver_id", approval.ApproverID)
+	s.Logger.Info("approval created",
+		zap.String("approval_id", approval.ID.String()),
+		zap.String("approver_id", approval.ApproverID.String()),
+	)
 	return nil
 }
 
@@ -90,6 +95,65 @@ func (s *Service) DecideApproval(ctx context.Context, id, decision, comment stri
 		"decision":    decision,
 	})
 
-	s.Logger.Info("approval decided", "approval_id", approval.ID, "decision", decision)
+	s.Logger.Info("approval decided",
+		zap.String("approval_id", approval.ID.String()),
+		zap.String("decision", decision),
+	)
 	return approval, nil
+}
+
+// ListApprovals returns paginated approvals with filters and sorting
+func (s *Service) ListApprovals(
+	ctx context.Context,
+	filters *pagination.ApprovalFilters,
+	cursor *pagination.Cursor,
+	limit int,
+) (*pagination.ListResponse, error) {
+	// Get paginated results
+	approvals, totalCount, err := s.Repo.ListWithPagination(ctx, filters, cursor, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list approvals: %w", err)
+	}
+
+	// Determine if there are more results
+	hasMore := len(approvals) > limit
+	if hasMore {
+		// Remove the extra item
+		approvals = approvals[:limit]
+	}
+
+	// Build next cursor
+	var nextCursor string
+	if hasMore && len(approvals) > 0 {
+		lastApproval := approvals[len(approvals)-1]
+		nextCursor = pagination.EncodeCursor(&pagination.Cursor{
+			ID:        lastApproval.ID.String(),
+			CreatedAt: lastApproval.CreatedAt,
+		})
+	}
+
+	// Build pagination response
+	paginationResp := &pagination.PaginationResponse{
+		NextCursor:    nextCursor,
+		HasMore:       hasMore,
+		TotalCount:    totalCount,
+		PageSize:      limit,
+	}
+
+	// Get summary
+	summary, err := s.Repo.GetSummary(ctx, filters.DateRange)
+	if err != nil {
+		s.Logger.Error("failed to get summary", zap.Error(err))
+	}
+
+	return &pagination.ListResponse{
+		Data:       approvals,
+		Pagination: paginationResp,
+		Summary:    summary,
+	}, nil
+}
+
+// GetApprovalSummary returns approval summary statistics
+func (s *Service) GetApprovalSummary(ctx context.Context, dateRange *pagination.DateRangeFilter) (*pagination.ApprovalSummary, error) {
+	return s.Repo.GetSummary(ctx, dateRange)
 }

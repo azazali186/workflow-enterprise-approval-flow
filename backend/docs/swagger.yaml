@@ -1,0 +1,161 @@
+swagger: "2.0"
+info:
+  title: ApprovalFlow API
+  description: AeroXe ApprovalFlow - Digital approval and workflow automation platform
+  version: "1.0"
+  contact:
+    name: AeroXe Support
+    email: support@aeroxe.com
+host: localhost:8080
+basePath: /api/v1
+schemes:
+  - http
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: "Enter 'Bearer {token}'"
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return access token
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: "#/definitions/LoginResponse"
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: "#/definitions/Error"
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      description: Create a new user account
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/RegisterRequest"
+      responses:
+        "201":
+          description: Registration successful
+          schema:
+            $ref: "#/definitions/User"
+        "400":
+          description: Validation error
+          schema:
+            $ref: "#/definitions/ValidationError"
+definitions:
+  LoginRequest:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+      password:
+        type: string
+        minLength: 8
+  LoginResponse:
+    type: object
+    properties:
+      user:
+        $ref: "#/definitions/User"
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      expires_at:
+        type: string
+        format: date-time
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      email:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      created_at:
+        type: string
+        format: date-time
+      roles:
+        type: array
+        items:
+          $ref: "#/definitions/Role"
+  Role:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      description:
+        type: string
+      is_default:
+        type: boolean
+      permissions:
+        type: array
+        items:
+          $ref: "#/definitions/Permission"
+  Permission:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      name:
+        type: string
+      route:
+        type: string
+      path:
+        type: string
+      method:
+        type: string
+      service:
+        type: string
+  Error:
+    type: object
+    properties:
+      error:
+        type: string
+  ValidationError:
+    type: object
+    properties:
+      error:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          properties:
+            field:
+              type: string
+            message:
+              type: string

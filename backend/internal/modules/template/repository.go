@@ -2,13 +2,9 @@ package template
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
-	"github.com/aeroxe/approval-flow/internal/pkg/cache"
-	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
 	"gorm.io/gorm"
 )
 

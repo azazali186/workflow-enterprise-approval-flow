@@ -8,19 +8,19 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
-	"github.com/aeroxe/approval-flow/internal/modules/template/repository"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
+	"go.uber.org/zap"
 )
 
 type Service struct {
-	Repo   *repository.Repository
+	Repo   *Repository
 	Cache  *cache.Redis
 	NATS   *messaging.NATS
 	Logger *config.Config
 }
 
-func NewService(repo *repository.Repository, cache *cache.Redis, nats *messaging.NATS, cfg *config.Config) *Service {
+func NewService(repo *Repository, cache *cache.Redis, nats *messaging.NATS, cfg *config.Config) *Service {
 	return &Service{Repo: repo, Cache: cache, NATS: nats, Logger: cfg}
 }
 
@@ -31,7 +31,7 @@ func (s *Service) CreateTemplate(ctx context.Context, template *domain.Template)
 
 	s.Cache.Delete(ctx, fmt.Sprintf("template:%s", template.ID))
 	s.NATS.Publish("template.created", []byte(fmt.Sprintf(`{"template_id":"%s"}`, template.ID)))
-	s.Logger.Info("template created", "template_id", template.ID)
+	s.Logger.Info("template created", zap.String("template_id", template.ID.String()))
 	return nil
 }
 

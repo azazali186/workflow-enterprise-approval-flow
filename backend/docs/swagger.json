@@ -1,0 +1,621 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "ApprovalFlow API",
+    "description": "AeroXe ApprovalFlow - Digital approval and workflow automation platform",
+    "version": "1.0",
+    "contact": {
+      "name": "AeroXe Support",
+      "email": "support@aeroxe.com"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Enter 'Bearer {token}'"
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and return access token",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "schema": {
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register new user",
+        "description": "Create a new user account",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RegisterRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Registration successful",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh access token",
+        "description": "Get new access token using refresh token",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RefreshTokenRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token refreshed",
+            "schema": {
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "List applications",
+        "description": "Get paginated list of applications with filters",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "cursor", "in": "query", "type": "string", "description": "Pagination cursor"},
+          {"name": "limit", "in": "query", "type": "integer", "default": 10, "description": "Items per page"},
+          {"name": "status", "in": "query", "type": "string", "description": "Filter by status"},
+          {"name": "search", "in": "query", "type": "string", "description": "Search query"},
+          {"name": "sort_by", "in": "query", "type": "string", "description": "Sort field"},
+          {"name": "sort_order", "in": "query", "type": "string", "enum": ["asc", "desc"], "description": "Sort order"},
+          {"name": "start_date", "in": "query", "type": "string", "format": "date", "description": "Start date (YYYY-MM-DD)"},
+          {"name": "end_date", "in": "query", "type": "string", "format": "date", "description": "End date (YYYY-MM-DD)"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApplicationListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Applications"],
+        "summary": "Submit application",
+        "description": "Submit a new application",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SubmitApplicationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Application created",
+            "schema": {
+              "$ref": "#/definitions/Application"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/ValidationError"
+            }
+          }
+        }
+      }
+    },
+    "/applications/{id}": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Get application by ID",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "type": "string", "format": "uuid"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Application"
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/approvals": {
+      "get": {
+        "tags": ["Approvals"],
+        "summary": "List approvals",
+        "description": "Get paginated list of approvals with filters",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "cursor", "in": "query", "type": "string"},
+          {"name": "limit", "in": "query", "type": "integer", "default": 10},
+          {"name": "status", "in": "query", "type": "string"},
+          {"name": "approver_id", "in": "query", "type": "string", "format": "uuid"},
+          {"name": "start_date", "in": "query", "type": "string", "format": "date"},
+          {"name": "end_date", "in": "query", "type": "string", "format": "date"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApprovalListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/approvals/{id}/decide": {
+      "post": {
+        "tags": ["Approvals"],
+        "summary": "Decide on approval",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "type": "string", "format": "uuid"},
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DecideApprovalRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decision recorded",
+            "schema": {
+              "$ref": "#/definitions/Approval"
+            }
+          }
+        }
+      }
+    },
+    "/workflows": {
+      "get": {
+        "tags": ["Workflows"],
+        "summary": "List workflows",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "cursor", "in": "query", "type": "string"},
+          {"name": "limit", "in": "query", "type": "integer", "default": 10},
+          {"name": "category", "in": "query", "type": "string"},
+          {"name": "is_active", "in": "query", "type": "boolean"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/WorkflowListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Workflows"],
+        "summary": "Create workflow",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateWorkflowRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Workflow created",
+            "schema": {
+              "$ref": "#/definitions/Workflow"
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{user_id}": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "List notifications",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "user_id", "in": "path", "required": true, "type": "string", "format": "uuid"},
+          {"name": "cursor", "in": "query", "type": "string"},
+          {"name": "limit", "in": "query", "type": "integer", "default": 10},
+          {"name": "type", "in": "query", "type": "string"},
+          {"name": "is_read", "in": "query", "type": "boolean"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/NotificationListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/roles": {
+      "get": {
+        "tags": ["RBAC - Roles"],
+        "summary": "List roles",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/RoleListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["RBAC - Roles"],
+        "summary": "Create role",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateRoleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Role created",
+            "schema": {
+              "$ref": "#/definitions/Role"
+            }
+          }
+        }
+      }
+    },
+    "/admin/permissions": {
+      "get": {
+        "tags": ["RBAC - Permissions"],
+        "summary": "List permissions",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/PermissionListResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "LoginRequest": {
+      "type": "object",
+      "required": ["email", "password"],
+      "properties": {
+        "email": {"type": "string", "format": "email"},
+        "password": {"type": "string", "minLength": 8}
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "properties": {
+        "user": {"$ref": "#/definitions/User"},
+        "access_token": {"type": "string"},
+        "refresh_token": {"type": "string"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "RegisterRequest": {
+      "type": "object",
+      "required": ["email", "password", "name"],
+      "properties": {
+        "email": {"type": "string", "format": "email"},
+        "password": {"type": "string", "minLength": 8},
+        "name": {"type": "string", "minLength": 2, "maxLength": 255}
+      }
+    },
+    "RefreshTokenRequest": {
+      "type": "object",
+      "required": ["refresh_token"],
+      "properties": {
+        "refresh_token": {"type": "string"}
+      }
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "email": {"type": "string"},
+        "name": {"type": "string"},
+        "status": {"type": "string"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "roles": {"type": "array", "items": {"$ref": "#/definitions/Role"}}
+      }
+    },
+    "Role": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "is_default": {"type": "boolean"},
+        "permissions": {"type": "array", "items": {"$ref": "#/definitions/Permission"}}
+      }
+    },
+    "Permission": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string"},
+        "route": {"type": "string"},
+        "path": {"type": "string"},
+        "method": {"type": "string"},
+        "service": {"type": "string"}
+      }
+    },
+    "Application": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "applicant_id": {"type": "string", "format": "uuid"},
+        "workflow_id": {"type": "string", "format": "uuid"},
+        "template_id": {"type": "string", "format": "uuid"},
+        "status": {"type": "string"},
+        "priority": {"type": "string"},
+        "data": {"type": "object"},
+        "created_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "SubmitApplicationRequest": {
+      "type": "object",
+      "required": ["applicant_id", "workflow_id", "template_id"],
+      "properties": {
+        "applicant_id": {"type": "string", "format": "uuid"},
+        "workflow_id": {"type": "string", "format": "uuid"},
+        "template_id": {"type": "string", "format": "uuid"},
+        "priority": {"type": "string", "enum": ["low", "medium", "high", "urgent"]},
+        "data": {"type": "object"}
+      }
+    },
+    "Approval": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "application_id": {"type": "string", "format": "uuid"},
+        "approver_id": {"type": "string", "format": "uuid"},
+        "status": {"type": "string"},
+        "decision": {"type": "string"},
+        "comment": {"type": "string"},
+        "decided_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "DecideApprovalRequest": {
+      "type": "object",
+      "required": ["decision"],
+      "properties": {
+        "decision": {"type": "string", "enum": ["approved", "rejected", "escalated"]},
+        "comment": {"type": "string", "maxLength": 1000}
+      }
+    },
+    "Workflow": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "category": {"type": "string"},
+        "version": {"type": "integer"},
+        "is_active": {"type": "boolean"}
+      }
+    },
+    "CreateWorkflowRequest": {
+      "type": "object",
+      "required": ["name", "category"],
+      "properties": {
+        "name": {"type": "string", "maxLength": 255},
+        "description": {"type": "string"},
+        "category": {"type": "string", "maxLength": 100},
+        "steps": {"type": "array", "items": {"$ref": "#/definitions/WorkflowStepRequest"}}
+      }
+    },
+    "WorkflowStepRequest": {
+      "type": "object",
+      "required": ["name", "approver_role", "action"],
+      "properties": {
+        "name": {"type": "string"},
+        "approver_role": {"type": "string"},
+        "action": {"type": "string", "enum": ["approve", "reject", "escalate", "notify"]},
+        "timeout_hours": {"type": "integer"},
+        "is_required": {"type": "boolean"}
+      }
+    },
+    "Notification": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "user_id": {"type": "string", "format": "uuid"},
+        "type": {"type": "string"},
+        "title": {"type": "string"},
+        "body": {"type": "string"},
+        "read_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "CreateRoleRequest": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string", "minLength": 2, "maxLength": 100},
+        "description": {"type": "string", "maxLength": 500},
+        "is_default": {"type": "boolean"}
+      }
+    },
+    "PaginationResponse": {
+      "type": "object",
+      "properties": {
+        "next_cursor": {"type": "string"},
+        "has_more": {"type": "boolean"},
+        "total_count": {"type": "integer"},
+        "page_size": {"type": "integer"}
+      }
+    },
+    "ApplicationSummary": {
+      "type": "object",
+      "properties": {
+        "total_applications": {"type": "integer"},
+        "by_status": {"type": "object"},
+        "by_priority": {"type": "object"},
+        "recent_submissions": {"type": "integer"}
+      }
+    },
+    "ApplicationListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Application"}},
+        "pagination": {"$ref": "#/definitions/PaginationResponse"},
+        "summary": {"$ref": "#/definitions/ApplicationSummary"}
+      }
+    },
+    "ApprovalSummary": {
+      "type": "object",
+      "properties": {
+        "total_approvals": {"type": "integer"},
+        "pending_approvals": {"type": "integer"},
+        "approval_rate": {"type": "number"}
+      }
+    },
+    "ApprovalListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Approval"}},
+        "pagination": {"$ref": "#/definitions/PaginationResponse"},
+        "summary": {"$ref": "#/definitions/ApprovalSummary"}
+      }
+    },
+    "WorkflowListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Workflow"}},
+        "pagination": {"$ref": "#/definitions/PaginationResponse"}
+      }
+    },
+    "NotificationListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Notification"}},
+        "pagination": {"$ref": "#/definitions/PaginationResponse"}
+      }
+    },
+    "RoleListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Role"}},
+        "count": {"type": "integer"}
+      }
+    },
+    "PermissionListResponse": {
+      "type": "object",
+      "properties": {
+        "data": {"type": "array", "items": {"$ref": "#/definitions/Permission"}},
+        "count": {"type": "integer"}
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {"type": "string"}
+      }
+    },
+    "ValidationError": {
+      "type": "object",
+      "properties": {
+        "error": {"type": "string"},
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {"type": "string"},
+              "message": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
