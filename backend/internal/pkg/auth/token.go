@@ -6,9 +6,10 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 )
 
+// Claims represents JWT claims
 type Claims struct {
 	UserID string   `json:"user_id"`
 	Email  string   `json:"email"`
@@ -16,12 +17,14 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// TokenService handles JWT token operations
 type TokenService struct {
 	secret []byte
 	expiry time.Duration
 	logger *config.Config
 }
 
+// NewTokenService creates a new token service
 func NewTokenService(cfg *config.Config) *TokenService {
 	return &TokenService{
 		secret: []byte(cfg.JWTSecret),
@@ -30,6 +33,7 @@ func NewTokenService(cfg *config.Config) *TokenService {
 	}
 }
 
+// Generate generates a new access token
 func (t *TokenService) Generate(userID, email string, roles []string) (string, error) {
 	claims := Claims{
 		UserID: userID,
@@ -40,7 +44,7 @@ func (t *TokenService) Generate(userID, email string, roles []string) (string, e
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Subject:   "access-token",
-			ID:        uuid.New().String(),
+			ID:        pkguuid.NewV7().String(), // UUID v7 for token ID
 		},
 	}
 
@@ -48,6 +52,7 @@ func (t *TokenService) Generate(userID, email string, roles []string) (string, e
 	return token.SignedString(t.secret)
 }
 
+// Validate validates a token and returns claims
 func (t *TokenService) Validate(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -67,6 +72,7 @@ func (t *TokenService) Validate(tokenString string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token claims")
 }
 
+// Refresh refreshes an expired token
 func (t *TokenService) Refresh(tokenString string) (string, error) {
 	claims, err := t.Validate(tokenString)
 	if err != nil {
@@ -86,10 +92,24 @@ func (t *TokenService) GenerateRefresh(userID, email string, roles []string) (st
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Subject:   "refresh-token",
-			ID:        uuid.New().String(),
+			ID:        pkguuid.NewV7().String(), // UUID v7 for token ID
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(t.secret)
+}
+
+// ExtractTokenID extracts the token ID from a token string without validation
+// WARNING: This does not validate the token signature - use only for non-security purposes
+func (t *TokenService) ExtractTokenID(tokenString string) string {
+	// Parse without validation to extract claims
+	token, _, err := jwt.NewParser().ParseUnverified(tokenString, &Claims{})
+	if err != nil {
+		return ""
+	}
+	if claims, ok := token.Claims.(*Claims); ok {
+		return claims.ID
+	}
+	return ""
 }

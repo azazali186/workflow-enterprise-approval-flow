@@ -9,7 +9,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
-	"github.com/google/uuid"
+	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +45,7 @@ func NewOutbox(redis *cache.Redis, nats *messaging.NATS, cfg *config.Config) *Ou
 // PublishEvent stores an event in the outbox for reliable publishing
 func (o *Outbox) PublishEvent(ctx context.Context, aggregate, eventType string, payload map[string]interface{}) error {
 	event := OutboxEvent{
-		ID:        uuid.New().String(),
+		ID:        pkguuid.GenerateID(),
 		Aggregate: aggregate,
 		Type:      eventType,
 		Payload:   payload,

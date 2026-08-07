@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/google/uuid"
+	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 )
 
 const (
@@ -22,7 +22,7 @@ func RequestID() app.HandlerFunc {
 
 		// Generate new request ID if not provided
 		if requestID == "" {
-			requestID = uuid.New().String()
+			requestID = pkguuid.GenerateID()
 		}
 
 		// Set request ID in context

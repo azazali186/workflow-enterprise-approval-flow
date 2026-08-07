@@ -9,7 +9,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	"github.com/google/uuid"
+	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 	"go.uber.org/zap"
 )
 
@@ -27,7 +27,7 @@ func NewDistributedLock(redis *cache.Redis, key string, ttl time.Duration) *Dist
 	return &DistributedLock{
 		redis: redis,
 		key:   "dlock:" + key,
-		value: uuid.New().String(),
+		value: pkguuid.GenerateID(),
 		ttl:   ttl,
 	}
 }

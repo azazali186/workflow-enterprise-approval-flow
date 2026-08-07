@@ -30,6 +30,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/modules/template"
 	"github.com/aeroxe/approval-flow/internal/modules/workflow"
 	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
+	"github.com/aeroxe/approval-flow/internal/saga"
 	"github.com/aeroxe/approval-flow/internal/pkg/auth"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/database"
@@ -403,6 +404,14 @@ func (s *Server) Start() error {
 	outbox := middleware.NewOutbox(s.redis, s.nats, s.cfg)
 	outbox.StartProcessor(context.Background())
 	s.cfg.Info("outbox processor started")
+
+	// Start Saga Orchestrator
+	orchestrator := saga.NewOrchestrator(s.nats, s.redis, s.hub, s.cfg)
+	if err := orchestrator.Start(context.Background()); err != nil {
+		s.cfg.Error("failed to start saga orchestrator", zap.Error(err))
+	} else {
+		s.cfg.Info("saga orchestrator started")
+	}
 
 	return s.engine.Run()
 }
