@@ -23,6 +23,17 @@ func NewTemplateHandler(svc *template.Service, cfg *config.Config) *TemplateHand
 	return &TemplateHandler{svc: svc, cfg: cfg}
 }
 
+// GetTemplates lists templates
+// @Summary      List templates
+// @Description  Get all templates with pagination
+// @Tags         Templates
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.ListTemplatesRequest true  "List parameters"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      500  {object}  response.Response
+// @Router       /api/v1/templates [post]
 func (h *TemplateHandler) GetTemplates(ctx context.Context, c *app.RequestContext) {
 	var req validation.ListTemplatesRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -39,6 +50,17 @@ func (h *TemplateHandler) GetTemplates(ctx context.Context, c *app.RequestContex
 	response.Success(c, templates)
 }
 
+// GetTemplate gets a single template by ID
+// @Summary      Get template
+// @Description  Get template details by ID
+// @Tags         Templates
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetTemplateRequest true  "Template ID"
+// @Success      200  {object}  response.Response{data=domain.Template}
+// @Failure      400  {object}  response.Response
+// @Failure      404  {object}  response.Response
+// @Router       /api/v1/templates/get [post]
 func (h *TemplateHandler) GetTemplate(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetTemplateRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -54,6 +76,17 @@ func (h *TemplateHandler) GetTemplate(ctx context.Context, c *app.RequestContext
 	response.Success(c, tmpl)
 }
 
+// CreateTemplate creates a new template
+// @Summary      Create template
+// @Description  Create a new template record
+// @Tags         Templates
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.CreateTemplateRequest true  "Template details"
+// @Success      201  {object}  response.Response{data=domain.Template}
+// @Failure      400  {object}  response.Response
+// @Failure      409  {object}  response.Response
+// @Router       /api/v1/templates/create [post]
 func (h *TemplateHandler) CreateTemplate(ctx context.Context, c *app.RequestContext) {
 	var req validation.CreateTemplateRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -69,6 +102,16 @@ func (h *TemplateHandler) CreateTemplate(ctx context.Context, c *app.RequestCont
 	response.Success(c, tmpl)
 }
 
+// UpdateTemplate updates a template
+// @Summary      Update template
+// @Description  Update template details
+// @Tags         Templates
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.UpdateTemplateRequest true  "Update details"
+// @Success      200  {object}  response.Response{data=domain.Template}
+// @Failure      400  {object}  response.Response
+// @Router       /api/v1/templates/update [post]
 func (h *TemplateHandler) UpdateTemplate(ctx context.Context, c *app.RequestContext) {
 	var req validation.UpdateTemplateRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -78,6 +121,16 @@ func (h *TemplateHandler) UpdateTemplate(ctx context.Context, c *app.RequestCont
 	response.Success(c, map[string]string{"message": "template updated"})
 }
 
+// DeleteTemplate deletes a template
+// @Summary      Delete template
+// @Description  Delete a template record
+// @Tags         Templates
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.DeleteTemplateRequest true  "Template ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /api/v1/templates/delete [post]
 func (h *TemplateHandler) DeleteTemplate(ctx context.Context, c *app.RequestContext) {
 	var req validation.DeleteTemplateRequest
 	if err := c.BindAndValidate(&req); err != nil {

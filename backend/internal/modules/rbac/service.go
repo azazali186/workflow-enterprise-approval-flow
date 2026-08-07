@@ -474,3 +474,51 @@ func (s *Service) GetAllUserPermissions(ctx context.Context, userID uuid.UUID) (
 
 	return permissions, nil
 }
+
+// ChangePasswordRequest represents a password change request
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
+// ChangePassword changes a user's password after verifying the old password
+func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, req *ChangePasswordRequest) error {
+	// Get user with current password
+	user, err := s.Repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Verify old password
+	if !user.CheckPassword(req.OldPassword) {
+		return fmt.Errorf("invalid old password")
+	}
+
+	// Check if new password is different from old password
+	if user.CheckPassword(req.NewPassword) {
+		return fmt.Errorf("new password must be different from old password")
+	}
+
+	// Hash new password
+	if err := user.HashPassword(req.NewPassword); err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update user
+	if err := s.Repo.UpdateUser(ctx, user); err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	// Invalidate all existing sessions for this user (force re-login)
+	tokenKey := TokenCachePrefix + user.ID.String()
+	if err := s.Cache.Delete(ctx, tokenKey); err != nil {
+		s.Logger.Warn("failed to invalidate session after password change", zap.Error(err))
+	}
+
+	s.Logger.Info("password changed successfully",
+		zap.String("user_id", user.ID.String()),
+		zap.String("email", user.Email),
+	)
+
+	return nil
+}

@@ -23,6 +23,17 @@ func NewWorkflowHandler(svc *workflow.Service, cfg *config.Config) *WorkflowHand
 	return &WorkflowHandler{svc: svc, cfg: cfg}
 }
 
+// GetWorkflows lists workflows
+// @Summary      List workflows
+// @Description  Get all workflows with pagination
+// @Tags         Workflows
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.ListWorkflowsRequest true  "List parameters"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      500  {object}  response.Response
+// @Router       /api/v1/workflows [post]
 func (h *WorkflowHandler) GetWorkflows(ctx context.Context, c *app.RequestContext) {
 	var req validation.ListWorkflowsRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -39,6 +50,17 @@ func (h *WorkflowHandler) GetWorkflows(ctx context.Context, c *app.RequestContex
 	response.Success(c, workflows)
 }
 
+// GetWorkflow gets a single workflow by ID
+// @Summary      Get workflow
+// @Description  Get workflow details by ID
+// @Tags         Workflows
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetWorkflowRequest true  "Workflow ID"
+// @Success      200  {object}  response.Response{data=domain.Workflow}
+// @Failure      400  {object}  response.Response
+// @Failure      404  {object}  response.Response
+// @Router       /api/v1/workflows/get [post]
 func (h *WorkflowHandler) GetWorkflow(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetWorkflowRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -54,6 +76,17 @@ func (h *WorkflowHandler) GetWorkflow(ctx context.Context, c *app.RequestContext
 	response.Success(c, wf)
 }
 
+// CreateWorkflow creates a new workflow
+// @Summary      Create workflow
+// @Description  Create a new workflow record
+// @Tags         Workflows
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.CreateWorkflowRequest true  "Workflow details"
+// @Success      201  {object}  response.Response{data=domain.Workflow}
+// @Failure      400  {object}  response.Response
+// @Failure      409  {object}  response.Response
+// @Router       /api/v1/workflows/create [post]
 func (h *WorkflowHandler) CreateWorkflow(ctx context.Context, c *app.RequestContext) {
 	var req validation.CreateWorkflowRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -71,6 +104,16 @@ func (h *WorkflowHandler) CreateWorkflow(ctx context.Context, c *app.RequestCont
 	response.Success(c, wf)
 }
 
+// UpdateWorkflow updates a workflow
+// @Summary      Update workflow
+// @Description  Update workflow details
+// @Tags         Workflows
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.UpdateWorkflowRequest true  "Update details"
+// @Success      200  {object}  response.Response{data=domain.Workflow}
+// @Failure      400  {object}  response.Response
+// @Router       /api/v1/workflows/update [post]
 func (h *WorkflowHandler) UpdateWorkflow(ctx context.Context, c *app.RequestContext) {
 	var req validation.UpdateWorkflowRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -80,6 +123,16 @@ func (h *WorkflowHandler) UpdateWorkflow(ctx context.Context, c *app.RequestCont
 	response.Success(c, map[string]string{"message": "workflow updated"})
 }
 
+// DeleteWorkflow deletes a workflow
+// @Summary      Delete workflow
+// @Description  Delete a workflow record
+// @Tags         Workflows
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.DeleteWorkflowRequest true  "Workflow ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Router       /api/v1/workflows/delete [post]
 func (h *WorkflowHandler) DeleteWorkflow(ctx context.Context, c *app.RequestContext) {
 	var req validation.DeleteWorkflowRequest
 	if err := c.BindAndValidate(&req); err != nil {

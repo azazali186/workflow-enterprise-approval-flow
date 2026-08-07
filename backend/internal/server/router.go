@@ -155,15 +155,12 @@ func (s *Server) registerRoutes() {
 	// ==================== Swagger Docs ====================
 	s.engine.POST("/docs/swagger.json", func(ctx context.Context, c *app.RequestContext) {
 		c.Header("Content-Type", "application/json")
-		c.JSON(consts.StatusOK, map[string]interface{}{
-			"openapi": "3.0.0",
-			"info": map[string]interface{}{
-				"title":       s.cfg.AppName + " API",
-				"version":     "1.0.0",
-				"description": "Approval Flow Enterprise - Workflow Management System",
-			},
-			"paths": map[string]interface{}{},
-		})
+		c.JSON(consts.StatusOK, docs.SwaggerInfo.ReadDoc())
+	})
+
+	s.engine.POST("/docs", func(ctx context.Context, c *app.RequestContext) {
+		c.Header("Content-Type", "text/html")
+		c.String(consts.StatusOK, swaggerUIHTML)
 	})
 
 	// ==================== Prometheus Metrics ====================

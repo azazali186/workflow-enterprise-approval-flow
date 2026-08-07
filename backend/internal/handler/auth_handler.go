@@ -358,7 +358,7 @@ func (h *AuthHandler) ChangePassword(ctx context.Context, c *app.RequestContext)
 	reqCtx := h.extractRequestContext(c)
 	userID, _ := uuid.Parse(userIDStr.(string))
 
-	// Get user before change
+	// Get user before change (for audit log)
 	user, err := h.svc.GetUser(ctx, userID)
 	if err != nil {
 		h.cfg.Error("failed to get user for password change", zap.Error(err))
@@ -366,20 +366,43 @@ func (h *AuthHandler) ChangePassword(ctx context.Context, c *app.RequestContext)
 		return
 	}
 
-	// TODO: Implement actual password change in rbac service
-	// For now, return success
-	response.Success(c, map[string]string{"message": "password change requested"})
+	// Change password via RBAC service
+	err = h.svc.ChangePassword(ctx, userID, &rbac.ChangePasswordRequest{
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	})
+	if err != nil {
+		h.cfg.Error("password change failed", zap.Error(err), zap.String("user_id", userID.String()))
 
-	// Create audit log for password change attempt
+		// Determine appropriate error message
+		errMsg := "failed to change password"
+		status := http.StatusInternalServerError
+
+		switch err.Error() {
+		case "invalid old password":
+			errMsg = "current password is incorrect"
+			status = http.StatusBadRequest
+		case "new password must be different from old password":
+			errMsg = "new password must be different from current password"
+			status = http.StatusBadRequest
+		}
+
+		response.Error(c, status, errMsg)
+		return
+	}
+
+	// Create audit log for password change
 	if h.auditSvc != nil {
 		h.auditSvc.Log(ctx, auditmod.LogParams{
 			EntityType: "user",
 			EntityID:   userID,
 			Action:     domain.AuditActionChangePassword,
 			ActorID:    &userID,
+			ActorEmail: &user.Email,
 			BeforeState: map[string]interface{}{
-				"email": user.Email,
-				"name":  user.Name,
+				"email":    user.Email,
+				"name":     user.Name,
+				"password": "[REDACTED]",
 			},
 			AfterState: map[string]interface{}{
 				"email":    user.Email,
@@ -390,4 +413,6 @@ func (h *AuthHandler) ChangePassword(ctx context.Context, c *app.RequestContext)
 			Status:  domain.AuditStatusSuccess,
 		})
 	}
+
+	response.Success(c, map[string]string{"message": "password changed successfully"})
 }

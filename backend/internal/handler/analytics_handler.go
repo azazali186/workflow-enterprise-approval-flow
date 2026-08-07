@@ -23,6 +23,17 @@ func NewAnalyticsHandler(svc *analytics.Service, cfg *config.Config) *AnalyticsH
 	return &AnalyticsHandler{svc: svc, cfg: cfg}
 }
 
+// GetApprovalStats gets approval statistics
+// @Summary      Get approval stats
+// @Description  Get approval statistics with date range
+// @Tags         Analytics
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetApprovalStatsRequest true  "Date range"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      500  {object}  response.Response
+// @Router       /api/v1/analytics/approval-stats [post]
 func (h *AnalyticsHandler) GetApprovalStats(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetApprovalStatsRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -46,6 +57,17 @@ func (h *AnalyticsHandler) GetApprovalStats(ctx context.Context, c *app.RequestC
 	response.Success(c, stats)
 }
 
+// GetWorkflowPerformance gets workflow performance metrics
+// @Summary      Get workflow performance
+// @Description  Get performance metrics for a specific workflow
+// @Tags         Analytics
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetWorkflowPerformanceRequest true  "Workflow ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      404  {object}  response.Response
+// @Router       /api/v1/analytics/workflow-performance [post]
 func (h *AnalyticsHandler) GetWorkflowPerformance(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetWorkflowPerformanceRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -61,6 +83,17 @@ func (h *AnalyticsHandler) GetWorkflowPerformance(ctx context.Context, c *app.Re
 	response.Success(c, perf)
 }
 
+// GetApproverPerformance gets approver performance metrics
+// @Summary      Get approver performance
+// @Description  Get performance metrics for a specific approver
+// @Tags         Analytics
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetApproverPerformanceRequest true  "Approver ID"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      404  {object}  response.Response
+// @Router       /api/v1/analytics/approver-performance [post]
 func (h *AnalyticsHandler) GetApproverPerformance(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetApproverPerformanceRequest
 	if err := c.BindAndValidate(&req); err != nil {
@@ -76,6 +109,17 @@ func (h *AnalyticsHandler) GetApproverPerformance(ctx context.Context, c *app.Re
 	response.Success(c, perf)
 }
 
+// GetEscalationMetrics gets escalation metrics
+// @Summary      Get escalation metrics
+// @Description  Get escalation metrics with date range
+// @Tags         Analytics
+// @Accept       json
+// @Produce      json
+// @Param        request body     validation.GetEscalationMetricsRequest true  "Date range"
+// @Success      200  {object}  response.Response
+// @Failure      400  {object}  response.Response
+// @Failure      500  {object}  response.Response
+// @Router       /api/v1/analytics/escalation-metrics [post]
 func (h *AnalyticsHandler) GetEscalationMetrics(ctx context.Context, c *app.RequestContext) {
 	var req validation.GetEscalationMetricsRequest
 	if err := c.BindAndValidate(&req); err != nil {
