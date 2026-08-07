@@ -198,7 +198,7 @@ func (h *HealthHandler) Version(ctx context.Context, c *app.RequestContext) {
 // @Tags         Health
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  response.Response{data=PrometheusMetrics}
+// @Success      200  {object}  response.Response{data=map[string]interface{}}
 // @Router       /metrics [post]
 func (h *HealthHandler) Metrics(ctx context.Context, c *app.RequestContext) {
 	metrics := middleware.GetPrometheusMetrics()
