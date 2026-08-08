@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -69,11 +70,24 @@ func (n *NATS) CreateStream(name string, subjects []string) error {
 	return err
 }
 
+// EnsureStream creates the stream if it does not exist, or updates it to match
+// the desired configuration. AddStream alone fails when the stream already
+// exists, so this is the idempotent variant safe to call on every startup.
 func (n *NATS) EnsureStream(name string, subjects []string) error {
-	_, err := n.Jet.AddStream(&nats.StreamConfig{
+	cfg := &nats.StreamConfig{
 		Name:     name,
 		Subjects: subjects,
-	})
+	}
+
+	if _, err := n.Jet.StreamInfo(name); err != nil {
+		if errors.Is(err, nats.ErrStreamNotFound) {
+			_, createErr := n.Jet.AddStream(cfg)
+			return createErr
+		}
+		return err
+	}
+
+	_, err := n.Jet.UpdateStream(cfg)
 	return err
 }
 

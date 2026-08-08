@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -14,14 +16,16 @@ import (
 	"github.com/cloudwego/hertz/pkg/network"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/aeroxe/approval-flow/docs"
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/handler"
 	"github.com/aeroxe/approval-flow/internal/modules/analytics"
-	"github.com/aeroxe/approval-flow/internal/modules/approval"
 	"github.com/aeroxe/approval-flow/internal/modules/application"
+	"github.com/aeroxe/approval-flow/internal/modules/approval"
+	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
 	"github.com/aeroxe/approval-flow/internal/modules/escalation"
 	"github.com/aeroxe/approval-flow/internal/modules/login_log"
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
@@ -29,14 +33,13 @@ import (
 	"github.com/aeroxe/approval-flow/internal/modules/report"
 	"github.com/aeroxe/approval-flow/internal/modules/template"
 	"github.com/aeroxe/approval-flow/internal/modules/workflow"
-	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
-	"github.com/aeroxe/approval-flow/internal/saga"
 	"github.com/aeroxe/approval-flow/internal/pkg/auth"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/database"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
 	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	wsHub "github.com/aeroxe/approval-flow/internal/pkg/websocket"
+	"github.com/aeroxe/approval-flow/internal/saga"
 )
 
 type Server struct {
@@ -48,13 +51,21 @@ type Server struct {
 	hub      *wsHub.Hub
 	tokenSvc *auth.TokenService
 	rbacSvc  *rbac.Service
+	// ctx/cancel govern background workers (outbox processor, saga orchestrator)
+	// so they stop cleanly during shutdown.
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
 	docs.SwaggerInfo.Title = cfg.AppName + " API"
 	docs.SwaggerInfo.Description = "Approval Flow Enterprise - Workflow Management System"
-	docs.SwaggerInfo.Version = "1.0.0"
-	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%d", cfg.ServerPort)
+	docs.SwaggerInfo.Version = config.Version
+	if cfg.SwaggerHost != "" {
+		docs.SwaggerInfo.Host = cfg.SwaggerHost
+	} else {
+		docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%d", cfg.ServerPort)
+	}
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
@@ -93,6 +104,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		rbacSvc:  rbacSvc,
 	}
 
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+
 	s.registerMiddleware()
 	s.registerRoutes()
 
@@ -101,17 +114,18 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 func (s *Server) registerMiddleware() {
 	s.engine.Use(middleware.RequestID())
-	s.engine.Use(middleware.CORS(middleware.DefaultCORSConfig()))
+	s.engine.Use(middleware.CORS(middleware.NewCORSConfig(s.cfg)))
 	s.engine.Use(middleware.Recovery(s.cfg))
 	s.engine.Use(middleware.SecurityHeaders())
-	s.engine.Use(middleware.RateLimiter(s.redis, 100, time.Minute, s.cfg))
+	s.engine.Use(middleware.CircuitBreakerMiddleware(s.cfg))
+	s.engine.Use(middleware.RateLimiter(s.redis, s.cfg.RateLimitRPS, time.Duration(s.cfg.RateLimitWindow)*time.Second, s.cfg))
 	s.engine.Use(middleware.BodySizeLimit(middleware.MaxBodySize, s.cfg))
 	s.engine.Use(middleware.TimeoutMiddleware(s.cfg))
 	s.engine.Use(middleware.PrometheusMiddleware(s.cfg))
 	s.engine.Use(middleware.DistributedLockMiddleware(s.redis, s.cfg))
 	s.engine.Use(middleware.AuditMiddleware(s.db.Conn, s.cfg))
 
-	// Initialize circuit breakers
+	// Initialize circuit breakers for external dependencies
 	middleware.InitCircuitBreakers(s.cfg)
 }
 
@@ -153,28 +167,54 @@ func (s *Server) registerRoutes() {
 	healthHandler := handler.NewHealthHandler(s.db, s.redis, s.nats, s.cfg)
 
 	// ==================== Swagger Docs ====================
-	s.engine.POST("/docs/swagger.json", func(ctx context.Context, c *app.RequestContext) {
+	swaggerJSONHandler := func(ctx context.Context, c *app.RequestContext) {
 		c.Header("Content-Type", "application/json")
 		c.JSON(consts.StatusOK, docs.SwaggerInfo.ReadDoc())
-	})
+	}
+	s.engine.POST("/docs/swagger.json", swaggerJSONHandler)
+	s.engine.GET("/docs/swagger.json", swaggerJSONHandler)
 
-	s.engine.POST("/docs", func(ctx context.Context, c *app.RequestContext) {
+	swaggerUIHandler := func(ctx context.Context, c *app.RequestContext) {
 		c.Header("Content-Type", "text/html")
 		c.String(consts.StatusOK, swaggerUIHTML)
-	})
+	}
+	s.engine.POST("/docs", swaggerUIHandler)
+	s.engine.GET("/docs", swaggerUIHandler)
 
 	// ==================== Prometheus Metrics ====================
-	s.engine.POST("/metrics", func(ctx context.Context, c *app.RequestContext) {
+	metricsJSONHandler := func(ctx context.Context, c *app.RequestContext) {
 		metrics := middleware.GetPrometheusMetrics()
 		c.JSON(consts.StatusOK, metrics.ToJSON())
+	}
+	s.engine.POST("/metrics", metricsJSONHandler)
+
+	// Prometheus text exposition format (GET), consumable by a real scraper.
+	s.engine.GET("/metrics", func(ctx context.Context, c *app.RequestContext) {
+		c.Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+		c.String(consts.StatusOK, middleware.GetPrometheusMetrics().ToPrometheusText())
 	})
 
 	// ==================== Health (Public) ====================
-	s.engine.POST("/health", healthHandler.HealthCheck)
-	s.engine.POST("/health/detailed", healthHandler.DetailedHealthCheck)
-	s.engine.POST("/health/ready", healthHandler.ReadyCheck)
-	s.engine.POST("/health/live", healthHandler.LiveCheck)
-	s.engine.POST("/version", healthHandler.Version)
+	registerPublic := func(method, path string, h app.HandlerFunc) {
+		switch method {
+		case "GET":
+			s.engine.GET(path, h)
+		case "POST":
+			s.engine.POST(path, h)
+		}
+	}
+	// GET variants are provided for load balancers, Kubernetes probes and
+	// monitoring scrapers; POST variants remain for backward compatibility.
+	registerPublic("GET", "/health", healthHandler.HealthCheck)
+	registerPublic("POST", "/health", healthHandler.HealthCheck)
+	registerPublic("GET", "/health/detailed", healthHandler.DetailedHealthCheck)
+	registerPublic("POST", "/health/detailed", healthHandler.DetailedHealthCheck)
+	registerPublic("GET", "/health/ready", healthHandler.ReadyCheck)
+	registerPublic("POST", "/health/ready", healthHandler.ReadyCheck)
+	registerPublic("GET", "/health/live", healthHandler.LiveCheck)
+	registerPublic("POST", "/health/live", healthHandler.LiveCheck)
+	registerPublic("GET", "/version", healthHandler.Version)
+	registerPublic("POST", "/version", healthHandler.Version)
 
 	// ==================== Auth (Public) ====================
 	s.engine.POST("/api/v1/auth/login", authHandler.Login)
@@ -285,28 +325,26 @@ func (s *Server) registerRoutes() {
 	v1.POST("/analytics/approvers", analyticsHandler.GetApproverPerformance)
 	v1.POST("/analytics/escalations", analyticsHandler.GetEscalationMetrics)
 
-	// ==================== WebSocket (Public) ====================
+	// ==================== WebSocket (Authenticated) ====================
 	s.engine.POST("/ws", s.handleWebSocket)
 }
 
 func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
-	// Parse WebSocket upgrade request from body/headers
-	userID := string(ctx.GetHeader("X-User-ID"))
-	if userID == "" {
-		// Fallback: try to read from request body
-		var wsReq struct {
-			UserID   string `json:"user_id"`
-			ClientID string `json:"client_id"`
-		}
-		if err := ctx.BindAndValidate(&wsReq); err == nil && wsReq.UserID != "" {
-			userID = wsReq.UserID
-		}
-	}
-	if userID == "" {
-		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "user_id is required"})
+	// Require a valid bearer token — the user identity comes from the signed
+	// JWT, never from client-supplied headers or body fields.
+	claims, ok := middleware.ValidateBearerToken(c, ctx, s.tokenSvc, s.redis, s.cfg)
+	if !ok {
 		return
 	}
 
+	// Reject cross-origin browser connections not present in the allow-list.
+	origin := string(ctx.GetHeader("Origin"))
+	if origin != "" && !middleware.IsOriginAllowed(origin, s.cfg.CORSAllowedOrigins) {
+		ctx.JSON(consts.StatusForbidden, map[string]string{"error": "origin not allowed"})
+		return
+	}
+
+	userID := claims.UserID
 	clientID := string(ctx.GetHeader("X-Client-ID"))
 	if clientID == "" {
 		clientID = userID
@@ -396,15 +434,16 @@ func (s *Server) Start() error {
 	}
 
 	s.seedDefaultRoles()
+	s.bootstrapAdmin()
 
 	// Start outbox processor for reliable event publishing
 	outbox := middleware.NewOutbox(s.redis, s.nats, s.cfg)
-	outbox.StartProcessor(context.Background())
+	outbox.StartProcessor(s.ctx)
 	s.cfg.Info("outbox processor started")
 
 	// Start Saga Orchestrator
 	orchestrator := saga.NewOrchestrator(s.nats, s.redis, s.hub, s.cfg)
-	if err := orchestrator.Start(context.Background()); err != nil {
+	if err := orchestrator.Start(s.ctx); err != nil {
 		s.cfg.Error("failed to start saga orchestrator", zap.Error(err))
 	} else {
 		s.cfg.Info("saga orchestrator started")
@@ -446,8 +485,60 @@ func (s *Server) seedDefaultRoles() {
 	s.cfg.Info("default roles seeded")
 }
 
+// bootstrapAdmin creates the initial administrator account from ADMIN_EMAIL /
+// ADMIN_PASSWORD if one does not already exist. The default admin credentials
+// previously baked into migrations are intentionally removed.
+func (s *Server) bootstrapAdmin() {
+	if s.cfg.AdminEmail == "" || s.cfg.AdminPassword == "" {
+		s.cfg.Warn("ADMIN_EMAIL/ADMIN_PASSWORD not set; skipping admin bootstrap")
+		return
+	}
+
+	ctx := context.Background()
+	email := s.cfg.AdminEmail
+
+	existing, err := s.rbacSvc.Repo.GetUserByEmail(ctx, email)
+	if err == nil && existing != nil {
+		s.cfg.Info("admin user already exists; skipping bootstrap", zap.String("email", email))
+		return
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		s.cfg.Error("failed to check for existing admin user", zap.Error(err), zap.String("email", email))
+		return
+	}
+
+	role, err := s.rbacSvc.Repo.GetRoleByName(ctx, "admin")
+	if err != nil {
+		s.cfg.Error("admin role not found; cannot bootstrap admin", zap.Error(err))
+		return
+	}
+
+	user := &domain.User{
+		Email:  email,
+		Name:   "System Administrator",
+		Status: "active",
+	}
+	if err := user.HashPassword(s.cfg.AdminPassword); err != nil {
+		s.cfg.Error("failed to hash admin password", zap.Error(err))
+		return
+	}
+	user.Roles = []domain.Role{*role}
+
+	if err := s.rbacSvc.Repo.CreateUser(ctx, user); err != nil {
+		s.cfg.Error("failed to create admin user", zap.Error(err))
+		return
+	}
+
+	s.cfg.Info("admin user bootstrapped", zap.String("email", email))
+}
+
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.cfg.Info("shutting down server")
+	// Stop background workers (outbox processor, saga SLA monitor) first.
+	s.cancel()
+	if s.hub != nil {
+		s.hub.Shutdown()
+	}
 	s.engine.Close()
 	if s.nats != nil {
 		s.nats.Close()
@@ -485,15 +576,19 @@ func (s *Server) Migrate() error {
 	)
 }
 
-// RunMigrations runs golang-migrate migrations if available, falls back to AutoMigrate
+// RunMigrations runs golang-migrate migrations when SQL files exist; otherwise
+// it falls back to AutoMigrate for local development only. Unlike before, it
+// never runs AutoMigrate after a successful golang-migrate run, so the schema
+// in production is exclusively version-controlled by the migration files.
 func (s *Server) RunMigrations(migrationsDir string) error {
-	// Try golang-migrate first
-	if err := config.RunMigrationsFromMain(s.cfg, migrationsDir); err != nil {
-		s.cfg.Warn("golang-migrate failed, falling back to AutoMigrate", zap.Error(err))
+	files, err := filepath.Glob(filepath.Join(migrationsDir, "*.sql"))
+	if err != nil || len(files) == 0 {
+		s.cfg.Warn("no migration files found at " + migrationsDir + "; falling back to AutoMigrate (development only)")
 		return s.Migrate()
 	}
 
-	// Always run AutoMigrate to ensure all models are registered
-	// This is safe - AutoMigrate won't drop columns or change types
-	return s.Migrate()
+	if err := config.RunMigrationsFromMain(s.cfg, migrationsDir); err != nil {
+		return fmt.Errorf("database migration failed: %w", err)
+	}
+	return nil
 }

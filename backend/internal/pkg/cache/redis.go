@@ -110,9 +110,29 @@ func (r *Redis) GetWithTTL(ctx context.Context, key string) (string, time.Durati
 	return result.Val(), ttl, nil
 }
 
-// Incr increments a key's value
-func (r *Redis) Incr(ctx context.Context, key string) error {
-	return r.Client.Incr(ctx, key).Err()
+// Incr atomically increments a key's value and returns the new value.
+func (r *Redis) Incr(ctx context.Context, key string) (int64, error) {
+	return r.Client.Incr(ctx, key).Result()
+}
+
+// IncrWindow atomically increments a fixed-window counter, seeding the key with
+// its TTL on first use via SET NX. Because creation and TTL are one atomic
+// operation, a failed window can never leave a permanent counter behind.
+// Returns the counter value and true on success; (0, false) when Redis is
+// unavailable so callers can fail open.
+func (r *Redis) IncrWindow(ctx context.Context, key string, window time.Duration) (int64, bool) {
+	seeded, err := r.Client.SetNX(ctx, key, 1, window).Result()
+	if err != nil {
+		return 0, false
+	}
+	if seeded {
+		return 1, true
+	}
+	count, err := r.Client.Incr(ctx, key).Result()
+	if err != nil {
+		return 0, false
+	}
+	return count, true
 }
 
 // Expire sets a TTL on a key

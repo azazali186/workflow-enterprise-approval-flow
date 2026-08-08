@@ -17,14 +17,15 @@ import (
 )
 
 type HealthHandler struct {
-	db    *database.DB
-	redis *cache.Redis
-	nats  *messaging.NATS
-	cfg   *config.Config
+	db        *database.DB
+	redis     *cache.Redis
+	nats      *messaging.NATS
+	cfg       *config.Config
+	startTime time.Time
 }
 
 func NewHealthHandler(db *database.DB, redis *cache.Redis, nats *messaging.NATS, cfg *config.Config) *HealthHandler {
-	return &HealthHandler{db: db, redis: redis, nats: nats, cfg: cfg}
+	return &HealthHandler{db: db, redis: redis, nats: nats, cfg: cfg, startTime: time.Now()}
 }
 
 // HealthCheck godoc
@@ -49,8 +50,8 @@ func (h *HealthHandler) HealthCheck(ctx context.Context, c *app.RequestContext) 
 // @Router       /health/detailed [post]
 func (h *HealthHandler) DetailedHealthCheck(ctx context.Context, c *app.RequestContext) {
 	status := DetailedHealthStatus{
-		Status:   "ok",
-		Services: make(map[string]ServiceHealth),
+		Status:    "ok",
+		Services:  make(map[string]ServiceHealth),
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
@@ -114,12 +115,12 @@ func (h *HealthHandler) DetailedHealthCheck(ctx context.Context, c *app.RequestC
 	runtime.ReadMemStats(&memStats)
 
 	status.System = SystemHealth{
-		GoVersion:    runtime.Version(),
-		Goroutines:   runtime.NumGoroutine(),
-		MemoryAlloc:  memStats.Alloc,
-		MemoryTotal:  memStats.TotalAlloc,
-		MemorySys:    memStats.Sys,
-		Uptime:       time.Since(time.Now()).Seconds(), // This would need a start time
+		GoVersion:   runtime.Version(),
+		Goroutines:  runtime.NumGoroutine(),
+		MemoryAlloc: memStats.Alloc,
+		MemoryTotal: memStats.TotalAlloc,
+		MemorySys:   memStats.Sys,
+		Uptime:      time.Since(h.startTime).Seconds(),
 	}
 
 	h.cfg.Info("health check", zap.String("status", status.Status))
@@ -186,9 +187,9 @@ func (h *HealthHandler) LiveCheck(ctx context.Context, c *app.RequestContext) {
 // @Router       /version [post]
 func (h *HealthHandler) Version(ctx context.Context, c *app.RequestContext) {
 	response.Success(c, VersionInfo{
-		Version:   "1.0.0",
+		Version:   config.Version,
 		GoVersion: runtime.Version(),
-		BuildTime: "2024-01-01",
+		BuildTime: config.BuildTime,
 	})
 }
 
@@ -208,10 +209,10 @@ func (h *HealthHandler) Metrics(ctx context.Context, c *app.RequestContext) {
 // ==================== Types ====================
 
 type DetailedHealthStatus struct {
-	Status    string                    `json:"status"`
-	Services  map[string]ServiceHealth  `json:"services"`
-	System    SystemHealth              `json:"system"`
-	Timestamp string                    `json:"timestamp"`
+	Status    string                   `json:"status"`
+	Services  map[string]ServiceHealth `json:"services"`
+	System    SystemHealth             `json:"system"`
+	Timestamp string                   `json:"timestamp"`
 }
 
 type ServiceHealth struct {
@@ -221,12 +222,12 @@ type ServiceHealth struct {
 }
 
 type SystemHealth struct {
-	GoVersion  string  `json:"go_version"`
-	Goroutines int     `json:"goroutines"`
-	MemoryAlloc uint64 `json:"memory_alloc_bytes"`
-	MemoryTotal uint64 `json:"memory_total_bytes"`
-	MemorySys   uint64 `json:"memory_sys_bytes"`
-	Uptime     float64 `json:"uptime_seconds"`
+	GoVersion   string  `json:"go_version"`
+	Goroutines  int     `json:"goroutines"`
+	MemoryAlloc uint64  `json:"memory_alloc_bytes"`
+	MemoryTotal uint64  `json:"memory_total_bytes"`
+	MemorySys   uint64  `json:"memory_sys_bytes"`
+	Uptime      float64 `json:"uptime_seconds"`
 }
 
 type VersionInfo struct {

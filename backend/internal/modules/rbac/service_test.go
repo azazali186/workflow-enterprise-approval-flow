@@ -3,6 +3,7 @@ package rbac
 import (
 	"testing"
 
+	"github.com/aeroxe/approval-flow/internal/pkg/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -151,17 +152,18 @@ func TestRegisterRequest_Validation(t *testing.T) {
 }
 
 func TestComputeTokenHash(t *testing.T) {
-	// Test that the hash is deterministic
-	hash1 := computeTokenHash("token123", "user456")
-	hash2 := computeTokenHash("token123", "user456")
-	assert.Equal(t, hash1, hash2)
+	// The RBAC service and the auth middleware must use the exact same hash
+	// function, otherwise session validation always fails. This test guards
+	// against divergent implementations of the SSO token hash.
+	hash1 := auth.ComputeTokenHash("token123", "user456")
+	hash2 := auth.ComputeTokenHash("token123", "user456")
+	assert.Equal(t, hash1, hash2, "hash must be deterministic")
 
-	// Test that different inputs produce different hashes
-	hash3 := computeTokenHash("token789", "user456")
-	assert.NotEqual(t, hash1, hash3)
+	hash3 := auth.ComputeTokenHash("token789", "user456")
+	assert.NotEqual(t, hash1, hash3, "different tokens must hash differently")
 
-	hash4 := computeTokenHash("token123", "user789")
-	assert.NotEqual(t, hash1, hash4)
+	hash4 := auth.ComputeTokenHash("token123", "user789")
+	assert.NotEqual(t, hash1, hash4, "different users must hash differently")
 }
 
 func TestService_Constants(t *testing.T) {

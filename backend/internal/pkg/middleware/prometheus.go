@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,9 +17,9 @@ import (
 // PrometheusMetrics holds comprehensive Prometheus-style metrics
 type PrometheusMetrics struct {
 	// Counters
-	requestsTotal       int64
-	errorsTotal         int64
-	activeConnections   int64
+	requestsTotal     int64
+	errorsTotal       int64
+	activeConnections int64
 
 	// Histograms (latency buckets in ms)
 	latencyBuckets []float64
@@ -156,9 +158,9 @@ func (pm *PrometheusMetrics) ToJSON() map[string]interface{} {
 	return map[string]interface{}{
 		"uptime_seconds": uptime.Seconds(),
 		"counters": map[string]interface{}{
-			"http_requests_total":    atomic.LoadInt64(&pm.requestsTotal),
-			"http_errors_total":      atomic.LoadInt64(&pm.errorsTotal),
-			"active_connections":     atomic.LoadInt64(&pm.activeConnections),
+			"http_requests_total": atomic.LoadInt64(&pm.requestsTotal),
+			"http_errors_total":   atomic.LoadInt64(&pm.errorsTotal),
+			"active_connections":  atomic.LoadInt64(&pm.activeConnections),
 		},
 		"histograms": map[string]interface{}{
 			"http_request_duration_ms": map[string]interface{}{
@@ -207,6 +209,52 @@ func convertSyncMap(m *sync.Map) map[string]int64 {
 		return true
 	})
 	return result
+}
+
+// ToPrometheusText renders the metrics in Prometheus text exposition format so a
+// real Prometheus scraper can consume them at GET /metrics.
+func (pm *PrometheusMetrics) ToPrometheusText() string {
+	var b strings.Builder
+
+	b.WriteString("# HELP http_requests_total Total number of HTTP requests processed.\n")
+	b.WriteString("# TYPE http_requests_total counter\n")
+	fmt.Fprintf(&b, "http_requests_total %d\n", atomic.LoadInt64(&pm.requestsTotal))
+
+	b.WriteString("# HELP http_errors_total Total number of HTTP error responses (status >= 400).\n")
+	b.WriteString("# TYPE http_errors_total counter\n")
+	fmt.Fprintf(&b, "http_errors_total %d\n", atomic.LoadInt64(&pm.errorsTotal))
+
+	b.WriteString("# HELP http_active_connections Current number of in-flight requests.\n")
+	b.WriteString("# TYPE http_active_connections gauge\n")
+	fmt.Fprintf(&b, "http_active_connections %d\n", atomic.LoadInt64(&pm.activeConnections))
+
+	b.WriteString("# HELP http_request_duration_ms_sum Total request latency in milliseconds.\n")
+	b.WriteString("# TYPE http_request_duration_ms_sum counter\n")
+	fmt.Fprintf(&b, "http_request_duration_ms_sum %d\n", atomic.LoadInt64(&pm.latencySum))
+
+	b.WriteString("# HELP http_request_duration_ms_count Total number of requests observed.\n")
+	b.WriteString("# TYPE http_request_duration_ms_count counter\n")
+	fmt.Fprintf(&b, "http_request_duration_ms_count %d\n", atomic.LoadInt64(&pm.requestsTotal))
+
+	b.WriteString("# HELP http_uptime_seconds Server uptime in seconds.\n")
+	b.WriteString("# TYPE http_uptime_seconds gauge\n")
+	fmt.Fprintf(&b, "http_uptime_seconds %g\n", time.Since(pm.startTime).Seconds())
+
+	writeLabeled := func(name, help, typ, label string, m *sync.Map) {
+		b.WriteString("# HELP " + name + " " + help + "\n")
+		b.WriteString("# TYPE " + name + " " + typ + "\n")
+		m.Range(func(key, value interface{}) bool {
+			fmt.Fprintf(&b, "%s{%s=%q} %d\n", name, label, key.(string), value.(int64))
+			return true
+		})
+	}
+
+	writeLabeled("http_requests_by_method", "HTTP requests by HTTP method.", "counter", "method", &pm.requestsByMethod)
+	writeLabeled("http_requests_by_status", "HTTP requests by response status code.", "counter", "status", &pm.requestsByStatus)
+	writeLabeled("http_requests_by_path", "HTTP requests by request path.", "counter", "path", &pm.requestsByPath)
+	writeLabeled("http_errors_by_status", "HTTP error responses by response status code.", "counter", "status", &pm.errorsByType)
+
+	return b.String()
 }
 
 // PrometheusMiddleware collects comprehensive Prometheus-style metrics

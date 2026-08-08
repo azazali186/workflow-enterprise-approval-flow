@@ -5,15 +5,22 @@ PORT := 8080
 GRPC_PORT := 9090
 MIGRATIONS_DIR := ./migrations
 
+VERSION ?= dev
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS := -s -w \
+	-X github.com/aeroxe/approval-flow/internal/config.Version=$(VERSION)-$(COMMIT) \
+	-X github.com/aeroxe/approval-flow/internal/config.BuildTime=$(BUILD_TIME)
+
 run:
 	go run cmd/server/main.go
 
 build:
-	CGO_ENABLED=0 go build -o bin/server cmd/server/main.go
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/server cmd/server/main.go
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/server-linux-amd64 cmd/server/main.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/server-linux-arm64 cmd/server/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o bin/server-linux-amd64 cmd/server/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o bin/server-linux-arm64 cmd/server/main.go
 
 test:
 	go test ./... -v -count=1

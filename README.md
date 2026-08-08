@@ -152,6 +152,12 @@ ApprovalFlow implements ApprovalService, ApplicationService, WorkflowService, No
 | `decision_made` | Real-time updates for decision made |
 | `escalation_trigger` | Real-time updates for escalation trigger |
 
+> **WebSocket authentication:** the `/ws` endpoint requires an
+> `Authorization: Bearer <token>` header and derives the user identity from the
+> signed JWT — client-supplied user IDs are ignored. Connections from an
+> `Origin` outside `CORS_ALLOWED_ORIGINS` are rejected. Clients must send the
+> token header on the WebSocket upgrade request.
+
 ---
 
 ## Database Schema
@@ -184,7 +190,7 @@ ApprovalFlow implements ApprovalService, ApplicationService, WorkflowService, No
 
 ### Prerequisites
 
-- Go 1.22+
+- Go 1.25+
 - PostgreSQL 15+
 - Redis 7+
 - NATS Server 2.10+ (with JetStream)
@@ -198,14 +204,14 @@ ApprovalFlow implements ApprovalService, ApplicationService, WorkflowService, No
 git clone https://github.com/aeroxe/approval-flow.git
 cd approval-flow
 
+# Create your environment file (set a strong JWT_SECRET and ADMIN_PASSWORD)
+cp backend/.env.example backend/.env
+
 # Start infrastructure services
 docker-compose up -d postgres redis nats
 
 # Run database migrations
 make migrate-up
-
-# Seed initial data
-make seed
 
 # Start the Go server
 make run
@@ -215,6 +221,17 @@ cd clients/web
 npm install
 npm run dev
 ```
+
+> **Security note:** The initial administrator account is no longer seeded with
+> a default password. It is created on startup from the `ADMIN_EMAIL` and
+> `ADMIN_PASSWORD` environment variables. In production (`ENV=production`)
+> both are required, `JWT_SECRET` must be at least 32 characters, and the
+> default `DATABASE_URL` is rejected.
+>
+> **Migrations:** the server applies `MIGRATIONS_PATH` SQL files via
+> golang-migrate and **fails to start if they error** — it never silently falls
+> back to AutoMigrate when migration files are present (AutoMigrate is used
+> only when no SQL files exist, i.e. local development).
 
 ### Docker Compose
 
@@ -246,10 +263,15 @@ services:
     build: .
     ports:
       - "8080:8080"
+      - "9090:9090"
     depends_on:
-      - postgres
-      - redis
-      - nats
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    # JWT_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD are required via the .env file
 ```
 
 ---
@@ -280,7 +302,22 @@ GRPC_PORT=9090
 
 # WebSocket
 WS_MAX_CONNECTIONS=1000
-WS_PING_INTERVAL=30s
+WS_PING_INTERVAL=30
+
+# Initial admin account (created at startup if it does not exist)
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change-me
+
+# Rate limiting (per-IP fixed window)
+RATE_LIMIT_RPS=100
+RATE_LIMIT_BURST=200
+RATE_LIMIT_WINDOW=60
+
+# CORS allow-list (comma separated; empty = * for development only)
+CORS_ALLOWED_ORIGINS=
+
+# golang-migrate directory (copied into the Docker image)
+MIGRATIONS_PATH=./migrations
 ```
 
 ---

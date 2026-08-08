@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/aeroxe/approval-flow/internal/config"
-	"github.com/golang-jwt/jwt/v5"
 	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Claims represents JWT claims
@@ -28,9 +28,14 @@ type TokenService struct {
 func NewTokenService(cfg *config.Config) *TokenService {
 	return &TokenService{
 		secret: []byte(cfg.JWTSecret),
-		expiry: 24 * time.Hour,
+		expiry: cfg.JWTExpiryDuration(),
 		logger: cfg,
 	}
+}
+
+// Expiry returns the configured access token lifetime.
+func (t *TokenService) Expiry() time.Duration {
+	return t.expiry
 }
 
 // Generate generates a new access token

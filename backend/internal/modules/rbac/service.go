@@ -2,7 +2,6 @@ package rbac
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
 	"strings"
 	"time"
@@ -28,10 +27,10 @@ const (
 
 // Service handles RBAC business logic
 type Service struct {
-	Repo    *Repository
-	Cache   *cache.Redis
-	Token   *auth.TokenService
-	Logger  *config.Config
+	Repo   *Repository
+	Cache  *cache.Redis
+	Token  *auth.TokenService
+	Logger *config.Config
 }
 
 // NewService creates a new RBAC service
@@ -90,7 +89,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest) (*LoginResponse,
 	}
 
 	// Store token in Redis for single sign-on
-	tokenHash := computeTokenHash(accessToken, user.ID.String())
+	tokenHash := auth.ComputeTokenHash(accessToken, user.ID.String())
 	tokenKey := TokenCachePrefix + user.ID.String()
 	if err := s.Cache.Set(ctx, tokenKey, tokenHash, DefaultTokenTTL); err != nil {
 		s.Logger.Error("failed to cache token", zap.Error(err))
@@ -186,7 +185,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 	}
 
 	// Update token cache
-	tokenHash := computeTokenHash(accessToken, user.ID.String())
+	tokenHash := auth.ComputeTokenHash(accessToken, user.ID.String())
 	tokenKey := TokenCachePrefix + user.ID.String()
 	if err := s.Cache.Set(ctx, tokenKey, tokenHash, DefaultTokenTTL); err != nil {
 		s.Logger.Error("failed to cache token", zap.Error(err))
@@ -215,7 +214,7 @@ func (s *Service) ValidateToken(ctx context.Context, tokenString string) (*auth.
 	}
 
 	// Check if token is in Redis (single sign-on)
-	tokenHash := computeTokenHash(tokenString, claims.UserID)
+	tokenHash := auth.ComputeTokenHash(tokenString, claims.UserID)
 	tokenKey := TokenCachePrefix + claims.UserID
 	cachedHash, err := s.Cache.Get(ctx, tokenKey)
 	if err != nil || cachedHash == "" {
@@ -237,7 +236,7 @@ func (s *Service) RenewToken(ctx context.Context, tokenString string) error {
 		return err
 	}
 
-	tokenHash := computeTokenHash(tokenString, claims.UserID)
+	tokenHash := auth.ComputeTokenHash(tokenString, claims.UserID)
 	tokenKey := TokenCachePrefix + claims.UserID
 
 	// Get current TTL
@@ -427,12 +426,6 @@ func FormatRouteName(path string) string {
 	cleaned = strings.ReplaceAll(cleaned, "/", " ")
 	titleCaser := cases.Title(language.English)
 	return titleCaser.String(strings.TrimSpace(cleaned))
-}
-
-// computeTokenHash computes a hash of the token and user ID for SSO validation
-func computeTokenHash(token, userID string) string {
-	value := md5.Sum([]byte(token + userID))
-	return fmt.Sprintf("%x", value)
 }
 
 // CheckPermission checks if a user has a specific permission

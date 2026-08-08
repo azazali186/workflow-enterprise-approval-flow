@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/natefinch/lumberjack.v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func NewLogger(env, level string, cfg *Config) (*zap.Logger, error) {
@@ -39,28 +39,35 @@ func NewLogger(env, level string, cfg *Config) (*zap.Logger, error) {
 	}
 
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
-	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
-
-	logDir := filepath.Dir(cfg.LogFilePath)
-	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, err
-	}
-
-	lumberjackLogger := &lumberjack.Logger{
-		Filename:   cfg.LogFilePath,
-		MaxSize:    cfg.LogMaxSize,
-		MaxBackups: cfg.LogMaxBackups,
-		MaxAge:     cfg.LogMaxAge,
-		Compress:   cfg.LogCompress,
-	}
-
-	fileWriteSyncer := zapcore.AddSync(lumberjackLogger)
 	consoleWriteSyncer := zapcore.AddSync(os.Stdout)
 
-	core := zapcore.NewTee(
-		zapcore.NewCore(fileEncoder, fileWriteSyncer, zapLevel),
-		zapcore.NewCore(consoleEncoder, consoleWriteSyncer, zapLevel),
-	)
+	var core zapcore.Core
+
+	// When no file path is configured (typical for containers), log to stdout only.
+	if cfg.LogFilePath == "" {
+		core = zapcore.NewCore(consoleEncoder, consoleWriteSyncer, zapLevel)
+	} else {
+		fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
+
+		logDir := filepath.Dir(cfg.LogFilePath)
+		if err := os.MkdirAll(logDir, 0755); err != nil {
+			return nil, err
+		}
+
+		lumberjackLogger := &lumberjack.Logger{
+			Filename:   cfg.LogFilePath,
+			MaxSize:    cfg.LogMaxSize,
+			MaxBackups: cfg.LogMaxBackups,
+			MaxAge:     cfg.LogMaxAge,
+			Compress:   cfg.LogCompress,
+		}
+
+		fileWriteSyncer := zapcore.AddSync(lumberjackLogger)
+		core = zapcore.NewTee(
+			zapcore.NewCore(fileEncoder, fileWriteSyncer, zapLevel),
+			zapcore.NewCore(consoleEncoder, consoleWriteSyncer, zapLevel),
+		)
+	}
 
 	logger := zap.New(core)
 	if env == "development" {

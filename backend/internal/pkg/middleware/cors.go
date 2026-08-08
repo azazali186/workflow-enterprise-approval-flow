@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
+	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 )
@@ -18,16 +20,36 @@ type CORSConfig struct {
 	MaxAge           int
 }
 
-// DefaultCORSConfig returns default CORS configuration
+// DefaultCORSConfig returns the default (development) CORS configuration.
+// Note: with a "*" allow-list, credentials cannot be enabled — browsers reject
+// the combination, and reflecting arbitrary origins with credentials would be
+// insecure. Use NewCORSConfig with an explicit allow-list in production.
 func DefaultCORSConfig() *CORSConfig {
 	return &CORSConfig{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "X-Request-ID"},
 		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 		MaxAge:           43200, // 12 hours
 	}
+}
+
+// NewCORSConfig builds a CORS configuration from the app config.
+// A wildcard origin ("*") disables credentials; an explicit allow-list enables them.
+func NewCORSConfig(cfg *config.Config) *CORSConfig {
+	c := DefaultCORSConfig()
+	c.AllowOrigins = cfg.CORSAllowedOrigins
+
+	hasWildcard := false
+	for _, origin := range c.AllowOrigins {
+		if origin == "*" {
+			hasWildcard = true
+			break
+		}
+	}
+	c.AllowCredentials = !hasWildcard && len(c.AllowOrigins) > 0
+	return c
 }
 
 // CORS creates a new CORS middleware
@@ -37,12 +59,6 @@ func CORS(config *CORSConfig) app.HandlerFunc {
 	}
 
 	return func(ctx context.Context, c *app.RequestContext) {
-		// Handle preflight OPTIONS request
-		if string(c.Request.Method()) == "OPTIONS" {
-			c.AbortWithStatus(consts.StatusNoContent)
-			return
-		}
-
 		// Get origin
 		origin := string(c.Request.Header.Peek("Origin"))
 		if origin == "" {
@@ -51,29 +67,15 @@ func CORS(config *CORSConfig) app.HandlerFunc {
 		}
 
 		// Check if origin is allowed
-		allowed := false
-		for _, allowedOrigin := range config.AllowOrigins {
-			if allowedOrigin == "*" || allowedOrigin == origin {
-				allowed = true
-				break
-			}
-			// Check for wildcard subdomain
-			if strings.HasPrefix(allowedOrigin, "*.") {
-				suffix := allowedOrigin[1:] // e.g., ".example.com"
-				if strings.HasSuffix(origin, suffix) {
-					allowed = true
-					break
-				}
-			}
-		}
-
-		if !allowed {
+		if !IsOriginAllowed(origin, config.AllowOrigins) {
+			// Not allowed: do not set CORS headers; let the request proceed
+			// (the browser will block the response for cross-origin reads).
 			c.Next(ctx)
 			return
 		}
 
 		// Set CORS headers
-		if config.AllowOrigins[0] == "*" {
+		if originIsWildcard(config.AllowOrigins) {
 			c.Header("Access-Control-Allow-Origin", "*")
 		} else {
 			c.Header("Access-Control-Allow-Origin", origin)
@@ -97,7 +99,7 @@ func CORS(config *CORSConfig) app.HandlerFunc {
 				c.Header("Access-Control-Allow-Headers", strings.Join(config.AllowHeaders, ", "))
 			}
 			if config.MaxAge > 0 {
-				c.Header("Access-Control-Max-Age", strings.TrimSpace(string(rune(config.MaxAge+'0'))))
+				c.Header("Access-Control-Max-Age", strconv.Itoa(config.MaxAge))
 			}
 			c.AbortWithStatus(consts.StatusNoContent)
 			return
@@ -105,4 +107,27 @@ func CORS(config *CORSConfig) app.HandlerFunc {
 
 		c.Next(ctx)
 	}
+}
+
+// IsOriginAllowed checks whether an origin matches an allow-list.
+// Supports a literal "*" wildcard and "*.example.com" subdomain wildcards.
+func IsOriginAllowed(origin string, allowOrigins []string) bool {
+	for _, allowedOrigin := range allowOrigins {
+		if allowedOrigin == "*" || allowedOrigin == origin {
+			return true
+		}
+		// Check for wildcard subdomain
+		if strings.HasPrefix(allowedOrigin, "*.") {
+			suffix := allowedOrigin[1:] // e.g., ".example.com"
+			if strings.HasSuffix(origin, suffix) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// originIsWildcard reports whether the allow-list is a single "*" entry.
+func originIsWildcard(allowOrigins []string) bool {
+	return len(allowOrigins) == 1 && allowOrigins[0] == "*"
 }

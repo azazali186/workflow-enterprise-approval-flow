@@ -88,13 +88,6 @@ func AuditMiddleware(db *gorm.DB, cfg *config.Config) app.HandlerFunc {
 			return
 		}
 
-	// Read request body for logging
-	requestBody := c.Request.Body()
-	if len(requestBody) > 0 {
-		// Restore the body for the handler
-		c.Request.SetBody(requestBody)
-	}
-
 		// Get user ID from context (set by auth middleware)
 		var actorID *uuid.UUID
 		if userIDStr, exists := c.Get("user_id"); exists {
@@ -133,8 +126,9 @@ func AuditMiddleware(db *gorm.DB, cfg *config.Config) app.HandlerFunc {
 			"duration_ms": time.Since(start).Milliseconds(),
 		}
 
-		// Log asynchronously to avoid blocking
-		go auditLogger.Log(ctx, LogEntry{
+		// Log asynchronously to avoid blocking; detach from the request context so a
+		// cancelled request does not silently drop the audit write.
+		go auditLogger.Log(context.WithoutCancel(ctx), LogEntry{
 			EntityType: entityType,
 			EntityID:   entityID,
 			Action:     action,
@@ -162,8 +156,10 @@ func isAuditExcludedPath(path string) bool {
 		"/health/ready",
 		"/health/live",
 		"/metrics",
+		"/docs",
 		"/docs/swagger.json",
 		"/version",
+		"/ws",
 	}
 
 	for _, excluded := range excludedPaths {

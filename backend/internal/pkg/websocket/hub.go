@@ -21,6 +21,7 @@ type Conn interface {
 	Pong(ctx context.Context) error
 }
 
+// Client represents a connected WebSocket client.
 type Client struct {
 	ID     string
 	UserID string
@@ -40,14 +41,12 @@ func (c *Client) ReadPump() {
 		n, err := c.Conn.Read(buf)
 		if err != nil {
 			if err != io.EOF && err != io.ErrClosedPipe {
-				log.Printf("read error: %v", err)
+				log.Printf("websocket read error: %v", err)
 			}
 			break
 		}
-		// Echo back for now (basic WebSocket)
-		if n > 0 {
-			_ = buf[:n]
-		}
+		// Inbound frames are currently ignored (notifications are server-push only).
+		_ = n
 	}
 }
 
@@ -62,11 +61,12 @@ func (c *Client) WritePump() {
 		select {
 		case msg, ok := <-c.Send:
 			if !ok {
-				c.Conn.Write([]byte("close"))
+				// Channel closed: the hub evicted us or is shutting down.
 				return
 			}
-			// Write raw message for basic WebSocket
-			c.Conn.Write(msg)
+			if _, err := c.Conn.Write(msg); err != nil {
+				return
+			}
 		case <-ticker.C:
 			if err := c.Conn.Ping(context.Background()); err != nil {
 				return
@@ -75,59 +75,148 @@ func (c *Client) WritePump() {
 	}
 }
 
+// directMsg is a message targeted at a specific user (or all users when userID == "").
+type directMsg struct {
+	userID string
+	data   []byte
+}
+
+// Hub manages all WebSocket clients. All mutations of the client map and all
+// closes of client.Send channels happen inside Run, which is the single owner
+// goroutine. This prevents the send-on-closed-channel races that a naive
+// multi-goroutine implementation suffers from.
 type Hub struct {
-	Clients      map[*Client]bool
-	Register     chan *Client
-	Unregister   chan *Client
-	Broadcast    chan []byte
-	mu           sync.RWMutex
-	PingInterval time.Duration
-	Logger       *config.Config
+	Register       chan *Client
+	Unregister     chan *Client
+	Broadcast      chan []byte
+	direct         chan directMsg
+	clients        map[*Client]bool
+	mu             sync.RWMutex
+	maxConnections int
+	PingInterval   time.Duration
+	closed         chan struct{}
+	closeOnce      sync.Once
+	Logger         *config.Config
 }
 
 func NewHub(cfg *config.Config) *Hub {
 	pingInterval := time.Duration(cfg.WSPingInterval) * time.Second
+	if pingInterval <= 0 {
+		pingInterval = 30 * time.Second
+	}
 	return &Hub{
-		Clients:      make(map[*Client]bool),
-		Register:     make(chan *Client),
-		Unregister:   make(chan *Client),
-		Broadcast:    make(chan []byte),
-		PingInterval: pingInterval,
-		Logger:       cfg,
+		Register:       make(chan *Client, 256),
+		Unregister:     make(chan *Client, 256),
+		Broadcast:      make(chan []byte, 256),
+		direct:         make(chan directMsg, 256),
+		clients:        make(map[*Client]bool),
+		maxConnections: cfg.WSMaxConnections,
+		PingInterval:   pingInterval,
+		closed:         make(chan struct{}),
+		Logger:         cfg,
 	}
 }
 
+// Run is the hub's single-owner event loop. It must be started once via `go hub.Run()`.
 func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.Register:
+			if h.maxConnections > 0 && len(h.clients) >= h.maxConnections {
+				h.Logger.Warn("websocket max connections reached, rejecting client",
+					zap.String("user_id", client.UserID),
+					zap.Int("max", h.maxConnections),
+				)
+				client.Conn.Close(1013, "too many connections")
+				continue
+			}
 			h.mu.Lock()
-			h.Clients[client] = true
+			h.clients[client] = true
 			h.mu.Unlock()
 			h.Logger.Info("client registered", zap.String("user_id", client.UserID))
 		case client := <-h.Unregister:
-			h.mu.Lock()
-			if _, ok := h.Clients[client]; ok {
-				delete(h.Clients, client)
-				close(client.Send)
+			if h.remove(client) {
+				h.Logger.Info("client unregistered", zap.String("user_id", client.UserID))
 			}
-			h.mu.Unlock()
-			h.Logger.Info("client unregistered", zap.String("user_id", client.UserID))
 		case msg := <-h.Broadcast:
-			h.mu.RLock()
-			for client := range h.Clients {
-				select {
-				case client.Send <- msg:
-				default:
-					close(client.Send)
-					delete(h.Clients, client)
+			for client := range h.snapshot() {
+				if !h.trySend(client, msg) {
+					h.remove(client)
 				}
 			}
-			h.mu.RUnlock()
+		case dm := <-h.direct:
+			for client := range h.snapshot() {
+				if dm.userID == "" || client.UserID == dm.userID {
+					if !h.trySend(client, dm.data) {
+						h.remove(client)
+					}
+				}
+			}
+		case <-h.closed:
+			h.Logger.Info("websocket hub shutting down")
+			h.mu.Lock()
+			for client := range h.clients {
+				client.Conn.Close(1001, "server shutting down")
+				close(client.Send)
+			}
+			h.clients = make(map[*Client]bool)
+			h.mu.Unlock()
+			return
 		}
 	}
 }
 
+// snapshot returns a copy of the client map for iteration. Safe to call from Run only.
+func (h *Hub) snapshot() map[*Client]bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	clients := make(map[*Client]bool, len(h.clients))
+	for client := range h.clients {
+		clients[client] = true
+	}
+	return clients
+}
+
+// remove deletes a client from the map and closes its Send channel.
+// Must only be called from Run (single owner).
+func (h *Hub) remove(client *Client) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if _, ok := h.clients[client]; !ok {
+		return false
+	}
+	delete(h.clients, client)
+	close(client.Send)
+	return true
+}
+
+// trySend performs a non-blocking send to a client's queue.
+// Must only be called from Run (single owner).
+func (h *Hub) trySend(client *Client, data []byte) bool {
+	select {
+	case client.Send <- data:
+		return true
+	default:
+		// Client is too slow to keep up — evict it.
+		return false
+	}
+}
+
+// Shutdown gracefully closes all client connections and stops the event loop.
+func (h *Hub) Shutdown() {
+	h.closeOnce.Do(func() {
+		close(h.closed)
+	})
+}
+
+// Len returns the number of currently connected clients.
+func (h *Hub) Len() int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.clients)
+}
+
+// SendToUser delivers a JSON event to all connections of a specific user.
 func (h *Hub) SendToUser(userID string, event string, payload interface{}) {
 	data, err := json.Marshal(map[string]interface{}{
 		"event":   event,
@@ -138,21 +227,13 @@ func (h *Hub) SendToUser(userID string, event string, payload interface{}) {
 		return
 	}
 
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	for client := range h.Clients {
-		if client.UserID == userID {
-			select {
-			case client.Send <- data:
-			default:
-				close(client.Send)
-				delete(h.Clients, client)
-			}
-		}
+	select {
+	case h.direct <- directMsg{userID: userID, data: data}:
+	case <-h.closed:
 	}
 }
 
+// SendToAll delivers a JSON event to every connected client.
 func (h *Hub) SendToAll(event string, payload interface{}) {
 	data, err := json.Marshal(map[string]interface{}{
 		"event":   event,
@@ -163,5 +244,8 @@ func (h *Hub) SendToAll(event string, payload interface{}) {
 		return
 	}
 
-	h.Broadcast <- data
+	select {
+	case h.Broadcast <- data:
+	case <-h.closed:
+	}
 }
