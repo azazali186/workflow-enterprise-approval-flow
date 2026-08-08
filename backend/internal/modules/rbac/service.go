@@ -435,6 +435,15 @@ func (s *Service) CheckPermission(ctx context.Context, userID uuid.UUID, permiss
 		return false, err
 	}
 
+	// The admin role is a superuser: it may access every route regardless of
+	// explicit permission grants, so a freshly bootstrapped administrator is
+	// never locked out of the console.
+	for _, role := range user.Roles {
+		if role.Name == "admin" {
+			return true, nil
+		}
+	}
+
 	for _, role := range user.Roles {
 		for _, permission := range role.Permissions {
 			if permission.Route == permissionRoute {

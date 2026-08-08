@@ -10,20 +10,21 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
+	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
 	"github.com/aeroxe/approval-flow/internal/modules/login_log"
 	"github.com/aeroxe/approval-flow/internal/modules/rbac"
-	auditmod "github.com/aeroxe/approval-flow/internal/modules/audit"
+	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
 	"github.com/aeroxe/approval-flow/internal/pkg/validation"
 	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	svc       *rbac.Service
-	loginLog  *login_log.Service
-	auditSvc  *auditmod.Service
-	db        *gorm.DB
-	cfg       *config.Config
+	svc      *rbac.Service
+	loginLog *login_log.Service
+	auditSvc *auditmod.Service
+	db       *gorm.DB
+	cfg      *config.Config
 }
 
 func NewAuthHandler(svc *rbac.Service, loginLog *login_log.Service, auditSvc *auditmod.Service, db *gorm.DB, cfg *config.Config) *AuthHandler {
@@ -110,14 +111,14 @@ func (h *AuthHandler) Login(ctx context.Context, c *app.RequestContext) {
 	// Create audit log
 	if h.auditSvc != nil {
 		h.auditSvc.Log(ctx, auditmod.LogParams{
-			EntityType:  "user",
-			EntityID:    result.User.ID,
-			Action:      domain.AuditActionLogin,
-			ActorID:     &result.User.ID,
-			ActorEmail:  &result.User.Email,
-			AfterState:  result.User,
-			Request:     reqCtx,
-			Status:      domain.AuditStatusSuccess,
+			EntityType: "user",
+			EntityID:   result.User.ID,
+			Action:     domain.AuditActionLogin,
+			ActorID:    &result.User.ID,
+			ActorEmail: &result.User.Email,
+			AfterState: result.User,
+			Request:    reqCtx,
+			Status:     domain.AuditStatusSuccess,
 		})
 	}
 
@@ -171,14 +172,14 @@ func (h *AuthHandler) Register(ctx context.Context, c *app.RequestContext) {
 	// Create audit log
 	if h.auditSvc != nil {
 		h.auditSvc.Log(ctx, auditmod.LogParams{
-			EntityType:  "user",
-			EntityID:    user.ID,
-			Action:      domain.AuditActionRegister,
-			ActorID:     &user.ID,
-			ActorEmail:  &user.Email,
-			AfterState:  user,
-			Request:     reqCtx,
-			Status:      domain.AuditStatusSuccess,
+			EntityType: "user",
+			EntityID:   user.ID,
+			Action:     domain.AuditActionRegister,
+			ActorID:    &user.ID,
+			ActorEmail: &user.Email,
+			AfterState: user,
+			Request:    reqCtx,
+			Status:     domain.AuditStatusSuccess,
 		})
 	}
 
@@ -229,13 +230,13 @@ func (h *AuthHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 		// Create audit log
 		if h.auditSvc != nil {
 			h.auditSvc.Log(ctx, auditmod.LogParams{
-				EntityType:  "user",
-				EntityID:    result.User.ID,
-				Action:      domain.AuditActionRefreshToken,
-				ActorID:     &result.User.ID,
-				ActorEmail:  &result.User.Email,
-				Request:     reqCtx,
-				Status:      domain.AuditStatusSuccess,
+				EntityType: "user",
+				EntityID:   result.User.ID,
+				Action:     domain.AuditActionRefreshToken,
+				ActorID:    &result.User.ID,
+				ActorEmail: &result.User.Email,
+				Request:    reqCtx,
+				Status:     domain.AuditStatusSuccess,
 			})
 		}
 	}
@@ -255,18 +256,19 @@ func (h *AuthHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 // @Failure      401  {object}  response.Response
 // @Router       /api/v1/profile [post]
 func (h *AuthHandler) GetProfile(ctx context.Context, c *app.RequestContext) {
+	// Identity always comes from the authenticated token, never the body, so a
+	// user can never read another user's profile (IDOR prevention). The body is
+	// tolerated for backward compatibility but ignored.
 	var req validation.GetProfileRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		// Fallback to context user ID
-		userIDStr, exists := c.Get("user_id")
-		if !exists {
-			response.Error(c, http.StatusUnauthorized, "unauthorized")
-			return
-		}
-		req.UserID = userIDStr.(string)
+	_ = c.BindAndValidate(&req)
+
+	userIDStr := middleware.GetUserIDFromContext(c)
+	if userIDStr == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
+		return
 	}
 
-	userID, err := uuid.Parse(req.UserID)
+	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "invalid user ID")
 		return
@@ -294,22 +296,21 @@ func (h *AuthHandler) GetProfile(ctx context.Context, c *app.RequestContext) {
 // @Failure      401  {object}  response.Response
 // @Router       /api/v1/logout [post]
 func (h *AuthHandler) Logout(ctx context.Context, c *app.RequestContext) {
+	// Identity always comes from the authenticated token, never the body.
 	var req validation.LogoutRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		// Fallback to context
-		userIDStr, exists := c.Get("user_id")
-		if !exists {
-			response.Error(c, http.StatusUnauthorized, "unauthorized")
-			return
-		}
-		req.UserID = userIDStr.(string)
+	_ = c.BindAndValidate(&req)
+
+	userIDStr := middleware.GetUserIDFromContext(c)
+	if userIDStr == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
+		return
 	}
 
 	reqCtx := h.extractRequestContext(c)
 
-	userID, _ := uuid.Parse(req.UserID)
+	userID, _ := uuid.Parse(userIDStr)
 
-	if err := h.svc.Logout(ctx, req.UserID); err != nil {
+	if err := h.svc.Logout(ctx, userIDStr); err != nil {
 		h.cfg.Error("logout failed", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "logout failed")
 		return
@@ -349,14 +350,14 @@ func (h *AuthHandler) ChangePassword(ctx context.Context, c *app.RequestContext)
 	}
 
 	// Get user ID from context
-	userIDStr, exists := c.Get("user_id")
-	if !exists {
+	userIDStr := middleware.GetUserIDFromContext(c)
+	if userIDStr == "" {
 		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	reqCtx := h.extractRequestContext(c)
-	userID, _ := uuid.Parse(userIDStr.(string))
+	userID, _ := uuid.Parse(userIDStr)
 
 	// Get user before change (for audit log)
 	user, err := h.svc.GetUser(ctx, userID)

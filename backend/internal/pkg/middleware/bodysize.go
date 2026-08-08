@@ -13,10 +13,16 @@ const (
 	MaxBodySize = 10 * 1024 * 1024
 )
 
-// BodySizeLimit creates a middleware that limits request body size
+// BodySizeLimit creates a middleware that limits request body size.
+//
+// The Content-Length header is checked for a fast rejection; the hard cap for
+// chunked/streamed bodies is enforced by the server itself via
+// server.WithMaxRequestBodySize (see internal/server/router.go). A previous
+// implementation here called SetBodyStream(BodyStream(), maxSize) which wiped
+// the body of every request (BodyStream() is nil for ordinary JSON bodies),
+// causing every body-based endpoint to fail binding.
 func BodySizeLimit(maxSize int64, cfg *config.Config) app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
-		// Check Content-Length header
 		contentLength := int64(c.Request.Header.ContentLength())
 		if contentLength > maxSize {
 			c.JSON(consts.StatusRequestEntityTooLarge, map[string]string{
@@ -25,9 +31,6 @@ func BodySizeLimit(maxSize int64, cfg *config.Config) app.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		// Limit the request body reader
-		c.Request.SetBodyStream(c.Request.BodyStream(), int(maxSize))
 
 		c.Next(ctx)
 	}

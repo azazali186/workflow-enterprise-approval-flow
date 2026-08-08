@@ -123,19 +123,33 @@ func (h *RBACHandler) UpdateUser(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	user := &domain.User{
-		Email: req.Email,
-		Name:  req.Name,
+	existing, err := h.svc.GetUser(ctx, id)
+	if err != nil {
+		h.cfg.Error("failed to load user for update", zap.Error(err))
+		response.Error(c, http.StatusNotFound, "user not found")
+		return
 	}
-	user.ID = id
 
-	if err := h.svc.UpdateUser(ctx, user); err != nil {
+	// Partial update: only apply the fields the client actually provided.
+	// Applying the raw request with Save() would zero out every omitted column
+	// (password hash, status, …), silently breaking login and other state.
+	if req.Name != "" {
+		existing.Name = req.Name
+	}
+	if req.Email != "" {
+		existing.Email = req.Email
+	}
+	if req.Status != "" {
+		existing.Status = req.Status
+	}
+
+	if err := h.svc.UpdateUser(ctx, existing); err != nil {
 		h.cfg.Error("failed to update user", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "failed to update user")
 		return
 	}
 
-	response.Success(c, user)
+	response.Success(c, existing)
 }
 
 // DeleteUser godoc

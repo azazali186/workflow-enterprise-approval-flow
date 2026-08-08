@@ -19,12 +19,14 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+// LogoutRequest and GetProfileRequest accept an optional user_id for backward
+// compatibility, but the identity always comes from the authenticated token.
 type LogoutRequest struct {
-	UserID string `json:"user_id" binding:"required"`
+	UserID string `json:"user_id"`
 }
 
 type GetProfileRequest struct {
-	UserID string `json:"user_id" binding:"required"`
+	UserID string `json:"user_id"`
 }
 
 type ChangePasswordRequest struct {
@@ -35,10 +37,10 @@ type ChangePasswordRequest struct {
 // ==================== User Requests ====================
 
 type ListUsersRequest struct {
-	Cursor  string `json:"cursor"`
-	Limit   int    `json:"limit"`
-	Search  string `json:"search"`
-	SortBy  string `json:"sort_by"`
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	Search    string `json:"search"`
+	SortBy    string `json:"sort_by"`
 	SortOrder string `json:"sort_order"`
 }
 
@@ -60,10 +62,10 @@ type DeleteUserRequest struct {
 // ==================== Role Requests ====================
 
 type ListRolesRequest struct {
-	Cursor  string `json:"cursor"`
-	Limit   int    `json:"limit"`
-	Search  string `json:"search"`
-	SortBy  string `json:"sort_by"`
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	Search    string `json:"search"`
+	SortBy    string `json:"sort_by"`
 	SortOrder string `json:"sort_order"`
 }
 
@@ -91,10 +93,10 @@ type DeleteRoleRequest struct {
 // ==================== Permission Requests ====================
 
 type ListPermissionsRequest struct {
-	Cursor  string `json:"cursor"`
-	Limit   int    `json:"limit"`
-	Search  string `json:"search"`
-	SortBy  string `json:"sort_by"`
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	Search    string `json:"search"`
+	SortBy    string `json:"sort_by"`
 	SortOrder string `json:"sort_order"`
 }
 
@@ -172,17 +174,17 @@ type GetApplicationRequest struct {
 }
 
 type ListApplicationsRequest struct {
-	Cursor       string `json:"cursor"`
-	Limit        int    `json:"limit"`
-	Search       string `json:"search"`
-	SortBy       string `json:"sort_by"`
-	SortOrder    string `json:"sort_order"`
-	Status       string `json:"status"`
-	Priority     string `json:"priority"`
-	ApplicantID  string `json:"applicant_id"`
-	WorkflowID   string `json:"workflow_id"`
-	StartDate    string `json:"start_date"`
-	EndDate      string `json:"end_date"`
+	Cursor      string `json:"cursor"`
+	Limit       int    `json:"limit"`
+	Search      string `json:"search"`
+	SortBy      string `json:"sort_by"`
+	SortOrder   string `json:"sort_order"`
+	Status      string `json:"status"`
+	Priority    string `json:"priority"`
+	ApplicantID string `json:"applicant_id"`
+	WorkflowID  string `json:"workflow_id"`
+	StartDate   string `json:"start_date"`
+	EndDate     string `json:"end_date"`
 }
 
 type UpdateApplicationRequest struct {
@@ -323,7 +325,7 @@ type DeleteTemplateRequest struct {
 
 type CreateEscalationRequest struct {
 	ApprovalID  string `json:"approval_id" binding:"required"`
-	Level       int    `json:"level" binding:"required,min=0,max=10"`
+	Level       int    `json:"level" binding:"min=0,max=10"`
 	EscalatedTo string `json:"escalated_to" binding:"required"`
 	Reason      string `json:"reason" binding:"required"`
 }
@@ -367,20 +369,20 @@ type SendNotificationRequest struct {
 }
 
 type GetNotificationsRequest struct {
-	UserID   string `json:"user_id" binding:"required"`
-	Cursor   string `json:"cursor"`
-	Limit    int    `json:"limit"`
-	SortBy   string `json:"sort_by"`
+	UserID    string `json:"user_id"` // optional; the authenticated user is used
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	SortBy    string `json:"sort_by"`
 	SortOrder string `json:"sort_order"`
-	Type     string `json:"type"`
-	Channel  string `json:"channel"`
-	IsRead   *bool  `json:"is_read"`
+	Type      string `json:"type"`
+	Channel   string `json:"channel"`
+	IsRead    *bool  `json:"is_read"`
 	StartDate string `json:"start_date"`
 	EndDate   string `json:"end_date"`
 }
 
 type GetUnreadNotificationsRequest struct {
-	UserID string `json:"user_id" binding:"required"`
+	UserID string `json:"user_id"` // optional; the authenticated user is used
 	Cursor string `json:"cursor"`
 	Limit  int    `json:"limit"`
 }
@@ -390,7 +392,7 @@ type MarkNotificationReadRequest struct {
 }
 
 type GetNotificationStatsRequest struct {
-	UserID string `json:"user_id" binding:"required"`
+	UserID string `json:"user_id"` // optional; the authenticated user is used
 }
 
 // ==================== Report Requests ====================

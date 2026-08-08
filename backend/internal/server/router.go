@@ -38,6 +38,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/pkg/database"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
 	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
+	"github.com/aeroxe/approval-flow/internal/pkg/validation"
 	wsHub "github.com/aeroxe/approval-flow/internal/pkg/websocket"
 	"github.com/aeroxe/approval-flow/internal/saga"
 )
@@ -69,7 +70,16 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	h := server.New(server.WithHostPorts(fmt.Sprintf(":%d", cfg.ServerPort)))
+	// MaxRequestBodySize enforces the same body cap for chunked/streamed
+	// requests that the BodySizeLimit middleware applies to Content-Length.
+	h := server.New(
+		server.WithHostPorts(fmt.Sprintf(":%d", cfg.ServerPort)),
+		server.WithMaxRequestBodySize(int(middleware.MaxBodySize)),
+		// Hertz v0.10 no longer validates `binding` tags by default; restore
+		// request validation via go-playground/validator (see
+		// internal/pkg/validation/binding_validator.go).
+		server.WithCustomValidatorFunc(validation.NewBindingValidatorFunc()),
+	)
 
 	db, err := database.New(cfg)
 	if err != nil {

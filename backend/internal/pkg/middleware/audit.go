@@ -90,8 +90,8 @@ func AuditMiddleware(db *gorm.DB, cfg *config.Config) app.HandlerFunc {
 
 		// Get user ID from context (set by auth middleware)
 		var actorID *uuid.UUID
-		if userIDStr, exists := c.Get("user_id"); exists {
-			if uid, err := uuid.Parse(userIDStr.(string)); err == nil {
+		if userIDStr := GetUserIDFromContext(c); userIDStr != "" {
+			if uid, err := uuid.Parse(userIDStr); err == nil {
 				actorID = &uid
 			}
 		}

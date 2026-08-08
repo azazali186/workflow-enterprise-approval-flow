@@ -48,7 +48,9 @@ func (r *Repository) GetWorkflowPerformance(ctx context.Context, workflowID stri
 
 	var avgTime float64
 	err := r.db.WithContext(ctx).Model(&domain.Approval{}).
-		Select("COALESCE(AVG(EXTRACT(EPOCH FROM (decided_at - created_at))), 0)").
+		// Columns are qualified because both approvals and applications have
+		// created_at/decided_at columns after the JOIN.
+		Select("COALESCE(AVG(EXTRACT(EPOCH FROM (approvals.decided_at - approvals.created_at))), 0)").
 		Joins("JOIN applications ON applications.id = approvals.application_id").
 		Where("applications.workflow_id = ? AND approvals.status IN ('approved', 'rejected')", workflowID).
 		Scan(&avgTime).Error

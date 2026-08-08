@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aeroxe/approval-flow/internal/config"
@@ -14,14 +15,38 @@ type Redis struct {
 	Client *redis.Client
 }
 
+// redisOptions builds go-redis options from REDIS_URL. The URL may be either a
+// full redis:// URL (including optional username/password) or a bare host:port
+// for compatibility with older deployments.
+func redisOptions(rawURL string) (*redis.Options, error) {
+	if !strings.Contains(rawURL, "://") {
+		return &redis.Options{
+			Addr:         rawURL,
+			DialTimeout:  10 * time.Second,
+			ReadTimeout:  3 * time.Second,
+			WriteTimeout: 3 * time.Second,
+			PoolSize:     10,
+		}, nil
+	}
+
+	opts, err := redis.ParseURL(rawURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid REDIS_URL: %w", err)
+	}
+	opts.DialTimeout = 10 * time.Second
+	opts.ReadTimeout = 3 * time.Second
+	opts.WriteTimeout = 3 * time.Second
+	opts.PoolSize = 10
+	return opts, nil
+}
+
 func New(cfg *config.Config) (*Redis, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr:         cfg.RedisURL,
-		DialTimeout:  10 * time.Second,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
-		PoolSize:     10,
-	})
+	opts, err := redisOptions(cfg.RedisURL)
+	if err != nil {
+		return nil, err
+	}
+
+	client := redis.NewClient(opts)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

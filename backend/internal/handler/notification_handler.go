@@ -9,6 +9,7 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
+	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
 	"github.com/aeroxe/approval-flow/internal/pkg/validation"
 )
@@ -34,13 +35,19 @@ func NewNotificationHandler(svc *notification.Service, cfg *config.Config) *Noti
 // @Failure      500  {object}  response.Response
 // @Router       /api/v1/notifications [post]
 func (h *NotificationHandler) GetNotifications(ctx context.Context, c *app.RequestContext) {
+	// Users only ever see their own notifications: identity comes from the
+	// authenticated token, never the body (IDOR prevention). The body is
+	// tolerated for backward compatibility but ignored.
 	var req validation.GetNotificationsRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "invalid request body")
+	_ = c.BindAndValidate(&req)
+
+	userID := middleware.GetUserIDFromContext(c)
+	if userID == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 	if req.Limit <= 0 { req.Limit = 10 }
-	notifications, err := h.svc.GetUserNotifications(ctx, req.UserID, req.Limit, 0)
+	notifications, err := h.svc.GetUserNotifications(ctx, userID, req.Limit, 0)
 	if err != nil {
 		h.cfg.Error("failed to get notifications", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "failed to get notifications")
@@ -61,12 +68,16 @@ func (h *NotificationHandler) GetNotifications(ctx context.Context, c *app.Reque
 // @Failure      500  {object}  response.Response
 // @Router       /api/v1/notifications/unread [post]
 func (h *NotificationHandler) GetUnreadNotifications(ctx context.Context, c *app.RequestContext) {
+	// Identity comes from the authenticated token, never the body.
 	var req validation.GetUnreadNotificationsRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "invalid request body")
+	_ = c.BindAndValidate(&req)
+
+	userID := middleware.GetUserIDFromContext(c)
+	if userID == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	notifications, err := h.svc.GetUnreadNotifications(ctx, req.UserID)
+	notifications, err := h.svc.GetUnreadNotifications(ctx, userID)
 	if err != nil {
 		h.cfg.Error("failed to get unread notifications", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "failed to get unread notifications")
@@ -130,10 +141,14 @@ func (h *NotificationHandler) MarkAsRead(ctx context.Context, c *app.RequestCont
 // @Failure      400  {object}  response.Response
 // @Router       /api/v1/notifications/stats [post]
 func (h *NotificationHandler) GetNotificationStats(ctx context.Context, c *app.RequestContext) {
+	// Identity comes from the authenticated token, never the body.
 	var req validation.GetNotificationStatsRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "invalid request body")
+	_ = c.BindAndValidate(&req)
+
+	userID := middleware.GetUserIDFromContext(c)
+	if userID == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	response.Success(c, map[string]interface{}{"user_id": req.UserID})
+	response.Success(c, map[string]interface{}{"user_id": userID})
 }

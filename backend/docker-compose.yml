@@ -35,7 +35,9 @@ services:
 
   nats:
     image: nats:2.10-alpine
-    command: ["-js"]
+    # -js enables JetStream; -m 8222 starts the monitoring endpoint the
+    # healthcheck probes (http://localhost:8222/healthz).
+    command: ["-js", "-m", "8222"]
     ports:
       - "4222:4222"
       - "8222:8222"
