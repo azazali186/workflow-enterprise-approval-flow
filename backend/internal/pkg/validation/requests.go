@@ -250,11 +250,25 @@ type GetPendingApprovalsRequest struct {
 
 // ==================== Workflow Requests ====================
 
+// WorkflowStepInput describes one approval step of a workflow. ApproverID takes
+// precedence over ApproverRole; if neither resolves to a user, the step's
+// approval is skipped at routing time.
+type WorkflowStepInput struct {
+	Name         string `json:"name" binding:"required"`
+	StepOrder    int    `json:"step_order"`
+	ApproverRole string `json:"approver_role"`
+	ApproverID   string `json:"approver_id"`
+	Action       string `json:"action"`
+	TimeoutHours int    `json:"timeout_hours"`
+	IsRequired   bool   `json:"is_required"`
+}
+
 type CreateWorkflowRequest struct {
-	Name        string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Category    string `json:"category" binding:"required"`
-	IsActive    bool   `json:"is_active"`
+	Name        string              `json:"name" binding:"required"`
+	Description string              `json:"description"`
+	Category    string              `json:"category" binding:"required"`
+	IsActive    bool                `json:"is_active"`
+	Steps       []WorkflowStepInput `json:"steps"`
 }
 
 type GetWorkflowRequest struct {
@@ -274,11 +288,12 @@ type ListWorkflowsRequest struct {
 }
 
 type UpdateWorkflowRequest struct {
-	WorkflowID  string `json:"workflow_id" binding:"required"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	IsActive    *bool  `json:"is_active"`
+	WorkflowID  string              `json:"workflow_id" binding:"required"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Category    string              `json:"category"`
+	IsActive    *bool               `json:"is_active"`
+	Steps       []WorkflowStepInput `json:"steps"`
 }
 
 type DeleteWorkflowRequest struct {
@@ -508,6 +523,14 @@ type GetEntityHistoryRequest struct {
 type GetUserActivityRequest struct {
 	ActorID string `json:"actor_id" binding:"required"`
 	Limit   int    `json:"limit"`
+}
+
+// ==================== Dropdown Requests ====================
+
+type DropdownListRequest struct {
+	Entities       []string `json:"entities" binding:"required,min=1"`
+	IncludeInactive bool     `json:"include_inactive"`
+	Statuses       []string `json:"statuses"`
 }
 
 // ==================== Helper: Parse UUID ====================

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/google/uuid"
@@ -116,23 +117,39 @@ func (h *ApplicationHandler) SubmitApplication(ctx context.Context, c *app.Reque
 		return
 	}
 
+	applicantID, err := uuid.Parse(req.ApplicantID)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid applicant ID")
+		return
+	}
 	workflowID, err := uuid.Parse(req.WorkflowID)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "invalid workflow ID")
 		return
 	}
-
 	templateID, err := uuid.Parse(req.TemplateID)
 	if err != nil {
 		response.Error(c, http.StatusBadRequest, "invalid template ID")
 		return
 	}
 
+	now := time.Now()
 	app := &domain.Application{
+		ApplicantID: applicantID,
 		WorkflowID:  workflowID,
 		TemplateID:  templateID,
+		Title:       req.Title,
+		Status:      "submitted",
 		Priority:    req.Priority,
+		SubmittedAt: &now,
 		Data:        domain.JSONMap(req.Data),
+	}
+	// The description is not a column yet; preserve it in the data payload.
+	if req.Description != "" {
+		if app.Data == nil {
+			app.Data = domain.JSONMap{}
+		}
+		app.Data["description"] = req.Description
 	}
 
 	if err := h.svc.SubmitApplication(ctx, app); err != nil {
@@ -205,5 +222,10 @@ func (h *ApplicationHandler) DeleteApplication(ctx context.Context, c *app.Reque
 		return
 	}
 
+	if err := h.svc.Repo.Delete(ctx, req.ApplicationID); err != nil {
+		h.cfg.Error("failed to delete application", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to delete application")
+		return
+	}
 	response.Success(c, map[string]string{"message": "application deleted"})
 }

@@ -7,11 +7,22 @@ export interface WorkflowQuery extends ListQuery {
   is_active?: boolean
 }
 
+export interface WorkflowStepPayload {
+  name: string
+  step_order?: number
+  approver_role?: string
+  approver_id?: string
+  action?: string
+  timeout_hours?: number
+  is_required?: boolean
+}
+
 export interface WorkflowPayload {
   name: string
   description?: string
   category: string
   is_active?: boolean
+  steps?: WorkflowStepPayload[]
 }
 
 export interface UpdateWorkflowPayload extends Partial<WorkflowPayload> {

@@ -1,15 +1,13 @@
 import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
-import { Select } from '@/components/ui/select'
-import { applicationsService } from '@/services/applications.service'
-import { usersService } from '@/services/users.service'
+import { Combobox } from '@/components/ui/combobox'
+import { useApplicationDropdown, useUserDropdown } from '@/hooks/use-dropdowns'
 import { useApprovalMutations } from '@/features/approvals/hooks/use-approvals'
 
 const schema = z.object({
@@ -28,22 +26,15 @@ export interface ApprovalCreateModalProps {
 export function ApprovalCreateModal({ open, onClose }: ApprovalCreateModalProps) {
   const { createApproval } = useApprovalMutations()
 
-  const { data: applications } = useQuery({
-    queryKey: ['applications', 'options'],
-    queryFn: () => applicationsService.list({ limit: 100, status: 'submitted' }),
-    enabled: open,
-  })
-
-  const { data: approvers } = useQuery({
-    queryKey: ['users', 'approver-options'],
-    queryFn: () => usersService.list({ limit: 100 }),
-    enabled: open,
-  })
+  // Fetch dropdown options using the common API
+  const { data: applicationOptions, isLoading: isLoadingApplications } = useApplicationDropdown(['submitted'], { enabled: open })
+  const { data: userOptions, isLoading: isLoadingUsers } = useUserDropdown({ enabled: open })
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -83,16 +74,22 @@ export function ApprovalCreateModal({ open, onClose }: ApprovalCreateModalProps)
     >
       <form id="approval-create-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <FormField label="Application" htmlFor="application_id" required error={errors.application_id?.message}>
-          <Select id="application_id" invalid={Boolean(errors.application_id)} {...register('application_id')}>
-            <option value="" disabled hidden>
-              Select application…
-            </option>
-            {(applications?.rows ?? []).map((application) => (
-              <option key={application.id} value={application.id}>
-                {application.id.slice(0, 8)} · {application.status}
-              </option>
-            ))}
-          </Select>
+          <Controller
+            name="application_id"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                id="application_id"
+                options={applicationOptions || []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select application..."
+                searchPlaceholder="Search applications..."
+                disabled={isLoadingApplications}
+                invalid={Boolean(errors.application_id)}
+              />
+            )}
+          />
         </FormField>
         <FormField
           label="Workflow step ID"
@@ -110,16 +107,22 @@ export function ApprovalCreateModal({ open, onClose }: ApprovalCreateModalProps)
           />
         </FormField>
         <FormField label="Approver" htmlFor="approver_id" required error={errors.approver_id?.message}>
-          <Select id="approver_id" invalid={Boolean(errors.approver_id)} {...register('approver_id')}>
-            <option value="" disabled hidden>
-              Select approver…
-            </option>
-            {(approvers?.rows ?? []).map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name} · {user.email}
-              </option>
-            ))}
-          </Select>
+          <Controller
+            name="approver_id"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                id="approver_id"
+                options={userOptions || []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select approver..."
+                searchPlaceholder="Search approvers..."
+                disabled={isLoadingUsers}
+                invalid={Boolean(errors.approver_id)}
+              />
+            )}
+          />
         </FormField>
       </form>
     </Modal>

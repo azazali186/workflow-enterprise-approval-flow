@@ -57,6 +57,19 @@ func (r *Repository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Model(&domain.User{}).Where("id = ?", id).Update("deleted_at", &now).Error
 }
 
+// GetUsersByRole returns active users assigned to the given role name, ordered
+// by creation time (used to resolve workflow-step approvers by role).
+func (r *Repository) GetUsersByRole(ctx context.Context, roleName string) ([]domain.User, error) {
+	var users []domain.User
+	err := r.db.WithContext(ctx).
+		Joins("JOIN user_roles ON user_roles.user_id = users.id").
+		Joins("JOIN roles ON roles.id = user_roles.role_id").
+		Where("roles.name = ? AND users.status = ?", roleName, domain.UserStatusActive).
+		Order("users.created_at ASC").
+		Find(&users).Error
+	return users, err
+}
+
 // ListUsers returns a paginated list of users
 func (r *Repository) ListUsers(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	var users []domain.User

@@ -1,16 +1,14 @@
 import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { FormField } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
-import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { approvalsService } from '@/services/approvals.service'
-import { usersService } from '@/services/users.service'
+import { Combobox } from '@/components/ui/combobox'
+import { useApprovalDropdown, useUserDropdown } from '@/hooks/use-dropdowns'
 import { useEscalationMutations } from '@/features/escalations/hooks/use-escalations'
 
 const schema = z.object({
@@ -33,23 +31,14 @@ export interface EscalationFormModalProps {
 
 export function EscalationFormModal({ open, onClose }: EscalationFormModalProps) {
   const { createEscalation } = useEscalationMutations()
-
-  const { data: approvals } = useQuery({
-    queryKey: ['approvals', 'options'],
-    queryFn: () => approvalsService.list({ limit: 100 }),
-    enabled: open,
-  })
-
-  const { data: users } = useQuery({
-    queryKey: ['users', 'assignee-options'],
-    queryFn: () => usersService.list({ limit: 100 }),
-    enabled: open,
-  })
+  const { data: approvalOptions, isLoading: isLoadingApprovals } = useApprovalDropdown({ enabled: open })
+  const { data: userOptions, isLoading: isLoadingUsers } = useUserDropdown({ enabled: open })
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -90,16 +79,23 @@ export function EscalationFormModal({ open, onClose }: EscalationFormModalProps)
       <form id="escalation-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Approval" htmlFor="approval_id" required error={errors.approval_id?.message}>
-            <Select id="approval_id" invalid={Boolean(errors.approval_id)} {...register('approval_id')}>
-              <option value="" disabled hidden>
-                Select approval…
-              </option>
-              {(approvals?.rows ?? []).map((approval) => (
-                <option key={approval.id} value={approval.id}>
-                  {approval.id.slice(0, 8)} · {approval.status}
-                </option>
-              ))}
-            </Select>
+            <Controller
+              name="approval_id"
+              control={control}
+              render={({ field }) => (
+                <Combobox
+                  id="approval_id"
+                  options={approvalOptions || []}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select approval..."
+                  searchPlaceholder="Search approvals..."
+                  disabled={isLoadingApprovals}
+                  invalid={Boolean(errors.approval_id)}
+                  emptyText="No pending approvals"
+                />
+              )}
+            />
           </FormField>
           <FormField label="Level" htmlFor="level" required error={errors.level?.message} hint="0–10">
             <Input
@@ -113,23 +109,29 @@ export function EscalationFormModal({ open, onClose }: EscalationFormModalProps)
           </FormField>
         </div>
         <FormField label="Escalate to" htmlFor="escalated_to" required error={errors.escalated_to?.message}>
-          <Select id="escalated_to" invalid={Boolean(errors.escalated_to)} {...register('escalated_to')}>
-            <option value="" disabled hidden>
-              Select assignee…
-            </option>
-            {(users?.rows ?? []).map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name} · {user.email}
-              </option>
-            ))}
-          </Select>
+          <Controller
+            name="escalated_to"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                id="escalated_to"
+                options={userOptions || []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select assignee..."
+                searchPlaceholder="Search users..."
+                disabled={isLoadingUsers}
+                invalid={Boolean(errors.escalated_to)}
+              />
+            )}
+          />
         </FormField>
         <FormField label="Reason" htmlFor="reason" required error={errors.reason?.message}>
           <Textarea
             id="reason"
             rows={3}
             invalid={Boolean(errors.reason)}
-            placeholder="Explain why this needs escalation…"
+            placeholder="Explain why this needs escalation..."
             {...register('reason')}
           />
         </FormField>

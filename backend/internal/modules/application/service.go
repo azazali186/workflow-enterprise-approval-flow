@@ -23,10 +23,19 @@ type Service struct {
 	Hub         *websocket.Hub
 	ApprovalSvc *approval.Service
 	Logger      *config.Config
+	// onSubmitted is invoked synchronously after a successful submission so the
+	// workflow engine can create the first approval task. Wired by the server
+	// to avoid circular module dependencies.
+	onSubmitted func(ctx context.Context, applicationID string) error
 }
 
 func NewService(repo *Repository, cache *cache.Redis, nats *messaging.NATS, hub *websocket.Hub, approvalSvc *approval.Service, cfg *config.Config) *Service {
 	return &Service{Repo: repo, Cache: cache, NATS: nats, Hub: hub, ApprovalSvc: approvalSvc, Logger: cfg}
+}
+
+// SetOnSubmitted registers the post-submission workflow routing callback.
+func (s *Service) SetOnSubmitted(fn func(ctx context.Context, applicationID string) error) {
+	s.onSubmitted = fn
 }
 
 func (s *Service) SubmitApplication(ctx context.Context, app *domain.Application) error {
@@ -46,6 +55,12 @@ func (s *Service) SubmitApplication(ctx context.Context, app *domain.Application
 		zap.String("application_id", app.ID.String()),
 		zap.String("applicant_id", app.ApplicantID.String()),
 	)
+
+	if s.onSubmitted != nil {
+		if err := s.onSubmitted(ctx, app.ID.String()); err != nil {
+			return fmt.Errorf("failed to route application to approval: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -115,10 +130,10 @@ func (s *Service) ListApplications(
 
 	// Build pagination response
 	paginationResp := &pagination.PaginationResponse{
-		NextCursor:    nextCursor,
-		HasMore:       hasMore,
-		TotalCount:    totalCount,
-		PageSize:      limit,
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+		TotalCount: totalCount,
+		PageSize:   limit,
 	}
 
 	// Get summary

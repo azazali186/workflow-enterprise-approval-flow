@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -9,8 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { usersService } from '@/services/users.service'
-import { useAppSelector } from '@/store/hooks'
+import { Combobox } from '@/components/ui/combobox'
+import { useUserDropdown } from '@/hooks/use-dropdowns'
 import { useNotificationMutations } from '@/features/notifications/hooks/use-notifications'
 
 const schema = z.object({
@@ -30,35 +29,24 @@ export interface SendNotificationModalProps {
 
 export function SendNotificationModal({ open, onClose }: SendNotificationModalProps) {
   const { sendNotification } = useNotificationMutations()
-  const currentUser = useAppSelector((state) => state.auth.user)
-
-  const { data: users } = useQuery({
-    queryKey: ['users', 'recipient-options'],
-    queryFn: () => usersService.list({ limit: 100 }),
-    enabled: open,
-  })
+  const { data: userOptions, isLoading: isLoadingUsers } = useUserDropdown({ enabled: open })
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { user_id: currentUser?.id ?? '', type: 'info', channel: 'in_app', title: '', body: '' },
+    defaultValues: { user_id: '', type: 'info', channel: 'in_app', title: '', body: '' },
   })
 
   useEffect(() => {
     if (open) {
-      reset({
-        user_id: currentUser?.id ?? '',
-        type: 'info',
-        channel: 'in_app',
-        title: '',
-        body: '',
-      })
+      reset({ user_id: '', type: 'info', channel: 'in_app', title: '', body: '' })
     }
-  }, [open, currentUser?.id, reset])
+  }, [open, reset])
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -89,21 +77,22 @@ export function SendNotificationModal({ open, onClose }: SendNotificationModalPr
     >
       <form id="send-notification-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <FormField label="Recipient" htmlFor="user_id" required error={errors.user_id?.message}>
-          <Select id="user_id" invalid={Boolean(errors.user_id)} {...register('user_id')}>
-            <option value="" disabled hidden>
-              Select recipient…
-            </option>
-            <option value={currentUser?.id ?? ''}>
-              {currentUser?.name ?? 'Current user'} (me)
-            </option>
-            {(users?.rows ?? [])
-              .filter((user) => user.id !== currentUser?.id)
-              .map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name} · {user.email}
-                </option>
-              ))}
-          </Select>
+          <Controller
+            name="user_id"
+            control={control}
+            render={({ field }) => (
+              <Combobox
+                id="user_id"
+                options={userOptions || []}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Select recipient..."
+                searchPlaceholder="Search users..."
+                disabled={isLoadingUsers}
+                invalid={Boolean(errors.user_id)}
+              />
+            )}
+          />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Type" htmlFor="type" required error={errors.type?.message}>

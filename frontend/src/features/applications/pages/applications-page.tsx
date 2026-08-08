@@ -33,6 +33,15 @@ export default function ApplicationsPage() {
 
   const columns: ColumnDef<Application>[] = [
     {
+      key: 'title',
+      header: 'Title',
+      render: (application) => (
+        <span className="max-w-[220px] truncate font-medium text-slate-700">
+          {application.title || 'Untitled'}
+        </span>
+      ),
+    },
+    {
       key: 'id',
       header: 'ID',
       render: (application) => (

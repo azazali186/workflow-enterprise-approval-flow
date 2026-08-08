@@ -3,11 +3,14 @@ package handler
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/aeroxe/approval-flow/internal/config"
+	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
 	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
@@ -46,7 +49,9 @@ func (h *NotificationHandler) GetNotifications(ctx context.Context, c *app.Reque
 		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	if req.Limit <= 0 { req.Limit = 10 }
+	if req.Limit <= 0 {
+		req.Limit = 10
+	}
 	notifications, err := h.svc.GetUserNotifications(ctx, userID, req.Limit, 0)
 	if err != nil {
 		h.cfg.Error("failed to get notifications", zap.Error(err))
@@ -102,7 +107,29 @@ func (h *NotificationHandler) SendNotification(ctx context.Context, c *app.Reque
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	response.Success(c, map[string]string{"message": "notification sent"})
+
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	now := time.Now()
+	notification := &domain.Notification{
+		UserID:  userID,
+		Type:    req.Type,
+		Channel: req.Channel,
+		Title:   req.Title,
+		Body:    req.Body,
+		Data:    domain.JSONMap(req.Data),
+		SentAt:  &now,
+	}
+	if err := h.svc.SendNotification(ctx, notification); err != nil {
+		h.cfg.Error("failed to send notification", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to send notification")
+		return
+	}
+	response.Success(c, notification)
 }
 
 // MarkAsRead marks a notification as read

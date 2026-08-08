@@ -5,9 +5,11 @@ import (
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/aeroxe/approval-flow/internal/config"
+	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/modules/approval"
 	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
@@ -40,7 +42,9 @@ func (h *ApprovalHandler) GetApprovals(ctx context.Context, c *app.RequestContex
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.Limit <= 0 { req.Limit = 10 }
+	if req.Limit <= 0 {
+		req.Limit = 10
+	}
 
 	filters := &pagination.ApprovalFilters{}
 	if req.Status != "" {
@@ -101,7 +105,35 @@ func (h *ApprovalHandler) CreateApproval(ctx context.Context, c *app.RequestCont
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	response.Success(c, map[string]string{"message": "approval created"})
+
+	applicationID, err := uuid.Parse(req.ApplicationID)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid application ID")
+		return
+	}
+	stepID, err := uuid.Parse(req.WorkflowStepID)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid workflow step ID")
+		return
+	}
+	approverID, err := uuid.Parse(req.ApproverID)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, "invalid approver ID")
+		return
+	}
+
+	approval := &domain.Approval{
+		ApplicationID:  applicationID,
+		WorkflowStepID: stepID,
+		ApproverID:     approverID,
+		Status:         "pending",
+	}
+	if err := h.svc.CreateApproval(ctx, approval); err != nil {
+		h.cfg.Error("failed to create approval", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to create approval")
+		return
+	}
+	response.Success(c, approval)
 }
 
 // DecideApproval decides on an approval
@@ -146,7 +178,24 @@ func (h *ApprovalHandler) UpdateApproval(ctx context.Context, c *app.RequestCont
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	response.Success(c, map[string]string{"message": "approval updated"})
+
+	approval, err := h.svc.GetApproval(ctx, req.ApprovalID)
+	if err != nil {
+		response.Error(c, http.StatusNotFound, "approval not found")
+		return
+	}
+	if req.Status != "" {
+		approval.Status = req.Status
+	}
+	if req.Comment != "" {
+		approval.Comment = &req.Comment
+	}
+	if err := h.svc.Repo.Update(ctx, approval); err != nil {
+		h.cfg.Error("failed to update approval", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to update approval")
+		return
+	}
+	response.Success(c, approval)
 }
 
 // DeleteApproval deletes an approval
@@ -163,6 +212,11 @@ func (h *ApprovalHandler) DeleteApproval(ctx context.Context, c *app.RequestCont
 	var req validation.DeleteApprovalRequest
 	if err := c.BindAndValidate(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.DeleteApproval(ctx, req.ApprovalID); err != nil {
+		h.cfg.Error("failed to delete approval", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to delete approval")
 		return
 	}
 	response.Success(c, map[string]string{"message": "approval deleted"})

@@ -1,18 +1,20 @@
 package domain
 
 import (
+	"encoding/json"
+
 	"github.com/google/uuid"
 )
 
 // Workflow represents a workflow definition in the system
 type Workflow struct {
 	Base
-	Name        string  `gorm:"size:255;not null" json:"name"`
-	Description *string `gorm:"type:text" json:"description,omitempty"`
-	Category    string  `gorm:"size:100;index" json:"category"`
-	Version     int     `gorm:"default:1" json:"version"`
-	IsActive    bool    `gorm:"default:true;index" json:"is_active"`
-	Steps       JSONMap `gorm:"type:jsonb" json:"steps,omitempty"`
+	Name        string          `gorm:"size:255;not null" json:"name"`
+	Description *string         `gorm:"type:text" json:"description,omitempty"`
+	Category    string          `gorm:"size:100;index" json:"category"`
+	Version     int             `gorm:"default:1" json:"version"`
+	IsActive    bool            `gorm:"default:true;index" json:"is_active"`
+	Steps       json.RawMessage `gorm:"type:jsonb" json:"steps,omitempty"`
 }
 
 // WorkflowStep represents a step in a workflow

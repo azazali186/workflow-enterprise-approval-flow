@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -8,10 +7,9 @@ import { FormField } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { Select } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { Textarea } from '@/components/ui/textarea'
-import { workflowsService } from '@/services/workflows.service'
-import { templatesService } from '@/services/templates.service'
-import { usersService } from '@/services/users.service'
+import { useUserDropdown, useWorkflowDropdown, useTemplateDropdown } from '@/hooks/use-dropdowns'
 import { usePermission } from '@/hooks/use-permission'
 import { useAppSelector } from '@/store/hooks'
 import { useApplicationMutations } from '@/features/applications/hooks/use-applications'
@@ -54,29 +52,17 @@ export function ApplicationFormModal({ open, onClose, application }: Application
   const currentUser = useAppSelector((state) => state.auth.user)
   const schema = useMemo(() => buildSchema(isSubmit), [isSubmit])
 
-  const { data: workflows } = useQuery({
-    queryKey: ['workflows', 'options'],
-    queryFn: () => workflowsService.list({ limit: 100, is_active: true }),
-    enabled: open && isSubmit,
-  })
-
-  const { data: templates } = useQuery({
-    queryKey: ['templates', 'options'],
-    queryFn: () => templatesService.list({ limit: 100 }),
-    enabled: open && isSubmit,
-  })
-
-  const { data: applicants } = useQuery({
-    queryKey: ['users', 'options'],
-    queryFn: () => usersService.list({ limit: 100 }),
-    enabled: open && isSubmit && isAdmin,
-  })
+  // Fetch dropdown options using the common API
+  const { data: userOptions, isLoading: isLoadingUsers } = useUserDropdown({ enabled: open && isSubmit && isAdmin })
+  const { data: workflowOptions, isLoading: isLoadingWorkflows } = useWorkflowDropdown(false, { enabled: open && isSubmit })
+  const { data: templateOptions, isLoading: isLoadingTemplates } = useTemplateDropdown({ enabled: open && isSubmit })
 
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -147,8 +133,6 @@ export function ApplicationFormModal({ open, onClose, application }: Application
     }
   }
 
-  const applicantOptions = applicants?.rows ?? []
-
   return (
     <Modal
       open={open}
@@ -176,21 +160,22 @@ export function ApplicationFormModal({ open, onClose, application }: Application
           <>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Applicant" htmlFor="applicant_id" required error={errors.applicant_id?.message}>
-                <Select id="applicant_id" invalid={Boolean(errors.applicant_id)} {...register('applicant_id')}>
-                  <option value="" disabled hidden>
-                    Select applicant…
-                  </option>
-                  <option value={currentUser?.id ?? ''}>
-                    {currentUser?.name ?? 'Current user'} (you)
-                  </option>
-                  {applicantOptions
-                    .filter((user) => user.id !== currentUser?.id)
-                    .map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name} · {user.email}
-                      </option>
-                    ))}
-                </Select>
+                <Controller
+                  name="applicant_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      id="applicant_id"
+                      options={userOptions || []}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select applicant..."
+                      searchPlaceholder="Search users..."
+                      disabled={isLoadingUsers}
+                      invalid={Boolean(errors.applicant_id)}
+                    />
+                  )}
+                />
               </FormField>
               <FormField label="Priority" htmlFor="priority" required error={errors.priority?.message}>
                 <Select id="priority" invalid={Boolean(errors.priority)} {...register('priority')}>
@@ -203,28 +188,40 @@ export function ApplicationFormModal({ open, onClose, application }: Application
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Workflow" htmlFor="workflow_id" required error={errors.workflow_id?.message}>
-                <Select id="workflow_id" invalid={Boolean(errors.workflow_id)} {...register('workflow_id')}>
-                  <option value="" disabled hidden>
-                    Select workflow…
-                  </option>
-                  {(workflows?.rows ?? []).map((workflow) => (
-                    <option key={workflow.id} value={workflow.id}>
-                      {workflow.name}
-                    </option>
-                  ))}
-                </Select>
+                <Controller
+                  name="workflow_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      id="workflow_id"
+                      options={workflowOptions || []}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select workflow..."
+                      searchPlaceholder="Search workflows..."
+                      disabled={isLoadingWorkflows}
+                      invalid={Boolean(errors.workflow_id)}
+                    />
+                  )}
+                />
               </FormField>
               <FormField label="Template" htmlFor="template_id" required error={errors.template_id?.message}>
-                <Select id="template_id" invalid={Boolean(errors.template_id)} {...register('template_id')}>
-                  <option value="" disabled hidden>
-                    Select template…
-                  </option>
-                  {(templates?.rows ?? []).map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </Select>
+                <Controller
+                  name="template_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      id="template_id"
+                      options={templateOptions || []}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select template..."
+                      searchPlaceholder="Search templates..."
+                      disabled={isLoadingTemplates}
+                      invalid={Boolean(errors.template_id)}
+                    />
+                  )}
+                />
               </FormField>
             </div>
             <FormField label="Title" htmlFor="title" required error={errors.title?.message}>

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/aeroxe/approval-flow/internal/config"
@@ -40,7 +42,9 @@ func (h *WorkflowHandler) GetWorkflows(ctx context.Context, c *app.RequestContex
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.Limit <= 0 { req.Limit = 10 }
+	if req.Limit <= 0 {
+		req.Limit = 10
+	}
 	workflows, err := h.svc.GetAllWorkflows(ctx, req.Limit, 0)
 	if err != nil {
 		h.cfg.Error("failed to get workflows", zap.Error(err))
@@ -48,6 +52,29 @@ func (h *WorkflowHandler) GetWorkflows(ctx context.Context, c *app.RequestContex
 		return
 	}
 	response.Success(c, workflows)
+}
+
+// buildWorkflowSteps converts validated request steps into domain steps.
+func buildWorkflowSteps(input []validation.WorkflowStepInput) []domain.WorkflowStep {
+	steps := make([]domain.WorkflowStep, 0, len(input))
+	for _, s := range input {
+		var approverID *uuid.UUID
+		if s.ApproverID != "" {
+			if id, err := uuid.Parse(s.ApproverID); err == nil {
+				approverID = &id
+			}
+		}
+		steps = append(steps, domain.WorkflowStep{
+			Name:         s.Name,
+			StepOrder:    s.StepOrder,
+			ApproverRole: s.ApproverRole,
+			ApproverID:   approverID,
+			Action:       s.Action,
+			TimeoutHours: s.TimeoutHours,
+			IsRequired:   s.IsRequired,
+		})
+	}
+	return steps
 }
 
 // GetWorkflow gets a single workflow by ID
@@ -94,13 +121,26 @@ func (h *WorkflowHandler) CreateWorkflow(ctx context.Context, c *app.RequestCont
 		return
 	}
 	var description *string
-	if req.Description != "" { description = &req.Description }
+	if req.Description != "" {
+		description = &req.Description
+	}
 	wf := &domain.Workflow{Name: req.Name, Description: description, Category: req.Category, IsActive: req.IsActive}
-	if err := h.svc.CreateWorkflow(ctx, wf); err != nil {
+
+	steps := buildWorkflowSteps(req.Steps)
+	if err := h.svc.CreateWorkflowWithSteps(ctx, wf, steps); err != nil {
 		h.cfg.Error("failed to create workflow", zap.Error(err))
 		response.Error(c, http.StatusConflict, err.Error())
 		return
 	}
+
+	// Mirror the steps into the JSON column so list/get responses expose them
+	// without an extra join.
+	if len(steps) > 0 {
+		if raw, err := json.Marshal(steps); err == nil {
+			wf.Steps = raw
+		}
+	}
+
 	response.Success(c, wf)
 }
 
@@ -120,7 +160,38 @@ func (h *WorkflowHandler) UpdateWorkflow(ctx context.Context, c *app.RequestCont
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	response.Success(c, map[string]string{"message": "workflow updated"})
+	wf, err := h.svc.GetWorkflow(ctx, req.WorkflowID)
+	if err != nil {
+		response.Error(c, http.StatusNotFound, "workflow not found")
+		return
+	}
+
+	if req.Name != "" {
+		wf.Name = req.Name
+	}
+	if req.Description != "" {
+		wf.Description = &req.Description
+	}
+	if req.Category != "" {
+		wf.Category = req.Category
+	}
+	if req.IsActive != nil {
+		wf.IsActive = *req.IsActive
+	}
+
+	steps := buildWorkflowSteps(req.Steps)
+	if err := h.svc.UpdateWorkflow(ctx, wf, steps); err != nil {
+		h.cfg.Error("failed to update workflow", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to update workflow")
+		return
+	}
+	if len(steps) > 0 {
+		if raw, err := json.Marshal(steps); err == nil {
+			wf.Steps = raw
+		}
+	}
+
+	response.Success(c, wf)
 }
 
 // DeleteWorkflow deletes a workflow
@@ -137,6 +208,11 @@ func (h *WorkflowHandler) DeleteWorkflow(ctx context.Context, c *app.RequestCont
 	var req validation.DeleteWorkflowRequest
 	if err := c.BindAndValidate(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.svc.DeleteWorkflow(ctx, req.WorkflowID); err != nil {
+		h.cfg.Error("failed to delete workflow", zap.Error(err))
+		response.Error(c, http.StatusInternalServerError, "failed to delete workflow")
 		return
 	}
 	response.Success(c, map[string]string{"message": "workflow deleted"})

@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 )
 
 // Base contains common fields for all entities
 type Base struct {
-	ID        uuid.UUID              `gorm:"type:uuid;primary_key" json:"id"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
-	DeletedAt soft_delete.DeletedAt  `gorm:"index" json:"deleted_at,omitempty"`
+	ID        uuid.UUID             `gorm:"type:uuid;primary_key" json:"id"`
+	CreatedAt time.Time             `json:"created_at"`
+	UpdatedAt time.Time             `json:"updated_at"`
+	DeletedAt soft_delete.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 // BeforeCreate generates UUID v7 before creating a record

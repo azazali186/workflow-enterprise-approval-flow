@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useWorkflowMutations } from '@/features/workflows/hooks/use-workflows'
 import { safeJsonParse } from '@/utils/format'
 import type { Workflow } from '@/types/models'
+import type { WorkflowStepPayload } from '@/services/workflows.service'
 
 const schema = z
   .object({
@@ -23,8 +24,21 @@ const schema = z
   .superRefine((values, ctx) => {
     if (values.steps_json?.trim()) {
       const parsed = safeJsonParse(values.steps_json)
-      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        ctx.addIssue({ code: 'custom', path: ['steps_json'], message: 'Must be a valid JSON object or array' })
+      const valid =
+        Array.isArray(parsed) &&
+        parsed.every(
+          (step) =>
+            typeof step === 'object' &&
+            step !== null &&
+            typeof (step as { name?: unknown }).name === 'string' &&
+            ((step as { name?: string }).name ?? '').length > 0,
+        )
+      if (!valid) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['steps_json'],
+          message: 'Must be a JSON array of steps, e.g. [{"name":"Manager review","approver_role":"manager"}]',
+        })
       }
     }
   })
@@ -72,12 +86,16 @@ export function WorkflowFormModal({ open, onClose, workflow }: WorkflowFormModal
 
   const onSubmit = async (values: FormValues) => {
     try {
+      const steps = values.steps_json?.trim()
+        ? (safeJsonParse(values.steps_json) as WorkflowStepPayload[])
+        : undefined
       if (isCreate) {
         await createWorkflow.mutateAsync({
           name: values.name,
           description: values.description || undefined,
           category: values.category,
           is_active: values.is_active,
+          steps,
         })
       } else {
         await updateWorkflow.mutateAsync({
@@ -86,6 +104,7 @@ export function WorkflowFormModal({ open, onClose, workflow }: WorkflowFormModal
           description: values.description || undefined,
           category: values.category,
           is_active: values.is_active,
+          steps,
         })
       }
       onClose()
@@ -128,13 +147,13 @@ export function WorkflowFormModal({ open, onClose, workflow }: WorkflowFormModal
           label="Steps (JSON)"
           htmlFor="steps_json"
           error={errors.steps_json?.message}
-          hint="Advanced: define workflow steps as a JSON object."
+          hint="Advanced: define workflow steps as a JSON array. Each step needs a name; approver_id or approver_role routes it."
         >
           <Textarea
             id="steps_json"
             rows={5}
             className="font-mono text-xs"
-            placeholder='[{"name": "Manager review", "step_order": 1}]'
+            placeholder='[{"name": "Manager review", "step_order": 1, "approver_role": "manager", "timeout_hours": 48}]'
             invalid={Boolean(errors.steps_json)}
             {...register('steps_json')}
           />

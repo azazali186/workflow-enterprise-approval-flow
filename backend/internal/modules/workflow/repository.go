@@ -61,6 +61,12 @@ func (r *Repository) GetStepsByWorkflowID(ctx context.Context, workflowID string
 	return steps, err
 }
 
+// DeleteStepsByWorkflowID removes all steps of a workflow (used when a
+// workflow's steps are replaced on update).
+func (r *Repository) DeleteStepsByWorkflowID(ctx context.Context, workflowID string) error {
+	return r.db.WithContext(ctx).Where("workflow_id = ?", workflowID).Delete(&domain.WorkflowStep{}).Error
+}
+
 // ListWithPagination returns paginated workflows with filters and sorting
 func (r *Repository) ListWithPagination(
 	ctx context.Context,

@@ -7,10 +7,17 @@ import (
 	"time"
 
 	"github.com/aeroxe/approval-flow/internal/config"
+	"github.com/aeroxe/approval-flow/internal/domain"
+	"github.com/aeroxe/approval-flow/internal/modules/approval"
+	"github.com/aeroxe/approval-flow/internal/modules/escalation"
+	"github.com/aeroxe/approval-flow/internal/modules/notification"
+	"github.com/aeroxe/approval-flow/internal/modules/rbac"
+	"github.com/aeroxe/approval-flow/internal/modules/workflow"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
-	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
 	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
+	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )
@@ -25,41 +32,63 @@ const (
 
 // Saga statuses
 const (
-	SagaStatusStarted   = "started"
-	SagaStatusRunning   = "running"
-	SagaStatusCompleted = "completed"
-	SagaStatusFailed    = "failed"
+	SagaStatusStarted     = "started"
+	SagaStatusRunning     = "running"
+	SagaStatusCompleted   = "completed"
+	SagaStatusFailed      = "failed"
 	SagaStatusCompensated = "compensated"
 )
 
 // SagaState represents the state of a saga
 type SagaState struct {
-	SagaID    string                 `json:"saga_id"`
-	SagaType  string                 `json:"saga_type"`
-	Status    string                 `json:"status"`
-	Step      int                    `json:"step"`
-	TotalSteps int                   `json:"total_steps"`
-	Data      map[string]interface{} `json:"data"`
-	Error     string                 `json:"error,omitempty"`
-	CreatedAt string                 `json:"created_at"`
-	UpdatedAt string                 `json:"updated_at"`
+	SagaID     string                 `json:"saga_id"`
+	SagaType   string                 `json:"saga_type"`
+	Status     string                 `json:"status"`
+	Step       int                    `json:"step"`
+	TotalSteps int                    `json:"total_steps"`
+	Data       map[string]interface{} `json:"data"`
+	Error      string                 `json:"error,omitempty"`
+	CreatedAt  string                 `json:"created_at"`
+	UpdatedAt  string                 `json:"updated_at"`
 }
 
-// Orchestrator manages saga execution
+// Orchestrator manages saga execution and the SLA escalation monitor.
 type Orchestrator struct {
-	nats   *messaging.NATS
-	cache  *cache.Redis
-	hub    *websocket.Hub
-	logger *config.Config
+	nats            *messaging.NATS
+	cache           *cache.Redis
+	hub             *websocket.Hub
+	logger          *config.Config
+	escalationSvc   *escalation.Service
+	notificationSvc *notification.Service
+	approvalSvc     *approval.Service
+	workflowSvc     *workflow.Service
+	rbacRepo        *rbac.Repository
 }
 
-// NewOrchestrator creates a new saga orchestrator
-func NewOrchestrator(nats *messaging.NATS, cache *cache.Redis, hub *websocket.Hub, cfg *config.Config) *Orchestrator {
+// NewOrchestrator creates a new saga orchestrator. The extra services power
+// the SLA escalation monitor, which turns overdue approvals into real
+// escalations.
+func NewOrchestrator(
+	nats *messaging.NATS,
+	cache *cache.Redis,
+	hub *websocket.Hub,
+	cfg *config.Config,
+	escalationSvc *escalation.Service,
+	notificationSvc *notification.Service,
+	approvalSvc *approval.Service,
+	workflowSvc *workflow.Service,
+	rbacRepo *rbac.Repository,
+) *Orchestrator {
 	return &Orchestrator{
-		nats:   nats,
-		cache:  cache,
-		hub:    hub,
-		logger: cfg,
+		nats:            nats,
+		cache:           cache,
+		hub:             hub,
+		logger:          cfg,
+		escalationSvc:   escalationSvc,
+		notificationSvc: notificationSvc,
+		approvalSvc:     approvalSvc,
+		workflowSvc:     workflowSvc,
+		rbacRepo:        rbacRepo,
 	}
 }
 
@@ -291,9 +320,9 @@ func (o *Orchestrator) handleApprovalCreated(msg *nats.Msg) {
 		approverID, _ := data["approver_id"].(string)
 		if approverID != "" {
 			o.hub.SendToUser(approverID, "approval_needed", map[string]interface{}{
-				"approval_id":   approvalID,
+				"approval_id":    approvalID,
 				"application_id": applicationID,
-				"status":        "pending",
+				"status":         "pending",
 			})
 		}
 	}
@@ -488,11 +517,76 @@ func (o *Orchestrator) startSLAMonitor(ctx context.Context) {
 	}
 }
 
-// checkOverdueApprovals checks for approvals that have exceeded their SLA
+// checkOverdueApprovals escalates every pending approval whose step SLA has
+// expired. Each breach creates an Escalation record, bumps the approval's
+// escalation level, and notifies the escalation target.
 func (o *Orchestrator) checkOverdueApprovals(ctx context.Context) {
-	// This would query the database for overdue approvals
-	// For now, we log that the SLA monitor is running
-	o.logger.Debug("SLA monitor: checking for overdue approvals")
+	if o.approvalSvc == nil || o.escalationSvc == nil {
+		return
+	}
+	overdue, err := o.approvalSvc.Repo.ListOverduePending(ctx, time.Now())
+	if err != nil {
+		o.logger.Error("SLA monitor: failed to query overdue approvals", zap.Error(err))
+		return
+	}
+	for i := range overdue {
+		o.escalateOverdue(ctx, &overdue[i])
+	}
+}
+
+// escalateOverdue creates the escalation for a single overdue approval.
+func (o *Orchestrator) escalateOverdue(ctx context.Context, a *domain.Approval) {
+	target, err := o.resolveEscalationTarget(ctx, a)
+	if err != nil {
+		o.logger.Error("SLA monitor: failed to resolve escalation target",
+			zap.String("approval_id", a.ID.String()), zap.Error(err))
+		return
+	}
+
+	level := a.EscalationLevel + 1
+	reason := "approval exceeded its SLA (no decision within the step timeout)"
+	if err := o.escalationSvc.Escalate(ctx, a.ID.String(), level, target, reason); err != nil {
+		o.logger.Error("SLA monitor: escalation failed",
+			zap.String("approval_id", a.ID.String()), zap.Error(err))
+		return
+	}
+
+	a.EscalationLevel = level
+	if err := o.approvalSvc.Repo.Update(ctx, a); err != nil {
+		o.logger.Error("SLA monitor: failed to update escalation level", zap.Error(err))
+	}
+
+	if o.notificationSvc != nil {
+		now := time.Now()
+		n := &domain.Notification{
+			UserID:  target,
+			Type:    "escalation",
+			Channel: "in_app",
+			Title:   "Approval escalated (SLA)",
+			Body:    fmt.Sprintf("Approval %s was escalated to level %d.", a.ID.String(), level),
+			SentAt:  &now,
+		}
+		if err := o.notificationSvc.SendNotification(ctx, n); err != nil {
+			o.logger.Error("SLA monitor: failed to notify escalation target", zap.Error(err))
+		}
+	}
+
+	o.logger.Warn("SLA monitor: approval escalated",
+		zap.String("approval_id", a.ID.String()),
+		zap.Int("level", level),
+	)
+}
+
+// resolveEscalationTarget picks an active admin as the escalation owner,
+// falling back to the approval's own approver.
+func (o *Orchestrator) resolveEscalationTarget(ctx context.Context, a *domain.Approval) (uuid.UUID, error) {
+	if o.rbacRepo != nil {
+		admins, err := o.rbacRepo.GetUsersByRole(ctx, "admin")
+		if err == nil && len(admins) > 0 {
+			return admins[0].ID, nil
+		}
+	}
+	return a.ApproverID, nil
 }
 
 // ==================== Helper: Generate Saga ID ====================

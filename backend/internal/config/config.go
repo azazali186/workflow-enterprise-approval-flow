@@ -59,6 +59,13 @@ type Config struct {
 	CORSAllowedOrigins []string
 	// SwaggerHost overrides the host advertised in the Swagger docs.
 	SwaggerHost string
+	// SMTP settings for email notifications. If SMTPHost is empty, email
+	// delivery is skipped (in-app notifications still work).
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUser     string
+	SMTPPassword string
+	SMTPFrom     string
 	*zap.Logger
 }
 
@@ -88,6 +95,11 @@ func Load() *Config {
 		AdminPassword:    getEnv("ADMIN_PASSWORD", ""),
 		MigrationsPath:   getEnv("MIGRATIONS_PATH", "./migrations"),
 		SwaggerHost:      getEnv("SWAGGER_HOST", ""),
+		SMTPHost:         getEnv("SMTP_HOST", ""),
+		SMTPPort:         getEnvAsInt("SMTP_PORT", 587),
+		SMTPUser:         getEnv("SMTP_USER", ""),
+		SMTPPassword:     getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:         getEnv("SMTP_FROM", "no-reply@approval-flow.local"),
 	}
 
 	// Parse comma-separated CORS allow-list

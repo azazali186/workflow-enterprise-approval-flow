@@ -52,6 +52,8 @@ type Server struct {
 	hub      *wsHub.Hub
 	tokenSvc *auth.TokenService
 	rbacSvc  *rbac.Service
+	// orchestrator runs the saga state machines and the SLA escalation monitor.
+	orchestrator *saga.Orchestrator
 	// ctx/cancel govern background workers (outbox processor, saga orchestrator)
 	// so they stop cleanly during shutdown.
 	ctx    context.Context
@@ -152,11 +154,17 @@ func (s *Server) registerRoutes() {
 	approvalSvc := approval.NewService(approvalRepo, s.redis, s.nats, s.hub, s.cfg)
 	applicationSvc := application.NewService(applicationRepo, s.redis, s.nats, s.hub, approvalSvc, s.cfg)
 	workflowSvc := workflow.NewService(workflowRepo, s.redis, s.nats, s.hub, s.cfg)
-	notificationSvc := notification.NewService(notificationRepo, s.redis, s.nats, s.cfg)
+	notificationSvc := notification.NewService(notificationRepo, s.redis, s.nats, s.db.Conn, s.cfg)
 	templateSvc := template.NewService(templateRepo, s.redis, s.nats, s.cfg)
 	escalationSvc := escalation.NewService(escalationRepo, s.nats, s.hub, s.cfg)
 	analyticsSvc := analytics.NewService(analyticsRepo, s.cfg)
 	reportSvc := report.NewService(reportRepo, s.redis, s.cfg)
+
+	// Wire the workflow engine: submission routes to the first approval step,
+	// and each decision advances the application through its steps.
+	engine := newWorkflowEngine(applicationSvc, approvalSvc, workflowSvc, escalationSvc, notificationSvc, s.rbacSvc.Repo, s.cfg)
+	applicationSvc.SetOnSubmitted(engine.onSubmitted)
+	approvalSvc.SetAdvanceHandler(engine.onDecided)
 
 	// Initialize audit & login log services
 	loginLogRepo := login_log.NewRepository(s.db.Conn)
@@ -243,6 +251,10 @@ func (s *Server) registerRoutes() {
 	v1.POST("/profile", authHandler.GetProfile)
 	v1.POST("/logout", authHandler.Logout)
 	v1.POST("/change-password", authHandler.ChangePassword)
+
+	// ==================== Dropdowns ====================
+	dropdownHandler := handler.NewDropdownHandler(s.db.Conn, s.cfg)
+	v1.POST("/dropdowns", dropdownHandler.ListDropdowns)
 
 	// ==================== RBAC Admin ====================
 	admin := v1.Group("/admin")
@@ -337,6 +349,10 @@ func (s *Server) registerRoutes() {
 
 	// ==================== WebSocket (Authenticated) ====================
 	s.engine.POST("/ws", s.handleWebSocket)
+
+	// The saga orchestrator (incl. SLA escalation monitor) needs the module
+	// services built above, so it is constructed here after routing is done.
+	s.orchestrator = saga.NewOrchestrator(s.nats, s.redis, s.hub, s.cfg, escalationSvc, notificationSvc, approvalSvc, workflowSvc, s.rbacSvc.Repo)
 }
 
 func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
@@ -451,9 +467,8 @@ func (s *Server) Start() error {
 	outbox.StartProcessor(s.ctx)
 	s.cfg.Info("outbox processor started")
 
-	// Start Saga Orchestrator
-	orchestrator := saga.NewOrchestrator(s.nats, s.redis, s.hub, s.cfg)
-	if err := orchestrator.Start(s.ctx); err != nil {
+	// Start Saga Orchestrator (including the SLA escalation monitor)
+	if err := s.orchestrator.Start(s.ctx); err != nil {
 		s.cfg.Error("failed to start saga orchestrator", zap.Error(err))
 	} else {
 		s.cfg.Info("saga orchestrator started")

@@ -3,24 +3,29 @@ package notification
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
+	"github.com/aeroxe/approval-flow/internal/pkg/email"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
 	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type Service struct {
-	Repo   *Repository
-	Cache  *cache.Redis
-	NATS   *messaging.NATS
-	Logger *config.Config
+	Repo        *Repository
+	Cache       *cache.Redis
+	NATS        *messaging.NATS
+	Logger      *config.Config
+	db          *gorm.DB
+	emailSender *email.Sender
 }
 
-func NewService(repo *Repository, cache *cache.Redis, nats *messaging.NATS, cfg *config.Config) *Service {
-	return &Service{Repo: repo, Cache: cache, NATS: nats, Logger: cfg}
+func NewService(repo *Repository, cache *cache.Redis, nats *messaging.NATS, db *gorm.DB, cfg *config.Config) *Service {
+	return &Service{Repo: repo, Cache: cache, NATS: nats, Logger: cfg, db: db, emailSender: email.New(cfg)}
 }
 
 func (s *Service) SendNotification(ctx context.Context, notification *domain.Notification) error {
@@ -28,12 +33,47 @@ func (s *Service) SendNotification(ctx context.Context, notification *domain.Not
 		return fmt.Errorf("failed to create notification: %w", err)
 	}
 
-	s.NATS.Publish("notification.created", []byte(fmt.Sprintf(`{"notification_id":"%s"}`, notification.ID)))
+	// Include the recipient so the saga can broadcast to the right user.
+	payload := fmt.Sprintf(`{"notification_id":"%s","user_id":"%s","type":"%s"}`,
+		notification.ID, notification.UserID, notification.Type)
+	s.NATS.Publish("notification.created", []byte(payload))
+
+	if notification.Channel == "email" || strings.Contains(notification.Channel, "email") {
+		s.deliverEmail(ctx, notification)
+	}
+
 	s.Logger.Info("notification created",
 		zap.String("notification_id", notification.ID.String()),
 		zap.String("user_id", notification.UserID.String()),
+		zap.String("channel", notification.Channel),
 	)
 	return nil
+}
+
+// deliverEmail resolves the recipient's email and sends it. Email delivery is
+// best-effort: an unconfigured SMTP server or a failed send is logged, never
+// fatal to the request (the in-app row is already persisted).
+func (s *Service) deliverEmail(ctx context.Context, notification *domain.Notification) {
+	if s.db == nil || s.emailSender == nil || !s.emailSender.Configured() {
+		s.Logger.Warn("email notification skipped: SMTP not configured",
+			zap.String("notification_id", notification.ID.String()),
+		)
+		return
+	}
+
+	var user domain.User
+	if err := s.db.WithContext(ctx).First(&user, "id = ?", notification.UserID).Error; err != nil {
+		s.Logger.Error("email notification skipped: recipient not found", zap.Error(err))
+		return
+	}
+
+	if err := s.emailSender.Send(user.Email, notification.Title, notification.Body); err != nil {
+		s.Logger.Error("email notification failed",
+			zap.String("notification_id", notification.ID.String()),
+			zap.String("recipient", user.Email),
+			zap.Error(err),
+		)
+	}
 }
 
 func (s *Service) GetUserNotifications(ctx context.Context, userID string, limit, offset int) ([]domain.Notification, error) {
@@ -85,10 +125,10 @@ func (s *Service) ListNotifications(
 
 	// Build pagination response
 	paginationResp := &pagination.PaginationResponse{
-		NextCursor:    nextCursor,
-		HasMore:       hasMore,
-		TotalCount:    totalCount,
-		PageSize:      limit,
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+		TotalCount: totalCount,
+		PageSize:   limit,
 	}
 
 	// Get summary

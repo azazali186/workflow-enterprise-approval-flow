@@ -7,7 +7,6 @@
 *.so
 *.dylib
 
-.github/
 
 # Test binary
 *.test

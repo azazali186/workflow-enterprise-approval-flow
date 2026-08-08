@@ -12,6 +12,7 @@ type Application struct {
 	ApplicantID uuid.UUID  `gorm:"type:uuid;index" json:"applicant_id"`
 	WorkflowID  uuid.UUID  `gorm:"type:uuid;index" json:"workflow_id"`
 	TemplateID  uuid.UUID  `gorm:"type:uuid;index" json:"template_id"`
+	Title       string     `gorm:"size:255;index" json:"title"`
 	Status      string     `gorm:"size:50;index;default:draft" json:"status"`
 	Priority    string     `gorm:"size:50;default:medium" json:"priority"`
 	SubmittedAt *time.Time `json:"submitted_at,omitempty"`

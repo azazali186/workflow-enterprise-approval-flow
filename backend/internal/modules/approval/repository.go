@@ -46,6 +46,21 @@ func (r *Repository) Update(ctx context.Context, approval *domain.Approval) erro
 	return r.db.WithContext(ctx).Save(approval).Error
 }
 
+// ListOverduePending returns pending approvals whose step SLA (timeout_hours
+// from the workflow_steps table) has expired. Used by the SLA escalation
+// monitor to trigger escalations.
+func (r *Repository) ListOverduePending(ctx context.Context, now time.Time) ([]domain.Approval, error) {
+	var approvals []domain.Approval
+	err := r.db.WithContext(ctx).
+		Model(&domain.Approval{}).
+		Joins("JOIN workflow_steps ON workflow_steps.id = approvals.workflow_step_id").
+		Where("approvals.status = ?", "pending").
+		Where("workflow_steps.timeout_hours > 0").
+		Where("approvals.created_at + make_interval(hours => workflow_steps.timeout_hours) < ?", now).
+		Find(&approvals).Error
+	return approvals, err
+}
+
 func (r *Repository) Delete(ctx context.Context, id string) error {
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&domain.Approval{}).Where("id = ?", id).Update("deleted_at", &now).Error

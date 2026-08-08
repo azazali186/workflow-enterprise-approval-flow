@@ -39,6 +39,7 @@ export interface Application extends EntityBase {
   applicant_id: string
   workflow_id: string
   template_id: string
+  title?: string
   status: string
   priority: string
   submitted_at?: string | null

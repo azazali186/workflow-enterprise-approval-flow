@@ -38,6 +38,23 @@ func (s *Service) CreateWorkflow(ctx context.Context, workflow *domain.Workflow)
 	return nil
 }
 
+// CreateWorkflowWithSteps creates a workflow and its approval steps together.
+// If any step fails to persist, the workflow is rolled back so a partial
+// failure never leaves an orphan definition.
+func (s *Service) CreateWorkflowWithSteps(ctx context.Context, workflow *domain.Workflow, steps []domain.WorkflowStep) error {
+	if err := s.CreateWorkflow(ctx, workflow); err != nil {
+		return err
+	}
+	for i := range steps {
+		steps[i].WorkflowID = workflow.ID
+		if err := s.Repo.CreateStep(ctx, &steps[i]); err != nil {
+			_ = s.Repo.Delete(ctx, workflow.ID.String())
+			return fmt.Errorf("failed to create workflow step: %w", err)
+		}
+	}
+	return nil
+}
+
 func (s *Service) GetWorkflow(ctx context.Context, id string) (*domain.Workflow, error) {
 	cacheKey := fmt.Sprintf("workflow:%s", id)
 	if cached, err := s.Cache.Get(ctx, cacheKey); err == nil && cached != "" {
@@ -64,6 +81,43 @@ func (s *Service) GetWorkflowsByCategory(ctx context.Context, category string) (
 
 func (s *Service) GetAllWorkflows(ctx context.Context, limit, offset int) ([]domain.Workflow, error) {
 	return s.Repo.GetAll(ctx, limit, offset)
+}
+
+// GetWorkflowSteps returns the ordered approval steps of a workflow.
+func (s *Service) GetWorkflowSteps(ctx context.Context, workflowID string) ([]domain.WorkflowStep, error) {
+	return s.Repo.GetStepsByWorkflowID(ctx, workflowID)
+}
+
+// UpdateWorkflow updates a workflow and, when steps are provided, replaces its
+// approval steps wholesale.
+func (s *Service) UpdateWorkflow(ctx context.Context, workflow *domain.Workflow, steps []domain.WorkflowStep) error {
+	if err := s.Repo.Update(ctx, workflow); err != nil {
+		return fmt.Errorf("failed to update workflow: %w", err)
+	}
+	if steps != nil {
+		if err := s.Repo.DeleteStepsByWorkflowID(ctx, workflow.ID.String()); err != nil {
+			return fmt.Errorf("failed to clear workflow steps: %w", err)
+		}
+		for i := range steps {
+			steps[i].WorkflowID = workflow.ID
+			if err := s.Repo.CreateStep(ctx, &steps[i]); err != nil {
+				return fmt.Errorf("failed to replace workflow steps: %w", err)
+			}
+		}
+	}
+	s.Cache.Delete(ctx, fmt.Sprintf("workflow:%s", workflow.ID))
+	s.Logger.Info("workflow updated", zap.String("workflow_id", workflow.ID.String()))
+	return nil
+}
+
+// DeleteWorkflow soft-deletes a workflow.
+func (s *Service) DeleteWorkflow(ctx context.Context, id string) error {
+	if err := s.Repo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("failed to delete workflow: %w", err)
+	}
+	s.Cache.Delete(ctx, fmt.Sprintf("workflow:%s", id))
+	s.Logger.Info("workflow deleted", zap.String("workflow_id", id))
+	return nil
 }
 
 func (s *Service) AddWorkflowStep(ctx context.Context, step *domain.WorkflowStep) error {
@@ -107,10 +161,10 @@ func (s *Service) ListWorkflows(
 
 	// Build pagination response
 	paginationResp := &pagination.PaginationResponse{
-		NextCursor:    nextCursor,
-		HasMore:       hasMore,
-		TotalCount:    totalCount,
-		PageSize:      limit,
+		NextCursor: nextCursor,
+		HasMore:    hasMore,
+		TotalCount: totalCount,
+		PageSize:   limit,
 	}
 
 	// Get summary
