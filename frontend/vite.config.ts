@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
+      include: ['src/**/*.test.{ts,tsx}'],
       setupFiles: ['./src/test/setup.ts'],
       css: true,
       reporters: ['verbose'],
@@ -51,7 +52,7 @@ export default defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
         include: ['src/**/*.{ts,tsx}'],
-        exclude: ['src/**/*.d.ts', 'src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
+        exclude: ['src/**/*.d.ts', 'src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}', 'tests/**/*'],
       },
     },
   }
