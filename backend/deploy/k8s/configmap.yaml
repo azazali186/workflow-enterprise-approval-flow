@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: approval-flow-config
+  namespace: approval-flow
+data:
+  # Production runtime configuration (non-secret values).
+  ENV: "production"
+  LOG_FILE_PATH: ""            # stdout-only logging for container logs
+  LOG_LEVEL: "info"
+  SERVER_PORT: "8080"
+  # NOTE: PostgreSQL, Redis and NATS are expected to be provisioned out of
+  # band (managed services or separate manifests). DATABASE_URL comes from
+  # secret.yaml; the hostnames below must resolve in-cluster or point at
+  # managed endpoints (e.g. RDS / ElastiCache).
+  REDIS_URL: "redis://redis:6379"
+  NATS_URL: "nats://nats:4222"
+  WS_MAX_CONNECTIONS: "1000"
+  WS_PING_INTERVAL: "30"
+  RATE_LIMIT_RPS: "100"
+  RATE_LIMIT_WINDOW: "60"
+  # Replace with the real frontend origins.
+  CORS_ALLOWED_ORIGINS: "https://app.example.com"
+  MIGRATIONS_PATH: "/app/migrations"

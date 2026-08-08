@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: approval-flow
+  labels:
+    app.kubernetes.io/name: approval-flow
+    app.kubernetes.io/part-of: aeroxe

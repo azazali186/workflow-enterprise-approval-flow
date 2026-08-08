@@ -1,0 +1,25 @@
+# VCS
+.git
+.gitignore
+.github
+
+# Build artifacts
+bin/
+*.exe
+*.test
+coverage.out
+coverage.html
+routes.json
+
+# Local logs & env
+logs/
+.env
+.env.*
+!.env.example
+
+# Editor/OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

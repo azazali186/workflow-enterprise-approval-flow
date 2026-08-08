@@ -378,34 +378,36 @@ go tool cover -html=coverage.out
 
 ### Kubernetes
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: approval-flow
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: approval-flow
-  template:
-    metadata:
-      labels:
-        app: approval-flow
-    spec:
-      containers:
-      - name: app
-        image: aeroxe/approval-flow:latest
-        ports:
-        - containerPort: 8080
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+Production manifests live in [`backend/deploy/k8s`](backend/deploy/k8s): namespace,
+ConfigMap, Secret (placeholders — replace or use ExternalSecrets), a hardened
+Deployment (non-root UID 10001, read-only rootfs, dropped capabilities,
+liveness/readiness/startup probes, resource limits), a ClusterIP Service, and
+an nginx Ingress with TLS.
+
+```bash
+# 1. Replace the placeholders in secret.yaml (or use a secret store).
+#    Production startup rejects placeholder secrets (CHANGE_ME, etc.) and
+#    short JWT secrets.
+# 2. Provision PostgreSQL, Redis and NATS out of band (managed services or
+#    separate manifests) and point DATABASE_URL / REDIS_URL / NATS_URL at them.
+# 3. Create the ingress TLS secret (or enable the cert-manager annotation).
+# 4. Apply everything
+kubectl apply -k backend/deploy/k8s
 ```
+
+The image (`ghcr.io/aeroxe/approval-flow`) is built and pushed by the CI
+pipeline on `main`; pin the exact tag it produces in `deployment.yaml`.
+Replicas run golang-migrate concurrently; the postgres driver serializes
+migrations with an advisory lock, so startup is safe with multiple replicas.
+
+> The manifests deploy only the application — PostgreSQL, Redis and NATS are
+> intentionally not included (teams typically use managed services). The app
+> will not become ready until those dependencies are reachable at the
+> configured URLs.
+
+> The WebSocket endpoint (`/ws`) requires an `Authorization: Bearer` token, so
+> clients connecting from outside the cluster must route through the same
+> Ingress (which terminates TLS).
 
 ---
 

@@ -1,0 +1,23 @@
+# Build artifacts
+bin/
+*.exe
+*.test
+coverage.out
+coverage.html
+routes.json
+
+# Logs
+logs/
+*.log
+
+# Local environment (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Editor/OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: approval-flow
+  namespace: approval-flow
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  # The referenced TLS secret must exist before the ingress becomes ready:
+  # either create it manually or enable cert-manager by uncommenting the
+  # cluster-issuer annotation above.
+  tls:
+    - hosts:
+        - api.example.com
+      secretName: approval-flow-tls
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: approval-flow
+                port:
+                  name: http

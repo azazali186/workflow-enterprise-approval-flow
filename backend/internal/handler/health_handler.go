@@ -9,7 +9,6 @@ import (
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
 	"github.com/aeroxe/approval-flow/internal/pkg/database"
 	"github.com/aeroxe/approval-flow/internal/pkg/messaging"
-	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -191,19 +190,6 @@ func (h *HealthHandler) Version(ctx context.Context, c *app.RequestContext) {
 		GoVersion: runtime.Version(),
 		BuildTime: config.BuildTime,
 	})
-}
-
-// Metrics godoc
-// @Summary      Prometheus metrics
-// @Description  Returns Prometheus-style metrics
-// @Tags         Health
-// @Accept       json
-// @Produce      json
-// @Success      200  {object}  response.Response{data=map[string]interface{}}
-// @Router       /metrics [post]
-func (h *HealthHandler) Metrics(ctx context.Context, c *app.RequestContext) {
-	metrics := middleware.GetPrometheusMetrics()
-	response.Success(c, metrics.ToJSON())
 }
 
 // ==================== Types ====================

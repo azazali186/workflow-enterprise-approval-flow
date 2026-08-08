@@ -36,10 +36,14 @@ func DefaultCORSConfig() *CORSConfig {
 }
 
 // NewCORSConfig builds a CORS configuration from the app config.
+// An empty or nil allow-list falls back to "*" (development default).
 // A wildcard origin ("*") disables credentials; an explicit allow-list enables them.
 func NewCORSConfig(cfg *config.Config) *CORSConfig {
 	c := DefaultCORSConfig()
 	c.AllowOrigins = cfg.CORSAllowedOrigins
+	if len(c.AllowOrigins) == 0 {
+		c.AllowOrigins = []string{"*"}
+	}
 
 	hasWildcard := false
 	for _, origin := range c.AllowOrigins {

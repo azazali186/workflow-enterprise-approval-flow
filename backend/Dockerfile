@@ -25,7 +25,8 @@ FROM alpine:3.22
 
 RUN apk --no-cache add ca-certificates tzdata \
     && addgroup -S app \
-    && adduser -S app -G app
+    # Pin a fixed UID so Kubernetes securityContext (runAsUser) matches exactly.
+    && adduser -S -G app -u 10001 app
 
 WORKDIR /app
 

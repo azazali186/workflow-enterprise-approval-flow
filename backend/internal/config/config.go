@@ -134,6 +134,9 @@ func (c *Config) validate() {
 		if len(c.JWTSecret) < 32 {
 			log.Fatal("JWT_SECRET must be at least 32 characters in production")
 		}
+		if looksLikePlaceholder(c.JWTSecret) || looksLikePlaceholder(c.AdminPassword) {
+			log.Fatal("JWT_SECRET and ADMIN_PASSWORD must not be placeholder values in production (e.g. CHANGE_ME or your-secret)")
+		}
 		if c.DatabaseURL == DefaultDatabaseURL {
 			log.Fatal("DATABASE_URL must be explicitly configured in production")
 		}
@@ -141,6 +144,18 @@ func (c *Config) validate() {
 			log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD are required in production to bootstrap the administrator account")
 		}
 	}
+}
+
+// looksLikePlaceholder detects common placeholder values that must never be
+// used in production (a guard against misapplied templates and example envs).
+func looksLikePlaceholder(value string) bool {
+	lower := strings.ToLower(value)
+	for _, marker := range []string{"change_me", "your-secret", "change-me", "changeme"} {
+		if strings.Contains(lower, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // JWTExpiryDuration returns the parsed JWT expiry duration (default 24h).
