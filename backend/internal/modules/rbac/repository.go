@@ -161,6 +161,18 @@ func (r *Repository) ListRoles(ctx context.Context) ([]domain.Role, error) {
 	return roles, err
 }
 
+// RoleHasPermission reports whether a permission is already assigned to a role.
+// The default-role seeding loop uses this to skip existing grants instead of
+// letting Create hit a duplicate-key error, which GORM logs at ERROR level and
+// would spam every startup with false alarms.
+func (r *Repository) RoleHasPermission(ctx context.Context, roleID, permissionID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&domain.RolePermission{}).
+		Where("role_id = ? AND permission_id = ?", roleID, permissionID).
+		Count(&count).Error
+	return count > 0, err
+}
+
 // AssignPermissionToRole assigns a permission to a role
 func (r *Repository) AssignPermissionToRole(ctx context.Context, roleID, permissionID uuid.UUID) error {
 	rolePermission := domain.RolePermission{

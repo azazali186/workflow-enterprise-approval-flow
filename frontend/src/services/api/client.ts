@@ -7,10 +7,23 @@ import { storage } from '@/utils/storage'
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/+$/, '')
 
+// Upper bound for any single request. The backend's timeout middleware also
+// returns 408 after 30s, but a blackholed connection (no response, no error)
+// would otherwise hang the UI forever — this guarantees every fetch resolves.
+const DEFAULT_TIMEOUT_MS = 30_000
+
 export interface RequestOptions {
   body?: unknown
   signal?: AbortSignal
   skipAuth?: boolean
+  /** Per-request timeout override; defaults to 30s. */
+  timeoutMs?: number
+}
+
+/** Combines a caller-provided signal (if any) with a hard timeout. */
+function requestSignal(opts: RequestOptions): AbortSignal {
+  const timeout = AbortSignal.timeout(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS)
+  return opts.signal ? AbortSignal.any([opts.signal, timeout]) : timeout
 }
 
 let refreshing: Promise<string | null> | null = null
@@ -40,6 +53,7 @@ async function refreshAccessToken(): Promise<string | null> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
+        signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
       })
       const envelope = (await res.json()) as ApiEnvelope<AuthResult>
       if (!res.ok || !envelope.data?.access_token) return null
@@ -105,10 +119,24 @@ async function performEnvelope<T>(
       method: 'POST',
       headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      signal: opts.signal,
+      signal: requestSignal(opts),
     })
   } catch (err) {
-    if (err instanceof DOMException && err.name === 'AbortError') throw err
+    // Caller-initiated cancellation (React Query, component unmount) propagates
+    // untouched so callers can distinguish it from a real failure.
+    if (opts.signal?.aborted) throw err
+    // Our built-in AbortSignal.timeout aborts fetch with a DOMException named
+    // 'TimeoutError'. DOMException is NOT a subclass of Error in browsers, so
+    // check the name property directly — constructor-based checks would make
+    // this branch dead code in production while passing in Node/jsdom.
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'name' in err &&
+      (err as { name?: string }).name === 'TimeoutError'
+    ) {
+      throw new ApiError('The request timed out. Please try again.', { isNetwork: true })
+    }
     throw new ApiError('Unable to reach the server. Check your connection and try again.', {
       isNetwork: true,
     })

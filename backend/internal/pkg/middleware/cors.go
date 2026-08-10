@@ -35,15 +35,24 @@ func DefaultCORSConfig() *CORSConfig {
 	}
 }
 
+// EffectiveCORSOrigins returns the effective origin allow-list for a config:
+// an empty or nil configured list falls back to "*" (development default).
+// Both the CORS middleware and the WebSocket origin check must use this so
+// they never disagree (an empty list previously allowed API requests via the
+// middleware fallback while rejecting every browser WebSocket handshake).
+func EffectiveCORSOrigins(configured []string) []string {
+	if len(configured) == 0 {
+		return []string{"*"}
+	}
+	return configured
+}
+
 // NewCORSConfig builds a CORS configuration from the app config.
 // An empty or nil allow-list falls back to "*" (development default).
 // A wildcard origin ("*") disables credentials; an explicit allow-list enables them.
 func NewCORSConfig(cfg *config.Config) *CORSConfig {
 	c := DefaultCORSConfig()
-	c.AllowOrigins = cfg.CORSAllowedOrigins
-	if len(c.AllowOrigins) == 0 {
-		c.AllowOrigins = []string{"*"}
-	}
+	c.AllowOrigins = EffectiveCORSOrigins(cfg.CORSAllowedOrigins)
 
 	hasWildcard := false
 	for _, origin := range c.AllowOrigins {

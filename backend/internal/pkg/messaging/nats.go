@@ -95,8 +95,14 @@ func (n *NATS) Close() {
 // NATS cannot stall API responses (it only delays delivery). JetStream still
 // retains the message for the durable stream, and core-NATS subscribers (the
 // saga orchestrator) receive it live. A failed stream ack is logged.
+//
+// Note: PublishAsync must NOT be given a nats.AckWait option — it conflicts
+// with the internal context PublishAsync uses and nats.go rejects the call
+// with ErrContextAndTimeout ("nats: context and timeout can not both be set"),
+// which silently broke every event publish. The async future carries its own
+// ack wait, and the server-side JetStream ack wait defaults to 30s.
 func (n *NATS) Publish(subject string, data []byte) error {
-	future, err := n.Jet.PublishAsync(subject, data, nats.AckWait(5*time.Second))
+	future, err := n.Jet.PublishAsync(subject, data)
 	if err != nil {
 		return err
 	}

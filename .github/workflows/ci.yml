@@ -145,3 +145,81 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-web:sha-${{ github.sha }}
             ghcr.io/${{ github.repository }}-web:latest
+
+  # Definitive integration gate: boot the real docker-compose stack and drive
+  # the full browser -> nginx -> backend -> NATS -> saga -> WebSocket chain.
+  # Static analysis and unit tests cannot catch the bugs this catches (nginx
+  # config errors, handshake hijack semantics, JetStream publish failures).
+  integration:
+    name: Integration (compose boot · nginx · API · WebSocket)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, frontend-e2e]
+    env:
+      # Satisfy the compose interpolation and the backend's production config
+      # guards (JWT_SECRET >= 32 chars, no placeholder markers).
+      JWT_SECRET: ci-integration-test-secret-0123456789abcdef0123456789
+      ADMIN_EMAIL: admin@integration.test
+      ADMIN_PASSWORD: CiIntegrationAdminPw!2026
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boot the full stack
+        run: |
+          docker compose up -d --build
+          # Wait for all five services to report healthy (healthchecks in
+          # docker-compose.yml / Dockerfiles).
+          for i in $(seq 1 60); do
+            healthy=$(docker compose ps --format '{{.Status}}' | grep -c '(healthy)' || true)
+            [ "$healthy" -ge 5 ] && break
+            sleep 5
+          done
+          docker compose ps --format 'table {{.Name}}\t{{.Status}}'
+
+      - name: Smoke — SPA + security headers through nginx
+        run: |
+          curl -fsS http://localhost:3000/ | grep -q '<div id="root">'
+          curl -fsSI http://localhost:3000/ | grep -qi 'content-security-policy'
+          curl -fsSI http://localhost:3000/ | grep -qi 'x-frame-options'
+          echo SPA_AND_HEADERS_OK
+
+      - name: Smoke — backend health (direct, not proxied)
+        run: |
+          curl -fsS http://localhost:8080/health/ready | grep -q '"status"'
+          echo HEALTH_OK
+
+      - name: Smoke — login → JWT through nginx
+        run: |
+          BODY=$(curl -fsS -X POST http://localhost:3000/api/v1/auth/login \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}")
+          echo "$BODY" | grep -q access_token
+          echo LOGIN_OK
+
+      - name: Smoke — WebSocket push (standards-compliant client through nginx)
+        run: |
+          if python3 -m venv /tmp/wsvenv; then PY=/tmp/wsvenv/bin/python; else PY=python3; fi
+          "$PY" -m pip install --quiet websockets
+          "$PY" ws-push-test.py "$ADMIN_EMAIL" "$ADMIN_PASSWORD" | tee /tmp/ws-push.log
+          grep -q PASS /tmp/ws-push.log
+
+      - name: Smoke — WebSocket in a real browser (Playwright chromium)
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          node scripts/ws-smoke.mjs "$ADMIN_EMAIL" "$ADMIN_PASSWORD" | tee /tmp/ws-browser.log
+          grep -q PASS /tmp/ws-browser.log
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          docker compose logs --tail 40 approval-flow
+          docker compose logs --tail 40 web
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v
+

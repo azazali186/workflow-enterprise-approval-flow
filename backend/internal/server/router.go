@@ -446,9 +446,24 @@ func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
 	}
 
 	// Reject cross-origin browser connections not present in the allow-list.
+	// Browsers always send an Origin header (even for same-origin sockets), so
+	// this check must use the SAME effective allow-list as the CORS middleware:
+	// an unset CORS_ALLOWED_ORIGINS falls back to "*" there, and rejecting it
+	// here would block every browser connection in the default deployment.
 	origin := string(ctx.GetHeader("Origin"))
-	if origin != "" && !middleware.IsOriginAllowed(origin, s.cfg.CORSAllowedOrigins) {
+	if origin != "" && !middleware.IsOriginAllowed(origin, middleware.EffectiveCORSOrigins(s.cfg.CORSAllowedOrigins)) {
 		ctx.JSON(consts.StatusForbidden, map[string]string{"error": "origin not allowed"})
+		return
+	}
+
+	// Validate the RFC 6455 handshake shape before hijacking: a plain HTTP GET
+	// (or POST) to /ws with a valid token must not get a 101 upgrade.
+	if !strings.Contains(strings.ToLower(string(ctx.GetHeader("Upgrade"))), "websocket") {
+		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "not a websocket upgrade request"})
+		return
+	}
+	if string(ctx.GetHeader("Sec-WebSocket-Version")) != "13" {
+		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "unsupported websocket version"})
 		return
 	}
 
@@ -458,25 +473,26 @@ func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
 		clientID = userID
 	}
 	wsKey := string(ctx.GetHeader("Sec-WebSocket-Key"))
+	if wsKey == "" {
+		ctx.JSON(consts.StatusBadRequest, map[string]string{"error": "missing Sec-WebSocket-Key"})
+		return
+	}
+
+	// The 101 handshake must go through hertz's normal response pipeline: the
+	// status code and Upgrade/Connection/Sec-WebSocket-Accept headers are set on
+	// the response, hertz writes them to the wire, and only THEN does it hand
+	// the raw connection to the hijack handler for RFC 6455 frame I/O.
+	// Writing the 101 manually inside the hijack callback is broken: hertz emits
+	// the default 200 (empty body) response before invoking the callback, so the
+	// client receives "HTTP/1.1 200 OK" followed by raw 101 bytes and rejects
+	// the handshake. See the reference pattern in
+	// github.com/hertz-contrib/websocket HertzUpgrader.Upgrade.
+	ctx.SetStatusCode(consts.StatusSwitchingProtocols)
+	ctx.Response.Header.Set("Upgrade", "websocket")
+	ctx.Response.Header.Set("Connection", "Upgrade")
+	ctx.Response.Header.Set("Sec-WebSocket-Accept", computeWSAcceptKey(wsKey))
 
 	ctx.Hijack(func(conn network.Conn) {
-		if wsKey == "" {
-			conn.Close()
-			return
-		}
-
-		acceptKey := computeWSAcceptKey(wsKey)
-		response := fmt.Sprintf("HTTP/1.1 101 Switching Protocols\r\n"+
-			"Upgrade: websocket\r\n"+
-			"Connection: Upgrade\r\n"+
-			"Sec-WebSocket-Accept: %s\r\n"+
-			"\r\n", acceptKey)
-
-		if _, err := conn.Write([]byte(response)); err != nil {
-			conn.Close()
-			return
-		}
-
 		// FrameConn implements the RFC 6455 wire protocol: ping/pong keepalive,
 		// the close handshake, and read/write deadlines so dead peers are
 		// eventually evicted (important behind load balancers with idle timeouts).
@@ -492,8 +508,15 @@ func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
 
 		s.hub.Register <- client
 
-		go client.ReadPump()
+		// WritePump owns outbound frames (keepalive pings + queued pushes).
+		// ReadPump drives the connection lifecycle — it exits when the peer
+		// disconnects, times out, or errors — and must run SYNCHRONOUSLY here:
+		// hertz closes the socket as soon as the hijack handler returns
+		// (KeepHijackedConns defaults to false; see Engine.hijackConnHandler),
+		// so returning early would kill every connection moments after the
+		// handshake (browsers see close code 1006).
 		go client.WritePump()
+		client.ReadPump()
 	})
 }
 
@@ -532,31 +555,26 @@ func (s *Server) Start() error {
 func (s *Server) seedDefaultRoles() {
 	ctx := context.Background()
 
-	adminRole := &domain.Role{
-		Name:        "admin",
-		Description: "System administrator with full access",
-		IsDefault:   false,
+	defaultRoles := []*domain.Role{
+		{Name: "admin", Description: "System administrator with full access", IsDefault: false},
+		{Name: "user", Description: "Regular user with basic access", IsDefault: true},
+		{Name: "viewer", Description: "Read-only access", IsDefault: false},
 	}
-	if err := s.rbacSvc.CreateRole(ctx, adminRole); err != nil {
-		s.cfg.Debug("admin role may already exist", zap.Error(err))
-	}
-
-	userRole := &domain.Role{
-		Name:        "user",
-		Description: "Regular user with basic access",
-		IsDefault:   true,
-	}
-	if err := s.rbacSvc.CreateRole(ctx, userRole); err != nil {
-		s.cfg.Debug("user role may already exist", zap.Error(err))
-	}
-
-	viewerRole := &domain.Role{
-		Name:        "viewer",
-		Description: "Read-only access",
-		IsDefault:   false,
-	}
-	if err := s.rbacSvc.CreateRole(ctx, viewerRole); err != nil {
-		s.cfg.Debug("viewer role may already exist", zap.Error(err))
+	for _, role := range defaultRoles {
+		// Check first so GORM never trips the unique name constraint — that
+		// would log a duplicate-key ERROR on every startup.
+		existing, err := s.rbacSvc.Repo.GetRoleByName(ctx, role.Name)
+		if err == nil && existing != nil {
+			s.cfg.Debug("role already exists", zap.String("role", role.Name))
+			continue
+		}
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			s.cfg.Error("failed to check default role", zap.String("role", role.Name), zap.Error(err))
+			continue
+		}
+		if err := s.rbacSvc.CreateRole(ctx, role); err != nil {
+			s.cfg.Debug("role may already exist", zap.String("role", role.Name), zap.Error(err))
+		}
 	}
 
 	s.cfg.Info("default roles seeded")
@@ -624,9 +642,20 @@ func (s *Server) seedDefaultRolePermissions() {
 					zap.String("role", roleName), zap.String("route", route), zap.Error(err))
 				continue
 			}
+			exists, err := s.rbacSvc.Repo.RoleHasPermission(ctx, role.ID, perm.ID)
+			if err != nil {
+				s.cfg.Debug("failed to check existing permission grant",
+					zap.String("role", roleName), zap.String("route", route), zap.Error(err))
+				continue
+			}
+			if exists {
+				// Already granted on a previous startup — skip silently instead of
+				// letting Create trip the unique constraint (which GORM logs at
+				// ERROR level and would spam every restart).
+				continue
+			}
 			if err := s.rbacSvc.Repo.AssignPermissionToRole(ctx, role.ID, perm.ID); err != nil {
-				// Duplicate key on restart is expected and harmless.
-				s.cfg.Debug("permission grant skipped",
+				s.cfg.Debug("permission grant failed",
 					zap.String("role", roleName), zap.String("route", route), zap.Error(err))
 			}
 		}

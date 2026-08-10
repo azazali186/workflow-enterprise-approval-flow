@@ -100,3 +100,59 @@ describe('api client — proactive session expiry', () => {
     expect(storage.getRefreshToken()).toBeNull()
   })
 })
+
+describe('api client — request timeout', () => {
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    storage.clearAuth()
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('rejects with a friendly network error when the request never responds', async () => {
+    vi.useFakeTimers()
+
+    // A fetch that hangs until aborted — simulates a blackholed connection.
+    globalThis.fetch = vi.fn(
+      (_url: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            reject(init.signal!.reason ?? new DOMException('Aborted', 'AbortError'))
+          })
+        }),
+    )
+
+    const promise = post('/hang', {}, { timeoutMs: 50 })
+
+    // Advance past the 50ms timeout so the abort signal fires.
+    await vi.advanceTimersByTimeAsync(60)
+
+    await expect(promise).rejects.toMatchObject({
+      name: 'ApiError',
+      isNetwork: true,
+    })
+    await expect(promise).rejects.toThrow('timed out')
+  })
+
+  it('still propagates a caller-provided abort signal unchanged', async () => {
+    globalThis.fetch = vi.fn(
+      (_url: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => {
+            reject(init.signal!.reason ?? new DOMException('Aborted', 'AbortError'))
+          })
+        }),
+    )
+
+    const controller = new AbortController()
+    const promise = post('/cancel', {}, { signal: controller.signal })
+    controller.abort(new DOMException('Aborted', 'AbortError'))
+
+    await expect(promise).rejects.toBeInstanceOf(DOMException)
+  })
+})

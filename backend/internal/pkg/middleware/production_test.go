@@ -30,6 +30,12 @@ func TestIsOriginAllowed(t *testing.T) {
 	}
 }
 
+func TestEffectiveCORSOrigins(t *testing.T) {
+	assert.Equal(t, []string{"*"}, EffectiveCORSOrigins(nil), "nil list falls back to wildcard")
+	assert.Equal(t, []string{"*"}, EffectiveCORSOrigins([]string{}), "empty list falls back to wildcard")
+	assert.Equal(t, []string{"https://app.example.com"}, EffectiveCORSOrigins([]string{"https://app.example.com"}), "explicit list is preserved")
+}
+
 func TestNewCORSConfig(t *testing.T) {
 	t.Run("wildcard disables credentials", func(t *testing.T) {
 		cfg := &config.Config{CORSAllowedOrigins: []string{"*"}}
