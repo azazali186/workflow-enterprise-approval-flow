@@ -528,9 +528,13 @@ type GetUserActivityRequest struct {
 // ==================== Dropdown Requests ====================
 
 type DropdownListRequest struct {
-	Entities       []string `json:"entities" binding:"required,min=1"`
+	Entities        []string `json:"entities" binding:"required,min=1"`
 	IncludeInactive bool     `json:"include_inactive"`
-	Statuses       []string `json:"statuses"`
+	Statuses        []string `json:"statuses"`
+	// WorkflowID optionally scopes the "workflow_steps" entity to a single
+	// workflow, so callers can offer steps for the selected application's
+	// workflow instead of the full cross-workflow list.
+	WorkflowID string `json:"workflow_id"`
 }
 
 // ==================== Helper: Parse UUID ====================

@@ -37,10 +37,9 @@ func TestDropdownIntegration_RequestValidation(t *testing.T) {
 			name:        "empty entities array",
 			body:        `{"entities": []}`,
 			expectValid: true,
-		},
-		{
+		}, {
 			name:        "all valid entity types",
-			body:        `{"entities": ["users", "workflows", "templates", "roles", "applications", "approvals"]}`,
+			body:        `{"entities": ["users", "workflows", "templates", "roles", "applications", "approvals", "workflow_steps"]}`,
 			expectValid: true,
 		},
 		{
@@ -63,9 +62,9 @@ func TestDropdownIntegration_RequestValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var req struct {
-				Entities       []string `json:"entities"`
+				Entities        []string `json:"entities"`
 				IncludeInactive bool     `json:"include_inactive"`
-				Statuses       []string `json:"statuses"`
+				Statuses        []string `json:"statuses"`
 			}
 
 			err := json.Unmarshal([]byte(tt.body), &req)
@@ -88,8 +87,8 @@ func TestDropdownIntegration_EntityValidation(t *testing.T) {
 	}{
 		{
 			name:     "all valid",
-			entities: []string{"users", "workflows", "templates"},
-			valid:    []string{"users", "workflows", "templates"},
+			entities: []string{"users", "workflows", "templates", "workflow_steps"},
+			valid:    []string{"users", "workflows", "templates", "workflow_steps"},
 			invalid:  []string{},
 		},
 		{
@@ -298,11 +297,11 @@ func TestDropdownIntegration_IncludeInactive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// This tests the logic, not the actual query
-			q := "WHERE deleted_at IS NULL"
+			q := "WHERE deleted_at = 0"
 			if !tt.includeInactive {
 				q += " AND is_active = ?"
 			}
-			assert.Contains(t, q, "deleted_at IS NULL")
+			assert.Contains(t, q, "deleted_at = 0")
 			if !tt.includeInactive {
 				assert.Contains(t, q, "is_active = ?")
 			}

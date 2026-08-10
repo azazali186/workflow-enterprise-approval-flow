@@ -3,6 +3,7 @@ package approval
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,7 +37,23 @@ func (s *Service) SetAdvanceHandler(fn func(ctx context.Context, applicationID, 
 	s.advanceFn = fn
 }
 
+// ErrWorkflowStepMismatch is returned when the requested workflow step does
+// not belong to the application's workflow.
+var ErrWorkflowStepMismatch = errors.New("workflow step does not belong to the application's workflow")
+
 func (s *Service) CreateApproval(ctx context.Context, approval *domain.Approval) error {
+	// Data-integrity guard: the step must belong to the application's workflow.
+	// The UI scopes the step dropdown by workflow, but the API must reject
+	// hand-crafted requests that link an application to a foreign workflow's
+	// step (would corrupt routing and SLA escalation).
+	valid, err := s.Repo.ValidateStepBelongsToApplication(ctx, approval.ApplicationID.String(), approval.WorkflowStepID.String())
+	if err != nil {
+		return fmt.Errorf("failed to validate workflow step: %w", err)
+	}
+	if !valid {
+		return ErrWorkflowStepMismatch
+	}
+
 	if err := s.Repo.Create(ctx, approval); err != nil {
 		return fmt.Errorf("failed to create approval: %w", err)
 	}

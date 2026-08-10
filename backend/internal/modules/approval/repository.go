@@ -46,6 +46,24 @@ func (r *Repository) Update(ctx context.Context, approval *domain.Approval) erro
 	return r.db.WithContext(ctx).Save(approval).Error
 }
 
+// ValidateStepBelongsToApplication checks that the workflow step belongs to the
+// same workflow as the application. An approval linking an application to a
+// step of a *different* workflow is a data-integrity violation (the UI now
+// prevents it, but the API must too — a hand-crafted request must not succeed).
+func (r *Repository) ValidateStepBelongsToApplication(ctx context.Context, applicationID, stepID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).
+		Model(&domain.WorkflowStep{}).
+		Joins("JOIN applications ON applications.workflow_id = workflow_steps.workflow_id").
+		Where("workflow_steps.id = ? AND applications.id = ?", stepID, applicationID).
+		Where("workflow_steps.deleted_at = 0 AND applications.deleted_at = 0").
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 // ListOverduePending returns pending approvals whose step SLA (timeout_hours
 // from the workflow_steps table) has expired. Used by the SLA escalation
 // monitor to trigger escalations.

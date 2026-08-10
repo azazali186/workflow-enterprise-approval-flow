@@ -147,7 +147,7 @@ export function WorkflowFormModal({ open, onClose, workflow }: WorkflowFormModal
           label="Steps (JSON)"
           htmlFor="steps_json"
           error={errors.steps_json?.message}
-          hint="Advanced: define workflow steps as a JSON array. Each step needs a name; approver_id or approver_role routes it."
+          hint="Advanced: define workflow steps as a JSON array. Each step needs a name; route it with approver_role (e.g. manager)."
         >
           <Textarea
             id="steps_json"

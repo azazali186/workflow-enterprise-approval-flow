@@ -11,19 +11,20 @@ import (
 func TestDropdownHandler_ListDropdowns_InvalidEntity(t *testing.T) {
 	// Test validation - should reject invalid entity types
 	validEntities := map[string]bool{
-		"users":        true,
-		"workflows":    true,
-		"templates":    true,
-		"roles":        true,
-		"applications": true,
-		"approvals":    true,
+		"users":          true,
+		"workflows":      true,
+		"templates":      true,
+		"roles":          true,
+		"applications":   true,
+		"approvals":      true,
+		"workflow_steps": true,
 	}
 
 	reqBody := `{"entities": ["invalid_entity"]}`
 	var parsedReq struct {
-		Entities       []string `json:"entities"`
+		Entities        []string `json:"entities"`
 		IncludeInactive bool     `json:"include_inactive"`
-		Statuses       []string `json:"statuses"`
+		Statuses        []string `json:"statuses"`
 	}
 	err := json.Unmarshal([]byte(reqBody), &parsedReq)
 	require.NoError(t, err)
@@ -42,12 +43,13 @@ func TestDropdownHandler_ListDropdowns_InvalidEntity(t *testing.T) {
 func TestDropdownHandler_ListDropdowns_ValidEntities(t *testing.T) {
 	// Test that valid entities are recognized
 	validEntities := map[string]bool{
-		"users":        true,
-		"workflows":    true,
-		"templates":    true,
-		"roles":        true,
-		"applications": true,
-		"approvals":    true,
+		"users":          true,
+		"workflows":      true,
+		"templates":      true,
+		"roles":          true,
+		"applications":   true,
+		"approvals":      true,
+		"workflow_steps": true,
 	}
 
 	testCases := []struct {
@@ -60,6 +62,7 @@ func TestDropdownHandler_ListDropdowns_ValidEntities(t *testing.T) {
 		{"roles", true},
 		{"applications", true},
 		{"approvals", true},
+		{"workflow_steps", true},
 		{"invalid", false},
 		{"", false},
 	}
@@ -100,9 +103,9 @@ func TestDropdownHandler_MultipleEntities(t *testing.T) {
 	}`
 
 	var req struct {
-		Entities       []string `json:"entities"`
+		Entities        []string `json:"entities"`
 		IncludeInactive bool     `json:"include_inactive"`
-		Statuses       []string `json:"statuses"`
+		Statuses        []string `json:"statuses"`
 	}
 
 	err := json.Unmarshal([]byte(reqBody), &req)
@@ -279,7 +282,7 @@ func TestDropdownHandler_MissingEntities(t *testing.T) {
 	reqBody := `{"include_inactive": true}`
 
 	var req struct {
-		Entities       []string `json:"entities"`
+		Entities        []string `json:"entities"`
 		IncludeInactive bool     `json:"include_inactive"`
 	}
 

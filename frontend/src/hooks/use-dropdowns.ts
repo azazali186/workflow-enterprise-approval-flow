@@ -82,6 +82,19 @@ export function useApprovalDropdown(options?: UseDropdownOptions) {
 }
 
 /**
+ * Hook to fetch the steps of a single workflow (id/name options). Disabled
+ * until a workflow is selected, so the dropdown never shows an empty list.
+ */
+export function useWorkflowStepDropdown(workflowId: string | undefined, options?: UseDropdownOptions) {
+  return useQuery({
+    queryKey: ['dropdowns', 'workflow_steps', workflowId],
+    queryFn: () => dropdownsService.workflowSteps(workflowId!),
+    enabled: (options?.enabled ?? true) && Boolean(workflowId),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
  * Hook to fetch multiple dropdown options in a single request.
  */
 export function useMultipleDropdowns(

@@ -5,11 +5,11 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"github.com/aeroxe/approval-flow/internal/config"
 )
 
 // setupTestDB creates an in-memory SQLite database with test tables.
@@ -24,14 +24,16 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 
-	// Create test tables
+	// Create test tables. deleted_at mirrors production: the soft_delete plugin
+	// uses a flag (0 = alive, non-zero = deleted) with a BIGINT DEFAULT 0 column,
+	// NOT a nullable timestamp — "deleted_at IS NULL" matches nothing.
 	err = db.Exec(`
 		CREATE TABLE users (
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
 			email TEXT NOT NULL,
 			status TEXT DEFAULT 'active',
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -42,7 +44,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			name TEXT NOT NULL,
 			category TEXT,
 			is_active BOOLEAN DEFAULT 1,
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -51,7 +53,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		CREATE TABLE templates (
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -60,7 +62,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		CREATE TABLE roles (
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -71,7 +73,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			title TEXT,
 			status TEXT DEFAULT 'submitted',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -81,7 +83,18 @@ func setupTestDB(t *testing.T) *gorm.DB {
 			id TEXT PRIMARY KEY,
 			status TEXT DEFAULT 'pending',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			deleted_at DATETIME
+			deleted_at BIGINT DEFAULT 0
+		)
+	`).Error
+	require.NoError(t, err)
+
+	err = db.Exec(`
+		CREATE TABLE workflow_steps (
+			id TEXT PRIMARY KEY,
+			workflow_id TEXT NOT NULL,
+			name TEXT NOT NULL,
+			step_order INTEGER DEFAULT 0,
+			deleted_at BIGINT DEFAULT 0
 		)
 	`).Error
 	require.NoError(t, err)
@@ -204,6 +217,26 @@ func insertTestData(t *testing.T, db *gorm.DB) {
 		).Error
 		require.NoError(t, err)
 	}
+
+	// Insert workflow steps
+	steps := []struct {
+		ID         string
+		WorkflowID string
+		Name       string
+		StepOrder  int
+	}{
+		{"step-1", "wf-1", "Manager Review", 1},
+		{"step-2", "wf-1", "Finance Check", 2},
+		{"step-3", "wf-2", "HR Review", 1},
+	}
+
+	for _, s := range steps {
+		err := db.Exec(
+			"INSERT INTO workflow_steps (id, workflow_id, name, step_order) VALUES (?, ?, ?, ?)",
+			s.ID, s.WorkflowID, s.Name, s.StepOrder,
+		).Error
+		require.NoError(t, err)
+	}
 }
 
 // createTestHandler creates a handler with test database.
@@ -232,12 +265,12 @@ func TestDropdownDB_ListUsers(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("users").
 		Select("id, name || ' (' || email || ')' as name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		Where("deleted_at = 0 AND status = ?", "active").
 		Order("name ASC").
 		Find(&rows).Error
 
 	require.NoError(t, err)
-	assert.Len(t, rows, 2) // Only active users
+	assert.Len(t, rows, 2)                // Only active users
 	assert.Equal(t, "user-1", rows[0].ID) // Alice comes first alphabetically
 	assert.Equal(t, "user-2", rows[1].ID) // Bob comes second
 }
@@ -256,7 +289,7 @@ func TestDropdownDB_ListWorkflows(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("workflows").
 		Select("id, name").
-		Where("deleted_at IS NULL AND is_active = ?", true).
+		Where("deleted_at = 0 AND is_active = ?", true).
 		Order("name ASC").
 		Find(&activeWorkflows).Error
 
@@ -271,7 +304,7 @@ func TestDropdownDB_ListWorkflows(t *testing.T) {
 	err = db.WithContext(ctx).
 		Table("workflows").
 		Select("id, name").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("name ASC").
 		Find(&allWorkflows).Error
 
@@ -292,7 +325,7 @@ func TestDropdownDB_ListTemplates(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("templates").
 		Select("id, name").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("name ASC").
 		Find(&templates).Error
 
@@ -313,7 +346,7 @@ func TestDropdownDB_ListRoles(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("roles").
 		Select("id, name").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("name ASC").
 		Find(&roles).Error
 
@@ -335,7 +368,7 @@ func TestDropdownDB_ListApplications(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("applications").
 		Select("id, COALESCE(title, 'Untitled') as title").
-		Where("deleted_at IS NULL AND status IN ?", []string{"submitted"}).
+		Where("deleted_at = 0 AND status IN ?", []string{"submitted"}).
 		Order("created_at DESC").
 		Limit(100).
 		Find(&submitted).Error
@@ -351,7 +384,7 @@ func TestDropdownDB_ListApplications(t *testing.T) {
 	err = db.WithContext(ctx).
 		Table("applications").
 		Select("id, COALESCE(title, 'Untitled') as title").
-		Where("deleted_at IS NULL AND status IN ?", []string{"submitted", "approved", "completed"}).
+		Where("deleted_at = 0 AND status IN ?", []string{"submitted", "approved", "completed"}).
 		Order("created_at DESC").
 		Limit(100).
 		Find(&all).Error
@@ -373,7 +406,7 @@ func TestDropdownDB_ListApprovals(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("approvals").
 		Select("id, status").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("created_at DESC").
 		Limit(100).
 		Find(&approvals).Error
@@ -382,14 +415,54 @@ func TestDropdownDB_ListApprovals(t *testing.T) {
 	assert.Len(t, approvals, 3)
 }
 
+func TestDropdownDB_ListWorkflowSteps(t *testing.T) {
+	db := setupTestDB(t)
+	insertTestData(t, db)
+
+	ctx := context.Background()
+
+	// Scoped to a single workflow: only its steps, in step_order.
+	var scoped []struct {
+		ID   string
+		Name string
+	}
+	err := db.WithContext(ctx).
+		Table("workflow_steps").
+		Select("workflow_steps.id, workflow_steps.name, workflow_steps.step_order, workflows.name as workflow_name").
+		Joins("JOIN workflows ON workflows.id = workflow_steps.workflow_id").
+		Where("workflow_steps.deleted_at = 0 AND workflows.deleted_at = 0").
+		Where("workflow_steps.workflow_id = ?", "wf-1").
+		Order("workflow_steps.workflow_id ASC, workflow_steps.step_order ASC").
+		Find(&scoped).Error
+	require.NoError(t, err)
+	assert.Len(t, scoped, 2)
+	assert.Equal(t, "step-1", scoped[0].ID)
+	assert.Equal(t, "step-2", scoped[1].ID)
+
+	// Unscoped: every workflow's steps.
+	var all []struct {
+		ID   string
+		Name string
+	}
+	err = db.WithContext(ctx).
+		Table("workflow_steps").
+		Select("workflow_steps.id, workflow_steps.name, workflow_steps.step_order, workflows.name as workflow_name").
+		Joins("JOIN workflows ON workflows.id = workflow_steps.workflow_id").
+		Where("workflow_steps.deleted_at = 0 AND workflows.deleted_at = 0").
+		Order("workflow_steps.workflow_id ASC, workflow_steps.step_order ASC").
+		Find(&all).Error
+	require.NoError(t, err)
+	assert.Len(t, all, 3)
+}
+
 func TestDropdownDB_SoftDelete(t *testing.T) {
 	db := setupTestDB(t)
 	insertTestData(t, db)
 
 	ctx := context.Background()
 
-	// Soft delete a user
-	err := db.Exec("UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", "user-1").Error
+	// Soft delete a user (non-zero flag, matching the soft_delete plugin)
+	err := db.Exec("UPDATE users SET deleted_at = 1 WHERE id = ?", "user-1").Error
 	require.NoError(t, err)
 
 	// Verify soft deleted user is excluded
@@ -400,7 +473,7 @@ func TestDropdownDB_SoftDelete(t *testing.T) {
 	err = db.WithContext(ctx).
 		Table("users").
 		Select("id, name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		Where("deleted_at = 0 AND status = ?", "active").
 		Find(&users).Error
 
 	require.NoError(t, err)
@@ -422,7 +495,7 @@ func TestDropdownDB_Pagination(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("applications").
 		Select("id, title").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("created_at DESC").
 		Limit(2).
 		Find(&applications).Error
@@ -450,7 +523,7 @@ func TestDropdownDB_SpecialCharacters(t *testing.T) {
 	err = db.WithContext(ctx).
 		Table("users").
 		Select("id, name || ' (' || email || ')' as name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		Where("deleted_at = 0 AND status = ?", "active").
 		Find(&users).Error
 
 	require.NoError(t, err)
@@ -471,7 +544,7 @@ func TestDropdownDB_EmptyResults(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("users").
 		Select("id, name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		Where("deleted_at = 0 AND status = ?", "active").
 		Find(&users).Error
 
 	require.NoError(t, err)
@@ -494,7 +567,7 @@ func TestDropdownDB_ConcurrentQueries(t *testing.T) {
 			err := db.WithContext(ctx).
 				Table("users").
 				Select("id, name").
-				Where("deleted_at IS NULL AND status = ?", "active").
+				Where("deleted_at = 0 AND status = ?", "active").
 				Find(&users).Error
 			assert.NoError(t, err)
 		}()
@@ -522,7 +595,7 @@ func TestDropdownDB_LargeDataset(t *testing.T) {
 	err := db.WithContext(ctx).
 		Table("users").
 		Select("id, name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		Where("deleted_at = 0 AND status = ?", "active").
 		Order("name ASC").
 		Find(&users).Error
 

@@ -8,6 +8,8 @@ export interface DropdownRequest {
   entities: string[]
   include_inactive?: boolean
   statuses?: string[]
+  /** Scopes the workflow_steps entity to a single workflow. */
+  workflow_id?: string
 }
 
 export interface DropdownResponse {
@@ -52,6 +54,16 @@ export const dropdownsService = {
 
   approvals(): Promise<DropdownOption[]> {
     return this.list({ entities: ['approvals'] }).then((res) => res.approvals || [])
+  },
+
+  /**
+   * Steps of a single workflow — used to keep a created approval consistent
+   * with the selected application's workflow.
+   */
+  workflowSteps(workflowId: string): Promise<DropdownOption[]> {
+    return this.list({ entities: ['workflow_steps'], workflow_id: workflowId }).then(
+      (res) => res.workflow_steps || []
+    )
   },
 
   /**

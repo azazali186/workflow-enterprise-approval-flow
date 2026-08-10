@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
-	"github.com/aeroxe/approval-flow/internal/modules/approval"
+	approvalmod "github.com/aeroxe/approval-flow/internal/modules/approval"
 	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
@@ -18,11 +19,11 @@ import (
 )
 
 type ApprovalHandler struct {
-	svc *approval.Service
+	svc *approvalmod.Service
 	cfg *config.Config
 }
 
-func NewApprovalHandler(svc *approval.Service, cfg *config.Config) *ApprovalHandler {
+func NewApprovalHandler(svc *approvalmod.Service, cfg *config.Config) *ApprovalHandler {
 	return &ApprovalHandler{svc: svc, cfg: cfg}
 }
 
@@ -130,6 +131,12 @@ func (h *ApprovalHandler) CreateApproval(ctx context.Context, c *app.RequestCont
 		Status:         "pending",
 	}
 	if err := h.svc.CreateApproval(ctx, approval); err != nil {
+		// A client-addressable validation failure (foreign workflow step) is a
+		// 400, not a 500.
+		if errors.Is(err, approvalmod.ErrWorkflowStepMismatch) {
+			response.Error(c, http.StatusBadRequest, err.Error())
+			return
+		}
 		h.cfg.Error("failed to create approval", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "failed to create approval")
 		return

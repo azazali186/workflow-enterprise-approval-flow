@@ -22,12 +22,13 @@ type DropdownOption struct {
 
 // validEntities is the set of entity types the API supports.
 var validEntities = map[string]bool{
-	"users":        true,
-	"workflows":    true,
-	"templates":    true,
-	"roles":        true,
-	"applications": true,
-	"approvals":    true,
+	"users":          true,
+	"workflows":      true,
+	"templates":      true,
+	"roles":          true,
+	"applications":   true,
+	"approvals":      true,
+	"workflow_steps": true,
 }
 
 // DropdownHandler handles dropdown option requests.
@@ -43,7 +44,7 @@ func NewDropdownHandler(db *gorm.DB, cfg *config.Config) *DropdownHandler {
 
 // ListDropdowns returns dropdown options for the requested entity types.
 // @Summary      List dropdown options
-// @Description  Returns id/name pairs for dropdown menus (users, workflows, templates, roles, etc.)
+// @Description  Returns id/name pairs for dropdown menus (users, workflows, templates, roles, workflow_steps, etc.)
 // @Tags         Dropdowns
 // @Accept       json
 // @Produce      json
@@ -67,7 +68,7 @@ func (h *DropdownHandler) ListDropdowns(ctx context.Context, c *app.RequestConte
 	}
 	if len(invalidEntities) > 0 {
 		response.Error(c, http.StatusBadRequest,
-			fmt.Sprintf("invalid entity type(s): %v. Valid types: users, workflows, templates, roles, applications, approvals", invalidEntities))
+			fmt.Sprintf("invalid entity type(s): %v. Valid types: users, workflows, templates, roles, applications, approvals, workflow_steps", invalidEntities))
 		return
 	}
 
@@ -96,6 +97,8 @@ func (h *DropdownHandler) ListDropdowns(ctx context.Context, c *app.RequestConte
 			options, err = h.listApplications(ctx, statuses)
 		case "approvals":
 			options, err = h.listApprovals(ctx)
+		case "workflow_steps":
+			options, err = h.listWorkflowSteps(ctx, req.WorkflowID)
 		}
 
 		if err != nil {
@@ -123,7 +126,9 @@ func (h *DropdownHandler) listUsers(ctx context.Context) ([]DropdownOption, erro
 	err := h.db.WithContext(ctx).
 		Table("users").
 		Select("id, name || ' (' || email || ')' as name").
-		Where("deleted_at IS NULL AND status = ?", "active").
+		// Soft delete is flag-based (soft_delete plugin): 0 = alive. The schema
+		// defaults deleted_at to 0, so "IS NULL" would exclude every row.
+		Where("deleted_at = 0 AND status = ?", "active").
 		Order("name ASC").
 		Find(&rows).Error
 	if err != nil {
@@ -145,7 +150,7 @@ func (h *DropdownHandler) listWorkflows(ctx context.Context, includeInactive boo
 	q := h.db.WithContext(ctx).
 		Table("workflows").
 		Select("id, name").
-		Where("deleted_at IS NULL")
+		Where("deleted_at = 0")
 	if !includeInactive {
 		q = q.Where("is_active = ?", true)
 	}
@@ -169,7 +174,7 @@ func (h *DropdownHandler) listTemplates(ctx context.Context) ([]DropdownOption, 
 	err := h.db.WithContext(ctx).
 		Table("templates").
 		Select("id, name").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("name ASC").
 		Find(&rows).Error
 	if err != nil {
@@ -191,7 +196,7 @@ func (h *DropdownHandler) listRoles(ctx context.Context) ([]DropdownOption, erro
 	err := h.db.WithContext(ctx).
 		Table("roles").
 		Select("id, name").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("name ASC").
 		Find(&rows).Error
 	if err != nil {
@@ -213,7 +218,7 @@ func (h *DropdownHandler) listApplications(ctx context.Context, statuses []strin
 	err := h.db.WithContext(ctx).
 		Table("applications").
 		Select("id, COALESCE(title, 'Untitled') as title").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Where("status IN ?", statuses).
 		Order("created_at DESC").
 		Limit(100).
@@ -237,7 +242,7 @@ func (h *DropdownHandler) listApprovals(ctx context.Context) ([]DropdownOption, 
 	err := h.db.WithContext(ctx).
 		Table("approvals").
 		Select("id, status").
-		Where("deleted_at IS NULL").
+		Where("deleted_at = 0").
 		Order("created_at DESC").
 		Limit(100).
 		Find(&rows).Error
@@ -247,6 +252,50 @@ func (h *DropdownHandler) listApprovals(ctx context.Context) ([]DropdownOption, 
 	opts := make([]DropdownOption, len(rows))
 	for i, r := range rows {
 		opts[i] = DropdownOption{ID: r.ID, Name: r.Status}
+	}
+	return opts, nil
+}
+
+// listWorkflowSteps returns the steps of a workflow as {id, name} options.
+// When WorkflowID is empty every workflow's steps are returned (names prefixed
+// with the workflow so duplicates across workflows stay distinguishable); when
+// set, only that workflow's steps come back — the shape a "create approval"
+// form needs to stay consistent with the selected application's workflow.
+func (h *DropdownHandler) listWorkflowSteps(ctx context.Context, workflowID string) ([]DropdownOption, error) {
+	type row struct {
+		ID           string
+		Name         string
+		StepOrder    int
+		WorkflowName string
+	}
+
+	q := h.db.WithContext(ctx).
+		Table("workflow_steps").
+		Select("workflow_steps.id, workflow_steps.name, workflow_steps.step_order, workflows.name as workflow_name").
+		Joins("JOIN workflows ON workflows.id = workflow_steps.workflow_id").
+		Where("workflow_steps.deleted_at = 0 AND workflows.deleted_at = 0")
+
+	var rows []row
+	if workflowID != "" {
+		q = q.Where("workflow_steps.workflow_id = ?", workflowID)
+	}
+
+	err := q.Order("workflow_steps.workflow_id ASC, workflow_steps.step_order ASC").
+		// Cap the unscoped (cross-workflow) listing, mirroring applications and
+		// approvals; the scoped path (the only one the UI uses) is naturally
+		// bounded by a single workflow's steps.
+		Limit(100).
+		Find(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	opts := make([]DropdownOption, len(rows))
+	for i, r := range rows {
+		name := r.Name
+		if workflowID == "" {
+			name = r.WorkflowName + " / " + r.Name
+		}
+		opts[i] = DropdownOption{ID: r.ID, Name: name}
 	}
 	return opts, nil
 }
