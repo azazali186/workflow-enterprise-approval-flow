@@ -312,11 +312,13 @@ test.describe('Combobox Component - Comprehensive E2E Tests', () => {
 
   // ==================== Disabled State ====================
   
-  test.describe('Disabled State', () => {
-    test('does not open dropdown when disabled', async ({ page }) => {
+  test.describe('Disabled State', () => {    test('does not open dropdown when disabled', async ({ page }) => {
       const combobox = page.locator('#disabled-combobox button[role="combobox"]')
-      await combobox.click()
-      
+      // Force the click: Playwright's actionability check refuses disabled
+      // elements, and a disabled button swallows click events in the browser,
+      // so the dropdown must never open.
+      await combobox.click({ force: true })
+
       const listbox = page.locator('#disabled-combobox [role="listbox"]')
       await expect(listbox).not.toBeVisible()
     })

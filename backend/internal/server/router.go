@@ -3,12 +3,12 @@ package server
 import (
 	"context"
 	"crypto/sha1"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"path/filepath"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -82,6 +82,16 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		// internal/pkg/validation/binding_validator.go).
 		server.WithCustomValidatorFunc(validation.NewBindingValidatorFunc()),
 	)
+
+	// Client IP resolution must only trust proxies the operator explicitly
+	// configures. Hertz defaults to trusting *all* proxies (0.0.0.0/0), which
+	// lets a remote client spoof X-Forwarded-For / X-Real-IP and bypass the
+	// per-IP rate limiter and login lockout. With no TRUSTED_PROXIES set, the
+	// socket peer address is used and header spoofing is impossible.
+	h.SetClientIPFunc(app.ClientIPWithOption(app.ClientIPOptions{
+		RemoteIPHeaders: []string{"X-Forwarded-For", "X-Real-IP"},
+		TrustedCIDRs:    parseTrustedCIDRs(cfg),
+	}))
 
 	db, err := database.New(cfg)
 	if err != nil {
@@ -162,7 +172,7 @@ func (s *Server) registerRoutes() {
 
 	// Wire the workflow engine: submission routes to the first approval step,
 	// and each decision advances the application through its steps.
-	engine := newWorkflowEngine(applicationSvc, approvalSvc, workflowSvc, escalationSvc, notificationSvc, s.rbacSvc.Repo, s.cfg)
+	engine := newWorkflowEngine(applicationSvc, approvalSvc, workflowSvc, escalationSvc, notificationSvc, s.rbacSvc.Repo, s.hub, s.cfg)
 	applicationSvc.SetOnSubmitted(engine.onSubmitted)
 	approvalSvc.SetAdvanceHandler(engine.onDecided)
 
@@ -184,23 +194,61 @@ func (s *Server) registerRoutes() {
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvc, s.cfg)
 	healthHandler := handler.NewHealthHandler(s.db, s.redis, s.nats, s.cfg)
 
-	// ==================== Swagger Docs ====================
-	swaggerJSONHandler := func(ctx context.Context, c *app.RequestContext) {
-		c.Header("Content-Type", "application/json")
-		c.JSON(consts.StatusOK, docs.SwaggerInfo.ReadDoc())
+	// ==================== Swagger Docs (optional) ====================
+	// Swagger is served by default in development and disabled in production
+	// unless SWAGGER_ENABLED=true, so the full API schema is not publicly
+	// exposed (it is a useful reconnaissance surface for attackers).
+	notFoundHandler := func(ctx context.Context, c *app.RequestContext) {
+		c.JSON(consts.StatusNotFound, map[string]string{"error": "not found"})
 	}
-	s.engine.POST("/docs/swagger.json", swaggerJSONHandler)
-	s.engine.GET("/docs/swagger.json", swaggerJSONHandler)
+	if s.cfg.ExposeSwagger {
+		swaggerJSONHandler := func(ctx context.Context, c *app.RequestContext) {
+			c.Header("Content-Type", "application/json")
+			c.JSON(consts.StatusOK, docs.SwaggerInfo.ReadDoc())
+		}
+		s.engine.POST("/docs/swagger.json", swaggerJSONHandler)
+		s.engine.GET("/docs/swagger.json", swaggerJSONHandler)
 
-	swaggerUIHandler := func(ctx context.Context, c *app.RequestContext) {
-		c.Header("Content-Type", "text/html")
-		c.String(consts.StatusOK, swaggerUIHTML)
+		swaggerUIHandler := func(ctx context.Context, c *app.RequestContext) {
+			c.Header("Content-Type", "text/html")
+			c.String(consts.StatusOK, swaggerUIHTML)
+		}
+		s.engine.POST("/docs", swaggerUIHandler)
+		s.engine.GET("/docs", swaggerUIHandler)
+		s.cfg.Info("swagger docs enabled")
+	} else {
+		s.engine.GET("/docs", notFoundHandler)
+		s.engine.GET("/docs/swagger.json", notFoundHandler)
 	}
-	s.engine.POST("/docs", swaggerUIHandler)
-	s.engine.GET("/docs", swaggerUIHandler)
 
-	// ==================== Prometheus Metrics ====================
+	// ==================== Prometheus Metrics (protected) ====================
+	// Operational counters (per-route request counts, error rates) must not be
+	// public. Behavior:
+	//   - METRICS_TOKEN set        → bearer/X-Metrics-Token header required.
+	//   - METRICS_TOKEN empty, prod → endpoint disabled (404).
+	//   - METRICS_TOKEN empty, dev  → open (local debugging).
+	metricsAllowed := func(c *app.RequestContext) bool {
+		if s.cfg.MetricsToken == "" {
+			return s.cfg.Env != "production"
+		}
+		provided := strings.TrimPrefix(string(c.GetHeader("Authorization")), "Bearer ")
+		if provided == "" {
+			provided = string(c.GetHeader("X-Metrics-Token"))
+		}
+		return subtle.ConstantTimeCompare([]byte(provided), []byte(s.cfg.MetricsToken)) == 1
+	}
+	metricsDenied := func(ctx context.Context, c *app.RequestContext) {
+		if s.cfg.MetricsToken != "" {
+			c.JSON(consts.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			return
+		}
+		c.JSON(consts.StatusNotFound, map[string]string{"error": "not found"})
+	}
 	metricsJSONHandler := func(ctx context.Context, c *app.RequestContext) {
+		if !metricsAllowed(c) {
+			metricsDenied(ctx, c)
+			return
+		}
 		metrics := middleware.GetPrometheusMetrics()
 		c.JSON(consts.StatusOK, metrics.ToJSON())
 	}
@@ -208,6 +256,10 @@ func (s *Server) registerRoutes() {
 
 	// Prometheus text exposition format (GET), consumable by a real scraper.
 	s.engine.GET("/metrics", func(ctx context.Context, c *app.RequestContext) {
+		if !metricsAllowed(c) {
+			metricsDenied(ctx, c)
+			return
+		}
 		c.Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
 		c.String(consts.StatusOK, middleware.GetPrometheusMetrics().ToPrometheusText())
 	})
@@ -235,12 +287,26 @@ func (s *Server) registerRoutes() {
 	registerPublic("POST", "/version", healthHandler.Version)
 
 	// ==================== Auth (Public) ====================
-	s.engine.POST("/api/v1/auth/login", authHandler.Login)
-	s.engine.POST("/api/v1/auth/register", authHandler.Register)
-	s.engine.POST("/api/v1/auth/refresh", authHandler.RefreshToken)
-	s.engine.POST("/api/v1/auth/login-history", loginLogHandler.GetLoginHistory)
-	s.engine.POST("/api/v1/auth/login-history/email", loginLogHandler.GetLoginHistoryByEmail)
-	s.engine.POST("/api/v1/auth/login-stats", loginLogHandler.GetLoginStats)
+	// Authentication endpoints get a stricter per-IP allowance than the general
+	// API (RATE_LIMIT_BURST per window) because they are the primary
+	// brute-force surface. The engine-wide limiter still applies as a backstop.
+	authPublic := s.engine.Group("/api/v1/auth")
+	authPublic.Use(middleware.RateLimiter(s.redis, s.cfg.RateLimitBurst, time.Duration(s.cfg.RateLimitWindow)*time.Second, s.cfg))
+	authPublic.POST("/login", authHandler.Login)
+	authPublic.POST("/register", authHandler.Register)
+	authPublic.POST("/refresh", authHandler.RefreshToken)
+
+	// Login history & stats used to be registered *before* authentication — an
+	// unauthenticated information-disclosure hole (anyone could read another
+	// user's login history, IPs and user agents by email). They keep their
+	// exact URLs (the admin console depends on them) but now require a valid
+	// session with the admin role.
+	authAdmin := s.engine.Group("/api/v1/auth")
+	authAdmin.Use(middleware.AuthMiddleware(s.tokenSvc, s.redis, s.cfg))
+	authAdmin.Use(middleware.RequireRole("admin", s.rbacSvc, s.cfg))
+	authAdmin.POST("/login-history", loginLogHandler.GetLoginHistory)
+	authAdmin.POST("/login-history/email", loginLogHandler.GetLoginHistoryByEmail)
+	authAdmin.POST("/login-stats", loginLogHandler.GetLoginStats)
 
 	// ==================== Protected Routes ====================
 	v1 := s.engine.Group("/api/v1")
@@ -348,6 +414,9 @@ func (s *Server) registerRoutes() {
 	v1.POST("/analytics/escalations", analyticsHandler.GetEscalationMetrics)
 
 	// ==================== WebSocket (Authenticated) ====================
+	// Browsers always send a GET handshake (new WebSocket(url)); POST is kept
+	// for non-browser clients and backward compatibility.
+	s.engine.GET("/ws", s.handleWebSocket)
 	s.engine.POST("/ws", s.handleWebSocket)
 
 	// The saga orchestrator (incl. SLA escalation monitor) needs the module
@@ -357,7 +426,20 @@ func (s *Server) registerRoutes() {
 
 func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
 	// Require a valid bearer token — the user identity comes from the signed
-	// JWT, never from client-supplied headers or body fields.
+	// JWT, never from client-supplied headers or body fields. Browsers cannot
+	// set the Authorization header on a WebSocket handshake, so a token passed
+	// as ?token=… (the standard browser pattern) is promoted to the header.
+	//
+	// SECURITY: query strings can end up in proxy access logs, so operators
+	// must ensure their reverse proxy never logs request args (the provided
+	// nginx.conf uses a log_format with $uri, not $request_uri/$args).
+	authorization := string(ctx.GetHeader("Authorization"))
+	if authorization == "" {
+		if q := string(ctx.QueryArgs().Peek("token")); q != "" {
+			ctx.Request.Header.Set("Authorization", "Bearer "+q)
+		}
+	}
+
 	claims, ok := middleware.ValidateBearerToken(c, ctx, s.tokenSvc, s.redis, s.cfg)
 	if !ok {
 		return
@@ -395,7 +477,10 @@ func (s *Server) handleWebSocket(c context.Context, ctx *app.RequestContext) {
 			return
 		}
 
-		wsConn := &basicWSConn{conn: conn}
+		// FrameConn implements the RFC 6455 wire protocol: ping/pong keepalive,
+		// the close handshake, and read/write deadlines so dead peers are
+		// eventually evicted (important behind load balancers with idle timeouts).
+		wsConn := wsHub.NewFrameConn(conn)
 
 		client := &wsHub.Client{
 			ID:     clientID,
@@ -419,38 +504,6 @@ func computeWSAcceptKey(key string) string {
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
-type basicWSConn struct {
-	conn   network.Conn
-	mu     sync.Mutex
-	closed bool
-}
-
-func (c *basicWSConn) Read(p []byte) (n int, err error) {
-	return c.conn.Read(p)
-}
-
-func (c *basicWSConn) Write(p []byte) (n int, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.closed {
-		return 0, io.ErrClosedPipe
-	}
-	return c.conn.Write(p)
-}
-
-func (c *basicWSConn) Close(code int, reason string) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.closed {
-		return nil
-	}
-	c.closed = true
-	return c.conn.Close()
-}
-
-func (c *basicWSConn) Ping(ctx context.Context) error { return nil }
-func (c *basicWSConn) Pong(ctx context.Context) error { return nil }
-
 func (s *Server) Start() error {
 	s.cfg.Info("starting server", zap.Int("port", s.cfg.ServerPort))
 
@@ -460,12 +513,11 @@ func (s *Server) Start() error {
 	}
 
 	s.seedDefaultRoles()
+	s.seedDefaultRolePermissions()
 	s.bootstrapAdmin()
 
-	// Start outbox processor for reliable event publishing
-	outbox := middleware.NewOutbox(s.redis, s.nats, s.cfg)
-	outbox.StartProcessor(s.ctx)
-	s.cfg.Info("outbox processor started")
+	// Event publishing is durable via JetStream (see internal/pkg/messaging),
+	// so no outbox processor is needed — it would only poll an empty queue.
 
 	// Start Saga Orchestrator (including the SLA escalation monitor)
 	if err := s.orchestrator.Start(s.ctx); err != nil {
@@ -513,6 +565,75 @@ func (s *Server) seedDefaultRoles() {
 // bootstrapAdmin creates the initial administrator account from ADMIN_EMAIL /
 // ADMIN_PASSWORD if one does not already exist. The default admin credentials
 // previously baked into migrations are intentionally removed.
+// defaultRoleRoutes defines the baseline permission grants applied at startup
+// so non-admin accounts are functional out of the box. The admin role is a
+// superuser (see rbac.Service.CheckPermission) and needs no grants. Route keys
+// must match exactly what ExtractAndStoreRoutes writes ("METHOD /api/v1/...").
+var (
+	viewerRoleRoutes = []string{
+		"POST /api/v1/profile",
+		"POST /api/v1/dropdowns",
+		"POST /api/v1/applications",
+		"POST /api/v1/applications/get",
+		"POST /api/v1/approvals",
+		"POST /api/v1/approvals/get",
+		"POST /api/v1/approvals/pending",
+		"POST /api/v1/workflows",
+		"POST /api/v1/workflows/get",
+		"POST /api/v1/templates",
+		"POST /api/v1/templates/get",
+		"POST /api/v1/escalations",
+		"POST /api/v1/escalations/get",
+		"POST /api/v1/notifications",
+		"POST /api/v1/notifications/unread",
+		"POST /api/v1/notifications/stats",
+		"POST /api/v1/reports/statuses",
+		"POST /api/v1/reports/comments",
+		"POST /api/v1/reports/documents",
+	}
+	userRoleRoutes = append([]string{
+		"POST /api/v1/applications/submit",
+		"POST /api/v1/approvals/decide",
+		"POST /api/v1/escalations/create",
+		"POST /api/v1/escalations/resolve",
+		"POST /api/v1/notifications/read",
+	}, viewerRoleRoutes...)
+)
+
+// seedDefaultRolePermissions grants the baseline route permissions to the
+// default "viewer" and "user" roles. Idempotent — it re-runs on every startup
+// and skips grants that already exist (duplicate-key errors are expected).
+// Admins can fine-tune grants afterwards via the RBAC admin API/UI.
+func (s *Server) seedDefaultRolePermissions() {
+	ctx := context.Background()
+
+	grants := map[string][]string{
+		"viewer": viewerRoleRoutes,
+		"user":   userRoleRoutes,
+	}
+	for roleName, routes := range grants {
+		role, err := s.rbacSvc.Repo.GetRoleByName(ctx, roleName)
+		if err != nil {
+			s.cfg.Debug("role not found for permission seeding", zap.String("role", roleName), zap.Error(err))
+			continue
+		}
+		for _, route := range routes {
+			perm, err := s.rbacSvc.Repo.GetPermissionByRoute(ctx, route)
+			if err != nil {
+				s.cfg.Debug("route permission not registered; skipping grant",
+					zap.String("role", roleName), zap.String("route", route), zap.Error(err))
+				continue
+			}
+			if err := s.rbacSvc.Repo.AssignPermissionToRole(ctx, role.ID, perm.ID); err != nil {
+				// Duplicate key on restart is expected and harmless.
+				s.cfg.Debug("permission grant skipped",
+					zap.String("role", roleName), zap.String("route", route), zap.Error(err))
+			}
+		}
+	}
+	s.cfg.Info("default role permissions seeded")
+}
+
 func (s *Server) bootstrapAdmin() {
 	if s.cfg.AdminEmail == "" || s.cfg.AdminPassword == "" {
 		s.cfg.Warn("ADMIN_EMAIL/ADMIN_PASSWORD not set; skipping admin bootstrap")
@@ -559,7 +680,7 @@ func (s *Server) bootstrapAdmin() {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.cfg.Info("shutting down server")
-	// Stop background workers (outbox processor, saga SLA monitor) first.
+	// Stop background workers (saga SLA monitor) first.
 	s.cancel()
 	if s.hub != nil {
 		s.hub.Shutdown()

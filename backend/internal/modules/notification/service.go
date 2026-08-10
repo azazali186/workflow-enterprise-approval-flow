@@ -36,7 +36,9 @@ func (s *Service) SendNotification(ctx context.Context, notification *domain.Not
 	// Include the recipient so the saga can broadcast to the right user.
 	payload := fmt.Sprintf(`{"notification_id":"%s","user_id":"%s","type":"%s"}`,
 		notification.ID, notification.UserID, notification.Type)
-	s.NATS.Publish("notification.created", []byte(payload))
+	if err := s.NATS.Publish("notification.created", []byte(payload)); err != nil {
+		s.Logger.Error("failed to publish notification.created", zap.Error(err), zap.String("notification_id", notification.ID.String()))
+	}
 
 	if notification.Channel == "email" || strings.Contains(notification.Channel, "email") {
 		s.deliverEmail(ctx, notification)

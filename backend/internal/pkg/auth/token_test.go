@@ -94,6 +94,36 @@ func TestTokenService_ValidateWrongSecret(t *testing.T) {
 	}
 }
 
+func TestTokenService_ValidateAccessRejectsRefreshToken(t *testing.T) {
+	svc := &TokenService{
+		secret: []byte("test-secret-key-for-testing-12345"),
+		expiry: 24 * time.Hour,
+	}
+
+	access, err := svc.Generate("user-123", "test@example.com", []string{"user"})
+	if err != nil {
+		t.Fatalf("failed to generate access token: %v", err)
+	}
+	if _, err := svc.ValidateAccess(access); err != nil {
+		t.Fatalf("access token must pass ValidateAccess, got: %v", err)
+	}
+
+	// A refresh token is signed with the same key but must never be accepted
+	// as an access token (it lives for 7 days).
+	refresh, err := svc.GenerateRefresh("user-123", "test@example.com", []string{"user"})
+	if err != nil {
+		t.Fatalf("failed to generate refresh token: %v", err)
+	}
+	if _, err := svc.ValidateAccess(refresh); err == nil {
+		t.Error("refresh token must be rejected by ValidateAccess")
+	}
+
+	// The generic Validate still accepts it (the refresh flow relies on this).
+	if _, err := svc.Validate(refresh); err != nil {
+		t.Fatalf("generic Validate must still accept refresh tokens, got: %v", err)
+	}
+}
+
 func TestTokenService_GenerateRefresh(t *testing.T) {
 	svc := &TokenService{
 		secret: []byte("test-secret-key-for-testing-12345"),

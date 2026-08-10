@@ -37,11 +37,19 @@ jobs:
       - name: go test
         run: go test ./...
 
+      # Concurrency bugs (data races) only surface under the race detector;
+      # run it in CI since local Windows/386 toolchains cannot.
+      - name: go test -race
+        run: go test -race ./...
+
       - name: go build
         run: go build ./...
 
+      - name: Vulnerability scan (govulncheck)
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
   frontend:
-    name: Frontend (typecheck · build)
+    name: Frontend (typecheck · unit · build · audit)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -61,15 +69,79 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build
         run: npm run build
 
-  docker:
-    name: Docker image build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  frontend-e2e:
+    name: Frontend E2E (Playwright)
     runs-on: ubuntu-latest
-    needs: [backend]
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build backend image
-        run: docker build -t approval-flow:ci backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+  docker:
+    name: Build & publish images
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, frontend-e2e]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Backend image metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          # Publish only on main; PRs just validate the Dockerfiles build.
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ghcr.io/${{ github.repository }}-web:sha-${{ github.sha }}
+            ghcr.io/${{ github.repository }}-web:latest

@@ -57,6 +57,20 @@ type Config struct {
 	// CORSAllowedOrigins is a comma-separated allow-list of origins. An empty
 	// value means "*" (development default).
 	CORSAllowedOrigins []string
+	// TrustedProxies is a comma-separated allow-list of proxy CIDRs (e.g.
+	// "10.0.0.0/8,172.16.0.0/12") whose X-Forwarded-For / X-Real-IP headers
+	// are honored when resolving the client IP. Empty = trust no proxy: the
+	// socket peer address is used, so remote headers cannot spoof the client
+	// IP (rate limiter / lockout / audit logs stay accurate).
+	TrustedProxies []string
+	// ExposeSwagger controls whether /docs and /docs/swagger.json are served.
+	// Defaults to true in development and false in production, where exposing
+	// the full API schema publicly is undesirable.
+	ExposeSwagger bool
+	// MetricsToken, when non-empty, protects /metrics with a bearer token. In
+	// production with no token set, /metrics is disabled entirely so internal
+	// route/error counters are never exposed publicly.
+	MetricsToken string
 	// SwaggerHost overrides the host advertised in the Swagger docs.
 	SwaggerHost string
 	// SMTP settings for email notifications. If SMTPHost is empty, email
@@ -71,18 +85,21 @@ type Config struct {
 
 func Load() *Config {
 	cfg := &Config{
-		AppName:          getEnv("APP_NAME", "approval-flow"),
-		Env:              getEnv("ENV", "development"),
-		LogLevel:         getEnv("LOG_LEVEL", "debug"),
-		ServerPort:       getEnvAsInt("SERVER_PORT", 8080),
-		GRPCPort:         getEnvAsInt("GRPC_PORT", 9090),
-		DatabaseURL:      getEnv("DATABASE_URL", DefaultDatabaseURL),
-		RedisURL:         getEnv("REDIS_URL", "redis://localhost:6379"),
-		NATSURL:          getEnv("NATS_URL", "nats://localhost:4222"),
-		JWTSecret:        getEnv("JWT_SECRET", ""),
-		JWTExpiry:        getEnv("JWT_EXPIRY", "24h"),
+		AppName:     getEnv("APP_NAME", "approval-flow"),
+		Env:         getEnv("ENV", "development"),
+		LogLevel:    getEnv("LOG_LEVEL", "debug"),
+		ServerPort:  getEnvAsInt("SERVER_PORT", 8080),
+		GRPCPort:    getEnvAsInt("GRPC_PORT", 9090),
+		DatabaseURL: getEnv("DATABASE_URL", DefaultDatabaseURL),
+		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379"),
+		NATSURL:     getEnv("NATS_URL", "nats://localhost:4222"),
+		JWTSecret:   getEnv("JWT_SECRET", ""),
+		JWTExpiry:   getEnv("JWT_EXPIRY", "24h"),
+		// RateLimitBurst is the stricter per-window allowance applied to the
+		// authentication endpoints (login/register/refresh), the primary
+		// brute-force surface.
 		RateLimitRPS:     getEnvAsInt("RATE_LIMIT_RPS", 100),
-		RateLimitBurst:   getEnvAsInt("RATE_LIMIT_BURST", 200),
+		RateLimitBurst:   getEnvAsInt("RATE_LIMIT_BURST", 20),
 		RateLimitWindow:  getEnvAsInt("RATE_LIMIT_WINDOW", 60),
 		WSMaxConnections: getEnvAsInt("WS_MAX_CONNECTIONS", 1000),
 		WSPingInterval:   getEnvAsInt("WS_PING_INTERVAL", 30),
@@ -114,6 +131,25 @@ func Load() *Config {
 	if len(cfg.CORSAllowedOrigins) == 0 {
 		cfg.CORSAllowedOrigins = []string{"*"}
 	}
+
+	// Parse comma-separated trusted proxy CIDR allow-list.
+	if raw := os.Getenv("TRUSTED_PROXIES"); raw != "" {
+		for _, cidr := range strings.Split(raw, ",") {
+			cidr = strings.TrimSpace(cidr)
+			if cidr != "" {
+				cfg.TrustedProxies = append(cfg.TrustedProxies, cidr)
+			}
+		}
+	}
+
+	// Swagger is public in development only; production must opt in explicitly.
+	if raw, ok := os.LookupEnv("SWAGGER_ENABLED"); ok {
+		cfg.ExposeSwagger = raw == "true" || raw == "1" || raw == "yes"
+	} else {
+		cfg.ExposeSwagger = cfg.Env != "production"
+	}
+
+	cfg.MetricsToken = getEnvOrEmpty("METRICS_TOKEN")
 
 	// Default log file path for local development only.
 	if cfg.LogFilePath == "" {

@@ -33,7 +33,9 @@ func (s *Service) CreateWorkflow(ctx context.Context, workflow *domain.Workflow)
 	}
 
 	s.Cache.Delete(ctx, fmt.Sprintf("workflow:%s", workflow.ID))
-	s.NATS.Publish("workflow.created", []byte(fmt.Sprintf(`{"workflow_id":"%s"}`, workflow.ID)))
+	if err := s.NATS.Publish("workflow.created", []byte(fmt.Sprintf(`{"workflow_id":"%s"}`, workflow.ID))); err != nil {
+		s.Logger.Error("failed to publish workflow.created", zap.Error(err), zap.String("workflow_id", workflow.ID.String()))
+	}
 	s.Logger.Info("workflow created", zap.String("workflow_id", workflow.ID.String()))
 	return nil
 }

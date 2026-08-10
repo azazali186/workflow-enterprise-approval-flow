@@ -264,7 +264,9 @@ func (o *Orchestrator) handleApplicationSubmitted(msg *nats.Msg) {
 		"application_id": applicationID,
 		"saga_id":        sagaID,
 	})
-	o.nats.Publish("approval_needed", approvalNeededData)
+	if err := o.nats.Publish("approval_needed", approvalNeededData); err != nil {
+		o.logger.Error("failed to publish approval_needed", zap.Error(err))
+	}
 
 	// Broadcast WebSocket event
 	if o.hub != nil {
@@ -377,7 +379,9 @@ func (o *Orchestrator) handleApprovalDecided(msg *nats.Msg) {
 		"decision":       decision,
 		"type":           "decision",
 	})
-	o.nats.Publish("notification.created", notificationData)
+	if err := o.nats.Publish("notification.created", notificationData); err != nil {
+		o.logger.Error("failed to publish notification.created", zap.Error(err))
+	}
 
 	o.UpdateSagaStep(ctx, sagaID, 2, map[string]interface{}{
 		"step_name": "send_notification",

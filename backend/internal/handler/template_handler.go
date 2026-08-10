@@ -85,7 +85,7 @@ func (h *TemplateHandler) GetTemplate(ctx context.Context, c *app.RequestContext
 // @Param        request body     validation.CreateTemplateRequest true  "Template details"
 // @Success      201  {object}  response.Response{data=domain.Template}
 // @Failure      400  {object}  response.Response
-// @Failure      409  {object}  response.Response
+// @Failure      500  {object}  response.Response
 // @Router       /api/v1/templates/create [post]
 func (h *TemplateHandler) CreateTemplate(ctx context.Context, c *app.RequestContext) {
 	var req validation.CreateTemplateRequest
@@ -96,7 +96,8 @@ func (h *TemplateHandler) CreateTemplate(ctx context.Context, c *app.RequestCont
 	tmpl := &domain.Template{Name: req.Name, Category: req.Category, Schema: req.Schema, UI: req.UI, IsActive: true}
 	if err := h.svc.CreateTemplate(ctx, tmpl); err != nil {
 		h.cfg.Error("failed to create template", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. DB drivers) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to create template")
 		return
 	}
 	response.Success(c, tmpl)

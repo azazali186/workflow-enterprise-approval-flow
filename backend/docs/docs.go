@@ -2932,8 +2932,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
                         }
@@ -3186,8 +3186,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
                         }

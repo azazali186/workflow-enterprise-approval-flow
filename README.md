@@ -106,14 +106,14 @@ ApprovalFlow implements ApprovalService, ApplicationService, WorkflowService, No
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | **HTTP Framework** | [Hertz](https://github.com/cloudwego/hertz) | High-performance HTTP server |
-| **RPC** | [gRPC](https://grpc.io/) | Synchronous service-to-service |
-| **Messaging** | [NATS](https://nats.io/) JetStream | Async event-driven messaging |
+| **Messaging** | [NATS](https://nats.io/) JetStream | Durable async event-driven messaging |
 | **Database** | [PostgreSQL](https://www.postgresql.org/) 15+ | Primary data store |
 | **Cache** | [Redis](https://redis.io/) 7+ | Caching, sessions, saga state |
-| **WebSocket** | [coder/websocket](https://github.com/coder/websocket) | Real-time communication |
-| **Frontend** | React 18 + TypeScript + Tailwind | Web application |
-| **Android** | Kotlin + Jetpack Compose + Hilt | Android application |
-| **iOS** | Swift 5.9+ + SwiftUI | iOS application |
+| **WebSocket** | In-repo RFC 6455 implementation | Real-time communication (ping/pong keepalive, close handshake) |
+| **Frontend** | React 18 + TypeScript + Tailwind + Vite | Web application (served by nginx in production) |
+
+> **Roadmap (not in this phase):** gRPC service-to-service transport, and native
+> Android (Kotlin + Jetpack Compose) / iOS (SwiftUI) clients.
 
 ---
 
@@ -207,19 +207,18 @@ cd approval-flow
 # Create your environment file (set a strong JWT_SECRET and ADMIN_PASSWORD)
 cp backend/.env.example backend/.env
 
-# Start infrastructure services
-docker-compose up -d postgres redis nats
+# Start infrastructure services + backend + web UI (nginx-served SPA)
+cd backend
+docker compose up -d postgres redis nats approval-flow web
+#   → API at http://localhost:8080, SPA at http://localhost:3000
 
-# Run database migrations
-make migrate-up
-
-# Start the Go server
+# Or run the backend directly (migrations run automatically at startup):
 make run
 
-# In another terminal - start React frontend
-cd clients/web
+# In another terminal - start the React frontend dev server
+cd ../frontend
 npm install
-npm run dev
+npm run dev   # → http://localhost:5173 (proxies /api and /ws to :8080)
 ```
 
 > **Security note:** The initial administrator account is no longer seeded with
@@ -235,44 +234,20 @@ npm run dev
 
 ### Docker Compose
 
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: approval-flow
-      POSTGRES_USER: aeroxe
-      POSTGRES_PASSWORD: secret
-    ports:
-      - "5432:5432"
+The full stack (PostgreSQL, Redis, NATS with JetStream, the backend, and the
+nginx-served frontend) is defined in [`backend/docker-compose.yml`](backend/docker-compose.yml):
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  nats:
-    image: nats:2.10-alpine
-    ports:
-      - "4222:4222"
-      - "8222:8222"
-    command: ["-js"]
-
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-      - "9090:9090"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    # JWT_SECRET, ADMIN_EMAIL and ADMIN_PASSWORD are required via the .env file
+```bash
+cd backend
+cp .env.example .env     # set a real JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
+# Infra + backend only:
+docker compose up -d postgres redis nats approval-flow
+# Full stack incl. the web UI:
+docker compose up -d
 ```
+
+> NATS must run with JetStream enabled (`-js`), which the compose file does.
+> The backend fails to start if the durable event stream cannot be created.
 
 ---
 
@@ -280,7 +255,7 @@ services:
 
 ```bash
 # Server
-PORT=8080
+SERVER_PORT=8080
 ENV=development
 LOG_LEVEL=debug
 
@@ -290,15 +265,12 @@ DATABASE_URL=postgres://aeroxe:secret@localhost:5432/approval-flow?sslmode=disab
 # Redis
 REDIS_URL=redis://localhost:6379
 
-# NATS
+# NATS (JetStream required)
 NATS_URL=nats://localhost:4222
 
 # JWT
-JWT_SECRET=your-secret-key
-JWT_EXPIRY=24h
-
-# gRPC
-GRPC_PORT=9090
+JWT_SECRET=your-secret-key          # ≥32 chars in production
+JWT_EXPIRY=24h                      # access token lifetime (refresh: 7 days)
 
 # WebSocket
 WS_MAX_CONNECTIONS=1000
@@ -309,9 +281,19 @@ ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=change-me
 
 # Rate limiting (per-IP fixed window)
-RATE_LIMIT_RPS=100
-RATE_LIMIT_BURST=200
+RATE_LIMIT_RPS=100                  # general API allowance per window
+RATE_LIMIT_BURST=20                 # auth endpoints (login/register/refresh)
 RATE_LIMIT_WINDOW=60
+
+# Trusted proxies: CIDRs whose X-Forwarded-For is honored for ClientIP().
+# Empty = trust none (spoof-proof, but behind a proxy you must set this).
+TRUSTED_PROXIES=
+
+# Swagger UI (/docs): default true in dev, false in production.
+SWAGGER_ENABLED=
+
+# Bearer token for /metrics; empty + production = metrics disabled.
+METRICS_TOKEN=
 
 # CORS allow-list (comma separated; empty = * for development only)
 CORS_ALLOWED_ORIGINS=
@@ -380,9 +362,11 @@ go tool cover -html=coverage.out
 
 Production manifests live in [`backend/deploy/k8s`](backend/deploy/k8s): namespace,
 ConfigMap, Secret (placeholders — replace or use ExternalSecrets), a hardened
-Deployment (non-root UID 10001, read-only rootfs, dropped capabilities,
-liveness/readiness/startup probes, resource limits), a ClusterIP Service, and
-an nginx Ingress with TLS.
+backend Deployment (non-root UID 10001, read-only rootfs, dropped
+capabilities, liveness/readiness/startup probes, resource limits), a frontend
+Deployment + Service (nginx-served SPA, same hardening), two ClusterIP
+Services, and an nginx Ingress with TLS for `api.example.com` (backend) and
+`app.example.com` (SPA).
 
 ```bash
 # 1. Replace the placeholders in secret.yaml (or use a secret store).
@@ -390,13 +374,17 @@ an nginx Ingress with TLS.
 #    short JWT secrets.
 # 2. Provision PostgreSQL, Redis and NATS out of band (managed services or
 #    separate manifests) and point DATABASE_URL / REDIS_URL / NATS_URL at them.
-# 3. Create the ingress TLS secret (or enable the cert-manager annotation).
-# 4. Apply everything
+# 3. Set TRUSTED_PROXIES in configmap.yaml to the ingress controller's CIDRs
+#    (otherwise the rate limiter sees one shared IP for all users).
+# 4. Create the ingress TLS secret (or enable the cert-manager annotation).
+# 5. Apply everything
 kubectl apply -k backend/deploy/k8s
 ```
 
-The image (`ghcr.io/aeroxe/approval-flow`) is built and pushed by the CI
-pipeline on `main`; pin the exact tag it produces in `deployment.yaml`.
+CI builds and publishes both images to GHCR on `main`:
+`ghcr.io/<owner>/approval-flow` (backend) and `ghcr.io/<owner>/approval-flow-web`
+(frontend), tagged with the commit SHA plus `latest`. Pin the exact sha tag in
+`deployment.yaml` / `frontend.yaml` for immutable deployments.
 Replicas run golang-migrate concurrently; the postgres driver serializes
 migrations with an advisory lock, so startup is safe with multiple replicas.
 
@@ -407,7 +395,8 @@ migrations with an advisory lock, so startup is safe with multiple replicas.
 
 > The WebSocket endpoint (`/ws`) requires an `Authorization: Bearer` token, so
 > clients connecting from outside the cluster must route through the same
-> Ingress (which terminates TLS).
+> Ingress (which terminates TLS). The frontend nginx proxies `/ws` and `/api`
+> to the backend in-cluster, so browsers are same-origin and need no CORS.
 
 ---
 

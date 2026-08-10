@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-flow-web
+  namespace: approval-flow
+  labels:
+    app.kubernetes.io/name: approval-flow-web
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: approval-flow-web
+  template:
+    metadata:
+      labels:
+        app: approval-flow-web
+    spec:
+      # nginx runs as uid 101 in the official image.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          # Built and pushed by CI (see .github/workflows/ci.yml) as
+          # ghcr.io/<org>/<repo>-web:sha-<sha> and :latest on main. Pin the
+          # sha tag CI publishes; :latest below is a placeholder.
+          image: ghcr.io/aeroxe/approval-flow-web:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: BACKEND_UPSTREAM
+              value: "http://approval-flow:8080"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: approval-flow-web
+  namespace: approval-flow
+  labels:
+    app.kubernetes.io/name: approval-flow-web
+spec:
+  selector:
+    app: approval-flow-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

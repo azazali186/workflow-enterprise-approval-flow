@@ -109,17 +109,20 @@ func (h *HealthHandler) DetailedHealthCheck(ctx context.Context, c *app.RequestC
 		}
 	}
 
-	// Add system metrics
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
+	// Runtime internals (memory, goroutines) are only exposed outside
+	// production — they are a useful reconnaissance surface publicly.
+	if h.cfg.Env != "production" {
+		var memStats runtime.MemStats
+		runtime.ReadMemStats(&memStats)
 
-	status.System = SystemHealth{
-		GoVersion:   runtime.Version(),
-		Goroutines:  runtime.NumGoroutine(),
-		MemoryAlloc: memStats.Alloc,
-		MemoryTotal: memStats.TotalAlloc,
-		MemorySys:   memStats.Sys,
-		Uptime:      time.Since(h.startTime).Seconds(),
+		status.System = SystemHealth{
+			GoVersion:   runtime.Version(),
+			Goroutines:  runtime.NumGoroutine(),
+			MemoryAlloc: memStats.Alloc,
+			MemoryTotal: memStats.TotalAlloc,
+			MemorySys:   memStats.Sys,
+			Uptime:      time.Since(h.startTime).Seconds(),
+		}
 	}
 
 	h.cfg.Info("health check", zap.String("status", status.Status))

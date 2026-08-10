@@ -275,7 +275,8 @@ func (h *RBACHandler) CreateRole(ctx context.Context, c *app.RequestContext) {
 
 	if err := h.svc.CreateRole(ctx, role); err != nil {
 		h.cfg.Error("failed to create role", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. raw DB errors) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to create role")
 		return
 	}
 
@@ -449,7 +450,8 @@ func (h *RBACHandler) CreatePermission(ctx context.Context, c *app.RequestContex
 
 	if err := h.svc.CreatePermission(ctx, permission); err != nil {
 		h.cfg.Error("failed to create permission", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. raw DB errors) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to create permission")
 		return
 	}
 
@@ -599,7 +601,8 @@ func (h *RBACHandler) AssignPermissionToRole(ctx context.Context, c *app.Request
 
 	if err := h.svc.AssignPermissionToRole(ctx, roleID, permissionID); err != nil {
 		h.cfg.Error("failed to assign permission", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. raw DB errors) to the client.
+		response.Error(c, http.StatusConflict, "failed to assign permission")
 		return
 	}
 
@@ -638,7 +641,8 @@ func (h *RBACHandler) RemovePermissionFromRole(ctx context.Context, c *app.Reque
 
 	if err := h.svc.RemovePermissionFromRole(ctx, roleID, permissionID); err != nil {
 		h.cfg.Error("failed to remove permission", zap.Error(err))
-		response.Error(c, http.StatusNotFound, err.Error())
+		// Never leak wrapped details; the 404 semantics are what matter here.
+		response.Error(c, http.StatusNotFound, "permission assignment not found")
 		return
 	}
 
@@ -713,7 +717,8 @@ func (h *RBACHandler) AssignRoleToUser(ctx context.Context, c *app.RequestContex
 
 	if err := h.svc.AssignRole(ctx, userID, roleID); err != nil {
 		h.cfg.Error("failed to assign role", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. raw DB errors) to the client.
+		response.Error(c, http.StatusConflict, "failed to assign role")
 		return
 	}
 
@@ -752,7 +757,8 @@ func (h *RBACHandler) RemoveRoleFromUser(ctx context.Context, c *app.RequestCont
 
 	if err := h.svc.RemoveRole(ctx, userID, roleID); err != nil {
 		h.cfg.Error("failed to remove role", zap.Error(err))
-		response.Error(c, http.StatusNotFound, err.Error())
+		// Never leak wrapped details; the 404 semantics are what matter here.
+		response.Error(c, http.StatusNotFound, "role assignment not found")
 		return
 	}
 

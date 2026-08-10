@@ -112,7 +112,7 @@ func (h *WorkflowHandler) GetWorkflow(ctx context.Context, c *app.RequestContext
 // @Param        request body     validation.CreateWorkflowRequest true  "Workflow details"
 // @Success      201  {object}  response.Response{data=domain.Workflow}
 // @Failure      400  {object}  response.Response
-// @Failure      409  {object}  response.Response
+// @Failure      500  {object}  response.Response
 // @Router       /api/v1/workflows/create [post]
 func (h *WorkflowHandler) CreateWorkflow(ctx context.Context, c *app.RequestContext) {
 	var req validation.CreateWorkflowRequest
@@ -129,7 +129,8 @@ func (h *WorkflowHandler) CreateWorkflow(ctx context.Context, c *app.RequestCont
 	steps := buildWorkflowSteps(req.Steps)
 	if err := h.svc.CreateWorkflowWithSteps(ctx, wf, steps); err != nil {
 		h.cfg.Error("failed to create workflow", zap.Error(err))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Internal error: never leak wrapped details (e.g. DB drivers) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to create workflow")
 		return
 	}
 

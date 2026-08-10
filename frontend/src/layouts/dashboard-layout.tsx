@@ -5,11 +5,16 @@ import { cn } from '@/utils/cn'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { setMobileSidebarOpen } from '@/store/slices/ui.slice'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { useRealtime } from '@/hooks/use-realtime'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { PageLoader } from '@/components/ui/page-loader'
 
 export function DashboardLayout() {
+  // Keep the authenticated realtime socket (notifications/approvals) alive
+  // for the lifetime of the console.
+  useRealtime()
+
   const collapsed = useAppSelector((state) => state.ui.sidebarCollapsed)
   const mobileOpen = useAppSelector((state) => state.ui.mobileSidebarOpen)
   const isDesktop = useMediaQuery('(min-width: 1024px)')

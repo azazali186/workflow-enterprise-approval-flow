@@ -38,44 +38,76 @@ func DefaultTimeoutConfig() TimeoutConfig {
 	}
 }
 
+// runWithTimeout runs the remaining handler chain with a cancelable context
+// and reports whether it timed out. On timeout the context is canceled, so
+// downstream handlers that respect context cancellation (DB/Redis calls with
+// ctx) abort their work instead of running to completion after the client
+// already received a 408 — the previous implementation passed the parent
+// context to c.Next, leaking goroutines under slow upstreams.
+//
+// Panics raised by handlers in the spawned goroutine are forwarded back to
+// the middleware goroutine and re-raised there, so the Recovery middleware
+// (wrapping this chain in the outer goroutine) still catches them. Without
+// this, a handler panic would crash the entire process.
+func runWithTimeout(ctx context.Context, c *app.RequestContext, cfg *config.Config, timeout time.Duration, message string) bool {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	done := make(chan struct{})
+	panicCh := make(chan any, 1)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// Log immediately so a crash-inducing bug is visible even when
+				// the timeout branch wins the select below and drops the panic.
+				cfg.Error("panic recovered in timed-out handler",
+					zap.Any("error", r),
+					zap.String("method", string(c.Request.Method())),
+					zap.String("path", string(c.Request.URI().Path())),
+				)
+				panicCh <- r
+			}
+			close(done)
+		}()
+		// Execute the chain with the timeout context so cancellation propagates.
+		c.Next(timeoutCtx)
+	}()
+
+	select {
+	case <-done:
+		// Request completed within timeout. Re-raise any handler panic on this
+		// goroutine so the surrounding Recovery middleware handles it.
+		select {
+		case r := <-panicCh:
+			panic(r)
+		default:
+		}
+		return false
+	case <-timeoutCtx.Done():
+		// Timeout occurred: cancel the handler goroutine's work and respond 408.
+		cancel()
+		cfg.Warn("request timeout",
+			zap.String("method", string(c.Request.Method())),
+			zap.String("path", string(c.Request.URI().Path())),
+			zap.Duration("timeout", timeout),
+		)
+
+		// Only send response if not already written.
+		if !c.Response.IsBodyStream() {
+			c.JSON(consts.StatusRequestTimeout, map[string]string{
+				"error":   "timeout",
+				"message": message,
+			})
+		}
+		return true
+	}
+}
+
 // TimeoutMiddleware creates a middleware that enforces request timeouts
 func TimeoutMiddleware(cfg *config.Config) app.HandlerFunc {
 	config := DefaultTimeoutConfig()
-
 	return func(ctx context.Context, c *app.RequestContext) {
-		// Create a context with timeout
-		timeoutCtx, cancel := context.WithTimeout(ctx, config.Timeout)
-		defer cancel()
-
-		// Channel to signal completion
-		done := make(chan struct{})
-
-		go func() {
-			// Execute next handler
-			c.Next(ctx)
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			// Request completed within timeout
-			return
-		case <-timeoutCtx.Done():
-			// Timeout occurred
-			cfg.Warn("request timeout",
-				zap.String("method", string(c.Request.Method())),
-				zap.String("path", string(c.Request.URI().Path())),
-				zap.Duration("timeout", config.Timeout),
-			)
-
-			// Only send response if not already written
-			if !c.Response.IsBodyStream() {
-				c.JSON(consts.StatusRequestTimeout, map[string]string{
-					"error":   "timeout",
-					"message": config.Message,
-				})
-			}
-		}
+		runWithTimeout(ctx, c, cfg, config.Timeout, config.Message)
 	}
 }
 
@@ -96,43 +128,11 @@ func TimeoutWithConfig(cfg *config.Config, timeoutConfig TimeoutConfig) app.Hand
 	}
 
 	return func(ctx context.Context, c *app.RequestContext) {
-		// Create a context with timeout
-		timeoutCtx, cancel := context.WithTimeout(ctx, timeoutConfig.Timeout)
-		defer cancel()
+		timedOut := runWithTimeout(ctx, c, cfg, timeoutConfig.Timeout, timeoutConfig.Message)
 
-		// Channel to signal completion
-		done := make(chan struct{})
-
-		go func() {
-			// Execute next handler
-			c.Next(ctx)
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			// Request completed within timeout
-			return
-		case <-timeoutCtx.Done():
-			// Timeout occurred
-			cfg.Warn("request timeout",
-				zap.String("method", string(c.Request.Method())),
-				zap.String("path", string(c.Request.URI().Path())),
-				zap.Duration("timeout", timeoutConfig.Timeout),
-			)
-
-			// Only send response if not already written
-			if !c.Response.IsBodyStream() {
-				c.JSON(consts.StatusRequestTimeout, map[string]string{
-					"error":   "timeout",
-					"message": timeoutConfig.Message,
-				})
-			}
-
-			// Call custom handler if provided
-			if timeoutConfig.Handler != nil {
-				timeoutConfig.Handler(timeoutCtx, c)
-			}
+		// Custom handler fires only after a timeout.
+		if timedOut && timeoutConfig.Handler != nil {
+			timeoutConfig.Handler(ctx, c)
 		}
 	}
 }

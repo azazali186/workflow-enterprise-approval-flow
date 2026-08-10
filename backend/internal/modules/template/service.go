@@ -30,7 +30,9 @@ func (s *Service) CreateTemplate(ctx context.Context, template *domain.Template)
 	}
 
 	s.Cache.Delete(ctx, fmt.Sprintf("template:%s", template.ID))
-	s.NATS.Publish("template.created", []byte(fmt.Sprintf(`{"template_id":"%s"}`, template.ID)))
+	if err := s.NATS.Publish("template.created", []byte(fmt.Sprintf(`{"template_id":"%s"}`, template.ID))); err != nil {
+		s.Logger.Error("failed to publish template.created", zap.Error(err), zap.String("template_id", template.ID.String()))
+	}
 	s.Logger.Info("template created", zap.String("template_id", template.ID.String()))
 	return nil
 }

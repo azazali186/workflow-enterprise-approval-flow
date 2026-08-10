@@ -32,7 +32,7 @@ spec:
         - name: app
           # Pin the exact image from CI (e.g. the sha tag it pushes). Avoid
           # mutable tags in production; the :latest below is a placeholder.
-          image: ghcr.io/aeroxe/approval-flow:v1.0.0
+          image: ghcr.io/aeroxe/approval-flow:latest
           imagePullPolicy: Always
           ports:
             - name: http

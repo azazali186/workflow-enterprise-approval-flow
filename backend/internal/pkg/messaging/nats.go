@@ -7,11 +7,30 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 )
 
+// EventStream is the JetStream stream that durably captures every event the
+// services and the saga orchestrator publish. Publishing through JetStream
+// (with an ack) means a subscriber that is briefly down — or the publisher
+// itself restarting — never silently loses a workflow event.
+const EventStream = "APPROVAL_FLOW_EVENTS"
+
+// EventSubjects is the set of subjects captured by the durable stream.
+var EventSubjects = []string{
+	"approval.>",
+	"application.>",
+	"workflow.>",
+	"escalation.>",
+	"notification.>",
+	"template.>",
+	"approval_needed",
+}
+
 type NATS struct {
-	Conn *nats.Conn
-	Jet  nats.JetStreamContext
+	Conn   *nats.Conn
+	Jet    nats.JetStreamContext
+	logger *config.Config
 }
 
 func New(cfg *config.Config) (*NATS, error) {
@@ -32,8 +51,37 @@ func New(cfg *config.Config) (*NATS, error) {
 		return nil, fmt.Errorf("failed to init jetstream: %w", err)
 	}
 
+	// Ensure the durable event stream exists before anything publishes, so a
+	// JetStream publish (which requires a matching stream) never fails at
+	// request time. NATS must be started with JetStream enabled (-js).
+	if err := ensureEventStream(jet); err != nil {
+		return nil, fmt.Errorf("failed to ensure JetStream event stream: %w", err)
+	}
+
 	cfg.Info("nats connection established")
-	return &NATS{Conn: conn, Jet: jet}, nil
+	return &NATS{Conn: conn, Jet: jet, logger: cfg}, nil
+}
+
+// ensureEventStream creates the event stream if it does not exist, or updates
+// it to match the desired configuration. Idempotent, safe on every startup.
+func ensureEventStream(jet nats.JetStreamContext) error {
+	cfg := &nats.StreamConfig{
+		Name:     EventStream,
+		Subjects: EventSubjects,
+		// Retain messages long enough for consumers to catch up after restarts.
+		MaxAge: 24 * time.Hour,
+	}
+
+	if _, err := jet.StreamInfo(EventStream); err != nil {
+		if errors.Is(err, nats.ErrStreamNotFound) {
+			_, createErr := jet.AddStream(cfg)
+			return createErr
+		}
+		return err
+	}
+
+	_, err := jet.UpdateStream(cfg)
+	return err
 }
 
 func (n *NATS) Close() {
@@ -42,8 +90,30 @@ func (n *NATS) Close() {
 	}
 }
 
+// Publish durably publishes an event via JetStream. The publish is
+// asynchronous: the request path never blocks on a stream ack, so a degraded
+// NATS cannot stall API responses (it only delays delivery). JetStream still
+// retains the message for the durable stream, and core-NATS subscribers (the
+// saga orchestrator) receive it live. A failed stream ack is logged.
 func (n *NATS) Publish(subject string, data []byte) error {
-	return n.Conn.Publish(subject, data)
+	future, err := n.Jet.PublishAsync(subject, data, nats.AckWait(5*time.Second))
+	if err != nil {
+		return err
+	}
+	go func() {
+		select {
+		case <-future.Ok():
+			// Acked by the stream.
+		case err := <-future.Err():
+			if n.logger != nil {
+				n.logger.Error("nats publish ack failed",
+					zap.String("subject", subject),
+					zap.Error(err),
+				)
+			}
+		}
+	}()
+	return nil
 }
 
 func (n *NATS) Request(subject string, data []byte, timeout time.Duration) (*nats.Msg, error) {

@@ -40,7 +40,8 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [highlightedIndex, setHighlightedIndex] = useState(0)
+  // -1 = nothing highlighted until the user navigates (standard combobox behavior)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const listboxId = useMemo(() => `listbox-${id ?? Math.random().toString(36).slice(2)}`, [id])
@@ -68,7 +69,7 @@ export function Combobox({
 
   // Reset highlighted index when search changes
   useEffect(() => {
-    setHighlightedIndex(0)
+    setHighlightedIndex(-1)
   }, [search])
 
   // Scroll highlighted item into view
@@ -217,13 +218,15 @@ export function Combobox({
           {/* Search input */}
           <div className="flex items-center border-b border-slate-200 px-3">
             <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            {/* Note: keydown handling lives on the container div — the input's
+                events bubble up to it, so attaching onKeyDown here as well would
+                fire the handler twice per keystroke. */}
             <input
               ref={inputRef}
               type="text"
               placeholder={searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={handleKeyDown}
               className="h-9 flex-1 bg-transparent pl-2 text-sm outline-none placeholder:text-slate-400"
               aria-label={searchPlaceholder}
               autoComplete="off"

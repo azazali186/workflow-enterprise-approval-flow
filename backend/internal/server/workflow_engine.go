@@ -16,6 +16,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/modules/notification"
 	"github.com/aeroxe/approval-flow/internal/modules/rbac"
 	"github.com/aeroxe/approval-flow/internal/modules/workflow"
+	"github.com/aeroxe/approval-flow/internal/pkg/websocket"
 )
 
 // workflowEngine wires the domain modules into a real approval workflow:
@@ -36,6 +37,7 @@ type workflowEngine struct {
 	escalationSvc   *escalation.Service
 	notificationSvc *notification.Service
 	rbacRepo        *rbac.Repository
+	hub             *websocket.Hub
 	cfg             *config.Config
 }
 
@@ -46,6 +48,7 @@ func newWorkflowEngine(
 	escalationSvc *escalation.Service,
 	notificationSvc *notification.Service,
 	rbacRepo *rbac.Repository,
+	hub *websocket.Hub,
 	cfg *config.Config,
 ) *workflowEngine {
 	return &workflowEngine{
@@ -55,6 +58,7 @@ func newWorkflowEngine(
 		escalationSvc:   escalationSvc,
 		notificationSvc: notificationSvc,
 		rbacRepo:        rbacRepo,
+		hub:             hub,
 		cfg:             cfg,
 	}
 }
@@ -88,6 +92,14 @@ func (e *workflowEngine) onDecided(ctx context.Context, applicationID, decision,
 	app, err := e.appSvc.GetApplication(ctx, applicationID)
 	if err != nil {
 		return fmt.Errorf("load application: %w", err)
+	}
+
+	// Realtime: notify the applicant the moment their application is decided.
+	if e.hub != nil {
+		e.hub.SendToUser(app.ApplicantID.String(), "decision_made", map[string]interface{}{
+			"application_id": app.ID,
+			"decision":       decision,
+		})
 	}
 
 	now := time.Now()

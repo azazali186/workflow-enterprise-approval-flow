@@ -154,7 +154,8 @@ func (h *ApplicationHandler) SubmitApplication(ctx context.Context, c *app.Reque
 
 	if err := h.svc.SubmitApplication(ctx, app); err != nil {
 		h.cfg.Error("failed to submit application", zap.Error(err))
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		// Internal error: never leak wrapped details (e.g. DB drivers) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to submit application")
 		return
 	}
 

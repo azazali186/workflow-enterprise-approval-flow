@@ -151,7 +151,8 @@ func (h *NotificationHandler) MarkAsRead(ctx context.Context, c *app.RequestCont
 	}
 	if err := h.svc.MarkAsRead(ctx, req.NotificationID); err != nil {
 		h.cfg.Error("failed to mark notification as read", zap.Error(err))
-		response.Error(c, http.StatusNotFound, err.Error())
+		// Never leak wrapped details; the 404 semantics are what matter here.
+		response.Error(c, http.StatusNotFound, "notification not found")
 		return
 	}
 	response.Success(c, map[string]string{"message": "notification marked as read"})

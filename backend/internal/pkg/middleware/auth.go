@@ -72,8 +72,12 @@ func ValidateBearerToken(ctx context.Context, c *app.RequestContext, tokenServic
 	// Extract token
 	tokenStr := authorization[7:]
 
-	// Parse and validate JWT (stateless)
-	claims, err := tokenService.Validate(tokenStr)
+	// Parse and validate JWT (stateless). ValidateAccess also rejects refresh
+	// tokens (Subject "refresh-token"): they are signed with the same key but
+	// live for 7 days, so they must never be accepted at authenticated
+	// endpoints — otherwise a stolen refresh token would grant API access
+	// during the Redis fail-open window.
+	claims, err := tokenService.ValidateAccess(tokenStr)
 	if err != nil {
 		cfg.Error("invalid token", zap.Error(err))
 		c.JSON(consts.StatusUnauthorized, map[string]string{

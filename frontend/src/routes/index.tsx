@@ -3,6 +3,15 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { DashboardLayout } from '@/layouts/dashboard-layout'
 import { AdminRoute, ProtectedRoute } from './protected-route'
 import { Spinner } from '@/components/ui/spinner'
+import { AppErrorFallback } from '@/components/ui/app-error-fallback'
+
+// Renders when a route element (or a lazy chunk) throws. React Router's data
+// router catches these internally and renders the nearest errorElement — the
+// error never reaches outer React error boundaries, so this is the only place
+// a page crash can get a styled, recoverable fallback.
+function RouteErrorElement() {
+  return <AppErrorFallback />
+}
 
 const LoginPage = lazy(() => import('@/features/auth/pages/login-page'))
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/dashboard-page'))
@@ -29,6 +38,7 @@ function LoginLoader() {
 export const router = createBrowserRouter([
   {
     path: '/login',
+    errorElement: <RouteErrorElement />,
     element: (
       <Suspense fallback={<LoginLoader />}>
         <LoginPage />
@@ -37,6 +47,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
+    errorElement: <RouteErrorElement />,
     element: (
       <ProtectedRoute>
         <DashboardLayout />

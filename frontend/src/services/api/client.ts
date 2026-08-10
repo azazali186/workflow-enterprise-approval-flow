@@ -15,6 +15,19 @@ export interface RequestOptions {
 
 let refreshing: Promise<string | null> | null = null
 
+/**
+ * True when the access token is already expired (with a small safety margin),
+ * so we refresh before the request instead of after a wasted 401 round-trip.
+ */
+function isAccessTokenExpired(): boolean {
+  const expiresAt = storage.getExpiresAt()
+  if (!expiresAt) return false
+  const expiry = Date.parse(expiresAt)
+  if (Number.isNaN(expiry)) return false
+  // Refresh 60s before the hard expiry to avoid a 401 mid-flight.
+  return Date.now() >= expiry - 60_000
+}
+
 /** Single-flight token refresh: concurrent 401s share one refresh call. */
 async function refreshAccessToken(): Promise<string | null> {
   if (refreshing) return refreshing
@@ -32,6 +45,7 @@ async function refreshAccessToken(): Promise<string | null> {
       if (!res.ok || !envelope.data?.access_token) return null
       storage.setAccessToken(envelope.data.access_token)
       storage.setRefreshToken(envelope.data.refresh_token)
+      storage.setExpiresAt(envelope.data.expires_at)
       return envelope.data.access_token
     } catch {
       return null
@@ -48,11 +62,37 @@ function sessionExpired(): void {
   store.dispatch(clearCredentials())
 }
 
+/**
+ * Returns a valid access token, refreshing first if the stored one is past
+ * its expiry (the proactive path used by the API client and the WebSocket
+ * client before a handshake). Returns null — and clears the session — when
+ * the refresh itself fails, since an expired session cannot be revived.
+ */
+export async function ensureFreshAccessToken(): Promise<string | null> {
+  if (!isAccessTokenExpired()) return storage.getAccessToken()
+  const fresh = await refreshAccessToken()
+  if (!fresh) {
+    sessionExpired()
+    return null
+  }
+  return fresh
+}
+
 async function performEnvelope<T>(
   path: string,
   opts: RequestOptions,
   attempt: 'first' | 'retry',
 ): Promise<ApiEnvelope<T>> {
+  // Proactive refresh: if the access token is already expired, swap it for a
+  // fresh one before the request goes out — no 401 round-trip needed.
+  if (attempt === 'first' && !opts.skipAuth && isAccessTokenExpired()) {
+    const newToken = await refreshAccessToken()
+    if (!newToken) {
+      sessionExpired()
+      throw new ApiError('Your session has expired. Please sign in again.', { status: 401 })
+    }
+  }
+
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (!opts.skipAuth) {
     const token = storage.getAccessToken()

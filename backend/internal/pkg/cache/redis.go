@@ -165,6 +165,13 @@ func (r *Redis) Expire(ctx context.Context, key string, expiration time.Duration
 	return r.Client.Expire(ctx, key, expiration).Err()
 }
 
+// Eval runs a Lua script atomically on the Redis server. Lua scripts are the
+// correct tool for compare-and-swap style operations (e.g. refresh-token
+// rotation) where a read-modify-write must not be interleaved.
+func (r *Redis) Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error) {
+	return r.Client.Eval(ctx, script, keys, args...).Result()
+}
+
 // Ping checks if Redis connection is alive
 func (r *Redis) Ping(ctx context.Context) error {
 	return r.Client.Ping(ctx).Err()

@@ -2,6 +2,7 @@ package rbac
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,11 +20,27 @@ import (
 const (
 	// TokenCachePrefix is the prefix for token cache keys
 	TokenCachePrefix = "auth:token:"
+	// RefreshTokenCachePrefix is the prefix for refresh-token keys. The
+	// session is revoked by deleting this key, which the refresh endpoint
+	// checks before minting new tokens.
+	RefreshTokenCachePrefix = "auth:refresh:"
 	// DefaultTokenTTL is the default token TTL
 	DefaultTokenTTL = 24 * time.Hour
+	// RefreshTokenTTL matches the refresh JWT lifetime (7 days).
+	RefreshTokenTTL = 7 * 24 * time.Hour
 	// RefreshThreshold is the threshold for token refresh
 	RefreshThreshold = 30 * time.Minute
 )
+
+// ErrRefreshTokenReuse is returned when a refresh token no longer matches the
+// session's current or previous hash — i.e. it was already rotated (stolen and
+// replayed) or belongs to a revoked session. The session is invalidated.
+var ErrRefreshTokenReuse = errors.New("refresh token reuse detected")
+
+// ErrEmailExists is returned by Register when the email is already taken. It
+// is a sentinel so the handler can return the exact user-facing conflict
+// message without exposing wrapped internal errors.
+var ErrEmailExists = errors.New("user with this email already exists")
 
 // Service handles RBAC business logic
 type Service struct {
@@ -95,6 +112,16 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest) (*LoginResponse,
 		s.Logger.Error("failed to cache token", zap.Error(err))
 	}
 
+	// Bind the refresh token to the session so logout and password changes
+	// revoke it, and rotation/reuse detection work. A new login replaces the
+	// previous refresh token (single active session per user).
+	refreshHash := auth.ComputeTokenHash(refreshToken, user.ID.String())
+	refreshKey := RefreshTokenCachePrefix + user.ID.String()
+	if err := s.Cache.Set(ctx, refreshKey, refreshHash, RefreshTokenTTL); err != nil {
+		s.Logger.Error("failed to cache refresh token", zap.Error(err))
+	}
+	_ = s.Cache.Delete(ctx, refreshKey+":prev")
+
 	// Update last login time
 	now := time.Now()
 	user.LastLoginAt = &now
@@ -122,7 +149,7 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*domain.U
 	// Check if user already exists
 	existing, _ := s.Repo.GetUserByEmail(ctx, req.Email)
 	if existing != nil {
-		return nil, fmt.Errorf("user with this email already exists")
+		return nil, ErrEmailExists
 	}
 
 	// Create new user
@@ -149,7 +176,17 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*domain.U
 	return user, nil
 }
 
-// RefreshToken refreshes an expired token
+// RefreshToken refreshes an expired access token. The presented refresh token
+// must match the session's current (or one-behind) hash in Redis:
+//   - current match: normal rotation — the old token is retired immediately.
+//   - one-behind match: a benign race (e.g. two browser tabs refreshed
+//     concurrently) — accepted, and rotated again.
+//   - no match: the token was reused after rotation (stolen/replayed) or the
+//     session was revoked — the entire session is invalidated and 401 returned.
+//
+// The compare-and-rotate runs as one atomic Lua script, so concurrent
+// refreshes presenting the same token cannot both win (or clobber each
+// other) — exactly one rotates and the loser is treated as a benign race.
 func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*LoginResponse, error) {
 	// Parse the refresh token
 	claims, err := s.Token.Validate(refreshToken)
@@ -168,7 +205,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 		return nil, fmt.Errorf("user not found")
 	}
 
-	// Generate new tokens
+	// Generate the replacement tokens up front; the atomic rotation either
+	// accepts them (valid/race) or rejects the presented token (reused/missing).
 	roles := make([]string, len(user.Roles))
 	for i, role := range user.Roles {
 		roles[i] = role.Name
@@ -184,9 +222,52 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	// Update token cache
-	tokenHash := auth.ComputeTokenHash(accessToken, user.ID.String())
-	tokenKey := TokenCachePrefix + user.ID.String()
+	// The session must still be active: logout / password change delete this key.
+	refreshKey := RefreshTokenCachePrefix + userID.String()
+	prevKey := refreshKey + ":prev"
+	presentedHash := auth.ComputeTokenHash(refreshToken, userID.String())
+	newRefreshHash := auth.ComputeTokenHash(newRefreshToken, userID.String())
+
+	status, err := s.Cache.Eval(ctx, refreshRotateScript,
+		[]string{refreshKey, prevKey},
+		presentedHash, newRefreshHash, int(RefreshTokenTTL.Seconds()),
+	)
+	if err != nil {
+		s.Logger.Error("refresh token rotation failed",
+			zap.String("user_id", userID.String()),
+			zap.Error(err),
+		)
+		return nil, fmt.Errorf("failed to rotate refresh token")
+	}
+
+	code, ok := status.(int64)
+	if !ok {
+		// Defensive: a Redis/client version change must never panic the server.
+		s.Logger.Error("refresh token rotation returned unexpected type",
+			zap.String("user_id", userID.String()),
+			zap.Any("value", status),
+		)
+		return nil, fmt.Errorf("failed to rotate refresh token")
+	}
+
+	switch refreshTokenStatusFromCode(code) {
+	case refreshTokenMissing:
+		return nil, fmt.Errorf("refresh token expired or session revoked")
+	case refreshTokenReused:
+		// The presented token matches neither the current nor the previous
+		// one — it was replayed after rotation or is otherwise forged. Kill
+		// the session so the stolen credential becomes worthless.
+		s.revokeSession(ctx, userID.String())
+		s.Logger.Error("refresh token reuse detected; session revoked",
+			zap.String("user_id", userID.String()),
+			zap.String("email", user.Email),
+		)
+		return nil, ErrRefreshTokenReuse
+	}
+
+	// Update the access-token session key (single sign-on).
+	tokenHash := auth.ComputeTokenHash(accessToken, userID.String())
+	tokenKey := TokenCachePrefix + userID.String()
 	if err := s.Cache.Set(ctx, tokenKey, tokenHash, DefaultTokenTTL); err != nil {
 		s.Logger.Error("failed to cache token", zap.Error(err))
 	}
@@ -199,16 +280,108 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 	}, nil
 }
 
-// Logout invalidates a user's token
-func (s *Service) Logout(ctx context.Context, userID string) error {
-	tokenKey := TokenCachePrefix + userID
-	return s.Cache.Delete(ctx, tokenKey)
+// refreshTokenStatus classifies a presented refresh-token hash against the
+// session's stored current/previous hashes.
+type refreshTokenStatus int
+
+const (
+	// refreshTokenValid: matches the current hash — normal rotation.
+	refreshTokenValid refreshTokenStatus = iota
+	// refreshTokenRace: matches the previous hash — a concurrent refresh in
+	// another tab rotated it first; benign, rotate again.
+	refreshTokenRace
+	// refreshTokenReused: matches neither — replayed/forged token; revoke.
+	refreshTokenReused
+	// refreshTokenMissing: no session stored (logged out / never logged in).
+	refreshTokenMissing
+)
+
+// refreshRotateScript atomically validates the presented refresh token and
+// rotates it. The compare-and-rotate must be one atomic operation: with a
+// separate read-then-write, two concurrent refreshes presenting the same
+// token would both pass the check and the second write would clobber the
+// first, spuriously revoking a legitimate multi-tab session. Lua scripts run
+// without interleaving, so exactly one refresh wins the rotation.
+//
+// KEYS:  [1] refreshKey, [2] prevKey
+// ARGV:  [1] presentedHash, [2] newRefreshHash, [3] ttlSeconds
+//
+// Returns a status code as a Lua integer: 0=valid, 1=race, 2=reused, 3=missing.
+const refreshRotateScript = `
+local current = redis.call('GET', KEYS[1])
+local previous = redis.call('GET', KEYS[2])
+local presented = ARGV[1]
+local newHash = ARGV[2]
+local ttl = tonumber(ARGV[3])
+
+if not current then
+  return 3 -- missing
+end
+if current == presented then
+  redis.call('SET', KEYS[2], current, 'EX', ttl)
+  redis.call('SET', KEYS[1], newHash, 'EX', ttl)
+  return 0 -- valid
+end
+if previous and previous == presented then
+  redis.call('SET', KEYS[2], current, 'EX', ttl)
+  redis.call('SET', KEYS[1], newHash, 'EX', ttl)
+  return 1 -- race
+end
+return 2 -- reused
+`
+
+// classifyRefreshToken mirrors the Lua script's decision table in pure Go. It
+// exists for unit testing the rotation semantics without a Redis instance;
+// production uses refreshRotateScript above (identical logic, atomic).
+func classifyRefreshToken(current, previous, presented string) refreshTokenStatus {
+	if current == "" {
+		return refreshTokenMissing
+	}
+	if current == presented {
+		return refreshTokenValid
+	}
+	if previous != "" && previous == presented {
+		return refreshTokenRace
+	}
+	return refreshTokenReused
 }
 
-// ValidateToken validates a token and checks if it's still valid in Redis
+// refreshTokenStatusFromCode maps the Lua script's integer status back to a
+// refreshTokenStatus.
+func refreshTokenStatusFromCode(code int64) refreshTokenStatus {
+	switch code {
+	case 0:
+		return refreshTokenValid
+	case 1:
+		return refreshTokenRace
+	case 3:
+		return refreshTokenMissing
+	default:
+		return refreshTokenReused
+	}
+}
+
+// revokeSession deletes every session artifact for a user: the access-token
+// key (SSO) and the refresh-token keys (current + previous).
+func (s *Service) revokeSession(ctx context.Context, userID string) {
+	_ = s.Cache.Delete(ctx, TokenCachePrefix+userID)
+	_ = s.Cache.Delete(ctx, RefreshTokenCachePrefix+userID)
+	_ = s.Cache.Delete(ctx, RefreshTokenCachePrefix+userID+":prev")
+}
+
+// Logout invalidates a user's session: the access token (SSO) and the refresh
+// token, so a stolen refresh token cannot mint new sessions after logout.
+func (s *Service) Logout(ctx context.Context, userID string) error {
+	s.revokeSession(ctx, userID)
+	return nil
+}
+
+// ValidateToken validates an access token and checks if it's still valid in
+// Redis. ValidateAccess rejects refresh tokens (they are signed with the same
+// key but live 7 days and must never be accepted at authenticated endpoints).
 func (s *Service) ValidateToken(ctx context.Context, tokenString string) (*auth.Claims, error) {
 	// Parse token
-	claims, err := s.Token.Validate(tokenString)
+	claims, err := s.Token.ValidateAccess(tokenString)
 	if err != nil {
 		return nil, err
 	}
@@ -511,11 +684,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, req *Cha
 		return fmt.Errorf("failed to update password: %w", err)
 	}
 
-	// Invalidate all existing sessions for this user (force re-login)
-	tokenKey := TokenCachePrefix + user.ID.String()
-	if err := s.Cache.Delete(ctx, tokenKey); err != nil {
-		s.Logger.Warn("failed to invalidate session after password change", zap.Error(err))
-	}
+	// Invalidate all existing sessions for this user (force re-login),
+	// including the refresh token.
+	s.revokeSession(ctx, user.ID.String())
 
 	s.Logger.Info("password changed successfully",
 		zap.String("user_id", user.ID.String()),

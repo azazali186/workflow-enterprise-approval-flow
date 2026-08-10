@@ -50,7 +50,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  app:
+  approval-flow:
     build:
       context: .
       args:
@@ -76,12 +76,34 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD must be set in the .env file}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      # Trust the compose network as a proxy layer so ClientIP() can resolve
+      # real clients when traffic is fronted by the web service's nginx.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      # Operational endpoints: swagger is off by default in production; set a
+      # token here to keep /metrics available to your scraper.
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/live || exit 1"]
       interval: 30s
       timeout: 5s
       start_period: 20s
       retries: 3
+    restart: unless-stopped
+
+  # Production web tier: nginx serves the built SPA and proxies /api + /ws to
+  # the backend on the same origin, so the browser never needs CORS.
+  web:
+    build:
+      context: ../frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    ports:
+      - "3000:80"
+    depends_on:
+      - approval-flow
+    environment:
+      BACKEND_UPSTREAM: http://approval-flow:8080
     restart: unless-stopped
 
 volumes:

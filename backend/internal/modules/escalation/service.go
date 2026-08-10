@@ -42,7 +42,9 @@ func (s *Service) Escalate(ctx context.Context, approvalID string, level int, es
 		return fmt.Errorf("failed to create escalation: %w", err)
 	}
 
-	s.NATS.Publish("escalation.created", []byte(fmt.Sprintf(`{"escalation_id":"%s"}`, escalation.ID)))
+	if err := s.NATS.Publish("escalation.created", []byte(fmt.Sprintf(`{"escalation_id":"%s"}`, escalation.ID))); err != nil {
+		s.Logger.Error("failed to publish escalation.created", zap.Error(err), zap.String("escalation_id", escalation.ID.String()))
+	}
 	s.Hub.SendToUser(escalatedTo.String(), "escalation_trigger", map[string]interface{}{
 		"escalation_id": escalation.ID,
 		"approval_id":   approvalID,

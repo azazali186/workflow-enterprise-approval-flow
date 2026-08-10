@@ -6,7 +6,9 @@
 *.dll
 *.so
 *.dylib
+.env
 
+.freebuff/
 
 # Test binary
 *.test

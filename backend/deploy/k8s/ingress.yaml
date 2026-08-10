@@ -14,8 +14,10 @@ spec:
   tls:
     - hosts:
         - api.example.com
+        - app.example.com
       secretName: approval-flow-tls
   rules:
+    # Backend API
     - host: api.example.com
       http:
         paths:
@@ -24,5 +26,17 @@ spec:
             backend:
               service:
                 name: approval-flow
+                port:
+                  name: http
+    # Frontend SPA (nginx proxies /api and /ws to the backend in-cluster, so
+    # the browser is same-origin and needs no CORS)
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: approval-flow-web
                 port:
                   name: http

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -155,7 +156,13 @@ func (h *AuthHandler) Register(ctx context.Context, c *app.RequestContext) {
 			reqCtx.IPAddress, reqCtx.UserAgent, reqCtx.RequestID)
 
 		h.cfg.Error("registration failed", zap.Error(err), zap.String("email", req.Email))
-		response.Error(c, http.StatusConflict, err.Error())
+		// Surface the known business conflict verbatim; any other failure is
+		// internal and must never leak wrapped details (e.g. DB drivers).
+		if errors.Is(err, rbac.ErrEmailExists) {
+			response.Error(c, http.StatusConflict, "user with this email already exists")
+			return
+		}
+		response.Error(c, http.StatusInternalServerError, "registration failed")
 		return
 	}
 
@@ -205,10 +212,22 @@ func (h *AuthHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 
 	reqCtx := h.extractRequestContext(c)
 
+	// Record the presented refresh token's jti for the audit trail.
+	tokenID := ""
+	if h.svc.Token != nil {
+		tokenID = h.svc.Token.ExtractTokenID(req.RefreshToken)
+	}
+
 	result, err := h.svc.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
+		// Distinguish reuse (stolen/rotated token) from ordinary invalidity.
+		failureReason := domain.FailureReasonTokenInvalid
+		if errors.Is(err, rbac.ErrRefreshTokenReuse) {
+			failureReason = domain.FailureReasonTokenReuse
+		}
+
 		// Log failed token refresh
-		h.loginLog.LogLoginFailure(ctx, "", domain.FailureReasonTokenInvalid,
+		h.loginLog.LogLoginFailure(ctx, "", failureReason,
 			reqCtx.IPAddress, reqCtx.UserAgent, reqCtx.RequestID)
 
 		h.cfg.Error("token refresh failed", zap.Error(err))
@@ -225,6 +244,7 @@ func (h *AuthHandler) RefreshToken(ctx context.Context, c *app.RequestContext) {
 			IPAddress: reqCtx.IPAddress,
 			UserAgent: reqCtx.UserAgent,
 			RequestID: reqCtx.RequestID,
+			TokenID:   tokenID,
 		})
 
 		// Create audit log

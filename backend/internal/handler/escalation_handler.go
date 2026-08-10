@@ -106,7 +106,8 @@ func (h *EscalationHandler) ResolveEscalation(ctx context.Context, c *app.Reques
 	}
 	if err := h.svc.ResolveEscalation(ctx, req.EscalationID); err != nil {
 		h.cfg.Error("failed to resolve escalation", zap.Error(err))
-		response.Error(c, http.StatusNotFound, err.Error())
+		// Never leak wrapped details; the 404 semantics are what matter here.
+		response.Error(c, http.StatusNotFound, "escalation not found or already resolved")
 		return
 	}
 	response.Success(c, map[string]string{"message": "escalation resolved"})

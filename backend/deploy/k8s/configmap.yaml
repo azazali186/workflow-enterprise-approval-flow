@@ -18,7 +18,20 @@ data:
   WS_MAX_CONNECTIONS: "1000"
   WS_PING_INTERVAL: "30"
   RATE_LIMIT_RPS: "100"
+  # Authentication endpoints (login/register/refresh) allow this many requests
+  # per window per IP.
+  RATE_LIMIT_BURST: "20"
   RATE_LIMIT_WINDOW: "60"
+  # CIDRs of the ingress controller / LBs whose X-Forwarded-For headers are
+  # trusted for ClientIP(). MUST be set to the real proxy subnets, otherwise
+  # every user is rate-limited as one shared IP (or, if empty, the peer IP).
+  TRUSTED_PROXIES: "10.0.0.0/8,172.16.0.0/12"
+  # Swagger is off in production; flip to "true" only if you need it behind
+  # your own authz.
+  SWAGGER_ENABLED: "false"
+  # Leave empty to disable /metrics in production; set a long random token to
+  # keep it available to your Prometheus scraper.
+  METRICS_TOKEN: ""
   # Replace with the real frontend origins.
   CORS_ALLOWED_ORIGINS: "https://app.example.com"
   MIGRATIONS_PATH: "/app/migrations"

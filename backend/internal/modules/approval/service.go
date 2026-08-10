@@ -43,7 +43,9 @@ func (s *Service) CreateApproval(ctx context.Context, approval *domain.Approval)
 
 	s.Cache.Delete(ctx, fmt.Sprintf("approval:%s", approval.ID))
 
-	s.NATS.Publish("approval.created", []byte(fmt.Sprintf(`{"approval_id":"%s"}`, approval.ID)))
+	if err := s.NATS.Publish("approval.created", []byte(fmt.Sprintf(`{"approval_id":"%s"}`, approval.ID))); err != nil {
+		s.Logger.Error("failed to publish approval.created", zap.Error(err), zap.String("approval_id", approval.ID.String()))
+	}
 	s.Hub.SendToUser(approval.ApproverID.String(), "approval_needed", map[string]interface{}{
 		"approval_id": approval.ID,
 		"status":      approval.Status,
@@ -113,11 +115,13 @@ func (s *Service) DecideApproval(ctx context.Context, id, decision, comment stri
 
 	s.Cache.Delete(ctx, fmt.Sprintf("approval:%s", approval.ID))
 
-	s.NATS.Publish("approval.decided", []byte(fmt.Sprintf(`{"approval_id":"%s","application_id":"%s","decision":"%s"}`, approval.ID, approval.ApplicationID, decision)))
-	s.Hub.SendToUser(approval.ApplicationID.String(), "decision_made", map[string]interface{}{
-		"approval_id": approval.ID,
-		"decision":    decision,
-	})
+	if err := s.NATS.Publish("approval.decided", []byte(fmt.Sprintf(`{"approval_id":"%s","application_id":"%s","decision":"%s"}`, approval.ID, approval.ApplicationID, decision))); err != nil {
+		s.Logger.Error("failed to publish approval.decided", zap.Error(err), zap.String("approval_id", approval.ID.String()))
+	}
+	// The applicant is notified of the decision via the workflow engine's
+	// onDecided callback (it resolves the applicant from the application), and
+	// the saga broadcasts decision_made. No targeted send here: this module
+	// does not know the applicant ID without another query.
 
 	// Advance the workflow (next step or application completion) synchronously
 	// so the caller sees a consistent state.

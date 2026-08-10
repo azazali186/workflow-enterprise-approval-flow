@@ -37,6 +37,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true
       storage.setAccessToken(action.payload.accessToken)
       storage.setRefreshToken(action.payload.refreshToken)
+      storage.setExpiresAt(action.payload.expiresAt)
     },
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload

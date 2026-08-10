@@ -45,7 +45,9 @@ func (s *Service) SubmitApplication(ctx context.Context, app *domain.Application
 
 	s.Cache.Delete(ctx, fmt.Sprintf("application:%s", app.ID))
 
-	s.NATS.Publish("application.submitted", []byte(fmt.Sprintf(`{"application_id":"%s"}`, app.ID)))
+	if err := s.NATS.Publish("application.submitted", []byte(fmt.Sprintf(`{"application_id":"%s"}`, app.ID))); err != nil {
+		s.Logger.Error("failed to publish application.submitted", zap.Error(err), zap.String("application_id", app.ID.String()))
+	}
 	s.Hub.SendToUser(app.ApplicantID.String(), "application_submitted", map[string]interface{}{
 		"application_id": app.ID,
 		"status":         app.Status,

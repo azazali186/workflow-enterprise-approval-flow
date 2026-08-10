@@ -77,6 +77,23 @@ func (t *TokenService) Validate(tokenString string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token claims")
 }
 
+// ValidateAccess validates a token AND requires it to be an access token
+// (Subject "access-token"). Refresh tokens are signed with the same key but
+// live for 7 days; they must never be accepted at authenticated endpoints —
+// otherwise a stolen refresh token would grant full API access during the
+// Redis fail-open window (or any path that skips the session check). The
+// refresh flow itself uses Validate, which accepts both subjects.
+func (t *TokenService) ValidateAccess(tokenString string) (*Claims, error) {
+	claims, err := t.Validate(tokenString)
+	if err != nil {
+		return nil, err
+	}
+	if claims.Subject != "access-token" {
+		return nil, fmt.Errorf("invalid token: unexpected subject %q", claims.Subject)
+	}
+	return claims, nil
+}
+
 // Refresh refreshes an expired token
 func (t *TokenService) Refresh(tokenString string) (string, error) {
 	claims, err := t.Validate(tokenString)

@@ -11,6 +11,7 @@ import (
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/domain"
 	"github.com/aeroxe/approval-flow/internal/modules/approval"
+	"github.com/aeroxe/approval-flow/internal/pkg/middleware"
 	"github.com/aeroxe/approval-flow/internal/pkg/pagination"
 	"github.com/aeroxe/approval-flow/internal/pkg/response"
 	"github.com/aeroxe/approval-flow/internal/pkg/validation"
@@ -156,7 +157,8 @@ func (h *ApprovalHandler) DecideApproval(ctx context.Context, c *app.RequestCont
 	approval, err := h.svc.DecideApproval(ctx, req.ApprovalID, req.Decision, req.Comment)
 	if err != nil {
 		h.cfg.Error("failed to decide approval", zap.Error(err))
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		// Internal error: never leak wrapped details (e.g. DB drivers) to the client.
+		response.Error(c, http.StatusInternalServerError, "failed to process approval decision")
 		return
 	}
 	response.Success(c, approval)
@@ -222,24 +224,34 @@ func (h *ApprovalHandler) DeleteApproval(ctx context.Context, c *app.RequestCont
 	response.Success(c, map[string]string{"message": "approval deleted"})
 }
 
-// GetPendingApprovals gets pending approvals for an approver
-// @Summary      Get pending approvals
-// @Description  Get pending approvals for a specific approver
+// GetPendingApprovals gets the authenticated user's pending approvals.
+// The approver identity always comes from the token, never the request body
+// (IDOR prevention).
+// @Summary      Get my pending approvals
+// @Description  Get the authenticated user's pending approvals. Identity is
+// @Description  taken from the token; the legacy body is tolerated but ignored.
 // @Tags         Approvals
 // @Accept       json
 // @Produce      json
-// @Param        request body     validation.GetPendingApprovalsRequest true  "Approver ID"
+// @Param        request body     validation.GetPendingApprovalsRequest false  "Legacy body (ignored)"
 // @Success      200  {object}  response.Response
-// @Failure      400  {object}  response.Response
+// @Failure      401  {object}  response.Response
 // @Failure      500  {object}  response.Response
 // @Router       /api/v1/approvals/pending [post]
 func (h *ApprovalHandler) GetPendingApprovals(ctx context.Context, c *app.RequestContext) {
+	// Identity always comes from the authenticated token, never the body, so a
+	// user can never read another approver's inbox (IDOR prevention). The body
+	// is tolerated for backward compatibility but ignored.
 	var req validation.GetPendingApprovalsRequest
-	if err := c.BindAndValidate(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, "invalid request body")
+	_ = c.BindAndValidate(&req)
+
+	userIDStr := middleware.GetUserIDFromContext(c)
+	if userIDStr == "" {
+		response.Error(c, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	approvals, err := h.svc.GetPendingApprovals(ctx, req.ApproverID)
+
+	approvals, err := h.svc.GetPendingApprovals(ctx, userIDStr)
 	if err != nil {
 		h.cfg.Error("failed to get pending approvals", zap.Error(err))
 		response.Error(c, http.StatusInternalServerError, "failed to get pending approvals")

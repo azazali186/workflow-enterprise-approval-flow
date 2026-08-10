@@ -38,4 +38,5 @@ const (
 	FailureReasonTokenExpired       = "token_expired"
 	FailureReasonTokenInvalid       = "token_invalid"
 	FailureReasonTokenRevoked       = "token_revoked"
+	FailureReasonTokenReuse         = "token_reuse_detected"
 )

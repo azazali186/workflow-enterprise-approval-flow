@@ -3,6 +3,7 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"sync"
 	"time"
 
 	"github.com/aeroxe/approval-flow/internal/config"
@@ -46,6 +47,50 @@ type LogEntry struct {
 	Changes    domain.JSONMap
 	IPAddress  string
 	UserAgent  string
+}
+
+// Bounded audit write queue: a slow database must never make every write
+// request spawn an unbounded goroutine (the previous implementation did).
+const (
+	auditQueueSize   = 1024
+	auditWorkerCount = 8
+)
+
+type auditJob struct {
+	ctx   context.Context
+	entry LogEntry
+	al    *AuditLogger
+}
+
+var (
+	auditQueue       chan auditJob
+	auditWorkersOnce sync.Once
+)
+
+// startAuditWorkers launches the fixed pool of audit writers once.
+func startAuditWorkers() {
+	auditQueue = make(chan auditJob, auditQueueSize)
+	for i := 0; i < auditWorkerCount; i++ {
+		go func() {
+			for job := range auditQueue {
+				job.al.Log(job.ctx, job.entry)
+			}
+		}()
+	}
+}
+
+// enqueueAudit schedules an audit write on the bounded pool. When the queue is
+// full the entry is dropped and logged rather than blocking or growing memory.
+func enqueueAudit(ctx context.Context, al *AuditLogger, entry LogEntry) {
+	auditWorkersOnce.Do(startAuditWorkers)
+	select {
+	case auditQueue <- auditJob{ctx: ctx, entry: entry, al: al}:
+	default:
+		al.logger.Error("audit queue full; dropping audit entry",
+			zap.String("action", entry.Action),
+			zap.String("entity_type", entry.EntityType),
+		)
+	}
 }
 
 // Log writes an audit log entry to the database
@@ -126,9 +171,9 @@ func AuditMiddleware(db *gorm.DB, cfg *config.Config) app.HandlerFunc {
 			"duration_ms": time.Since(start).Milliseconds(),
 		}
 
-		// Log asynchronously to avoid blocking; detach from the request context so a
-		// cancelled request does not silently drop the audit write.
-		go auditLogger.Log(context.WithoutCancel(ctx), LogEntry{
+		// Write on the bounded worker pool (detached from the request context so a
+		// cancelled request does not silently drop the audit write).
+		enqueueAudit(context.WithoutCancel(ctx), auditLogger, LogEntry{
 			EntityType: entityType,
 			EntityID:   entityID,
 			Action:     action,
