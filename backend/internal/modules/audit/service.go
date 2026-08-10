@@ -114,13 +114,13 @@ func (s *Service) Log(ctx context.Context, params LogParams) error {
 // LogCreate logs a create operation
 func (s *Service) LogCreate(ctx context.Context, entityType string, entityID uuid.UUID, actorID *uuid.UUID, entity interface{}, reqCtx *RequestContext) error {
 	return s.Log(ctx, LogParams{
-		EntityType:  entityType,
-		EntityID:    entityID,
-		Action:      domain.AuditActionCreate,
-		ActorID:     actorID,
-		AfterState:  entity,
-		Request:     reqCtx,
-		Status:      domain.AuditStatusSuccess,
+		EntityType: entityType,
+		EntityID:   entityID,
+		Action:     domain.AuditActionCreate,
+		ActorID:    actorID,
+		AfterState: entity,
+		Request:    reqCtx,
+		Status:     domain.AuditStatusSuccess,
 	})
 }
 

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aeroxe/approval-flow/internal/config"
 	"github.com/aeroxe/approval-flow/internal/pkg/cache"
+	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
 	"go.uber.org/zap"
 )
 

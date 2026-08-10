@@ -4,15 +4,15 @@ import "time"
 
 // PaginationSummary represents a summary of the pagination result
 type PaginationSummary struct {
-	TotalRecords    int64              `json:"total_records"`
-	FilteredRecords int64              `json:"filtered_records"`
-	Page            int                `json:"page"`
-	PageSize        int                `json:"page_size"`
-	TotalPages      int                `json:"total_pages"`
-	HasMore         bool               `json:"has_more"`
-	HasPrevious     bool               `json:"has_previous"`
-	NextCursor      string             `json:"next_cursor,omitempty"`
-	PreviousCursor  string             `json:"previous_cursor,omitempty"`
+	TotalRecords    int64  `json:"total_records"`
+	FilteredRecords int64  `json:"filtered_records"`
+	Page            int    `json:"page"`
+	PageSize        int    `json:"page_size"`
+	TotalPages      int    `json:"total_pages"`
+	HasMore         bool   `json:"has_more"`
+	HasPrevious     bool   `json:"has_previous"`
+	NextCursor      string `json:"next_cursor,omitempty"`
+	PreviousCursor  string `json:"previous_cursor,omitempty"`
 }
 
 // ApplicationSummary represents application-specific summary data
@@ -61,10 +61,10 @@ type UserSummary struct {
 
 // RoleSummary represents role-specific summary data
 type RoleSummary struct {
-	TotalRoles       int64            `json:"total_roles"`
-	WithPermissions  int64            `json:"with_permissions"`
-	ByDefault        map[string]int64 `json:"by_default"`
-	AvgPermissions   float64          `json:"avg_permissions_per_role"`
+	TotalRoles      int64            `json:"total_roles"`
+	WithPermissions int64            `json:"with_permissions"`
+	ByDefault       map[string]int64 `json:"by_default"`
+	AvgPermissions  float64          `json:"avg_permissions_per_role"`
 }
 
 // PermissionSummary represents permission-specific summary data
@@ -77,11 +77,11 @@ type PermissionSummary struct {
 
 // EscalationSummary represents escalation-specific summary data
 type EscalationSummary struct {
-	TotalEscalations   int64            `json:"total_escalations"`
-	ResolvedEscalations int64           `json:"resolved_escalations"`
-	PendingEscalations int64            `json:"pending_escalations"`
-	ByLevel            map[string]int64 `json:"by_level"`
-	AvgResolutionTime  float64          `json:"avg_resolution_time_hours"`
+	TotalEscalations    int64            `json:"total_escalations"`
+	ResolvedEscalations int64            `json:"resolved_escalations"`
+	PendingEscalations  int64            `json:"pending_escalations"`
+	ByLevel             map[string]int64 `json:"by_level"`
+	AvgResolutionTime   float64          `json:"avg_resolution_time_hours"`
 }
 
 // AuditLogSummary represents audit log-specific summary data

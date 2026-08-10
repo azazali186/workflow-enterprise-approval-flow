@@ -10,18 +10,18 @@ import (
 
 // DiffResult represents the result of comparing two states
 type DiffResult struct {
-	Before      map[string]interface{} `json:"before"`
-	After       map[string]interface{} `json:"after"`
-	Changed     []FieldChange          `json:"changed"`
-	HasChanges  bool                   `json:"has_changes"`
+	Before     map[string]interface{} `json:"before"`
+	After      map[string]interface{} `json:"after"`
+	Changed    []FieldChange          `json:"changed"`
+	HasChanges bool                   `json:"has_changes"`
 }
 
 // FieldChange represents a single field change
 type FieldChange struct {
-	Field    string      `json:"field"`
-	Before   interface{} `json:"before"`
-	After    interface{} `json:"after"`
-	Type     string      `json:"type"` // "added", "removed", "modified"
+	Field  string      `json:"field"`
+	Before interface{} `json:"before"`
+	After  interface{} `json:"after"`
+	Type   string      `json:"type"` // "added", "removed", "modified"
 }
 
 // ComputeChanges computes the diff between two entities and returns structured change data
@@ -219,9 +219,9 @@ func ChangesToJSONMap(diff *DiffResult) map[string]interface{} {
 	changes := make(map[string]interface{})
 	for _, change := range diff.Changed {
 		changes[change.Field] = map[string]interface{}{
-			"before":  change.Before,
-			"after":   change.After,
-			"type":    change.Type,
+			"before": change.Before,
+			"after":  change.After,
+			"type":   change.Type,
 		}
 	}
 
@@ -252,14 +252,14 @@ func SummaryOfChanges(diff *DiffResult) string {
 // FilterSensitiveFields removes sensitive fields from a map
 func FilterSensitiveFields(m map[string]interface{}) map[string]interface{} {
 	sensitiveFields := map[string]bool{
-		"password":          true,
-		"old_password":      true,
-		"new_password":      true,
-		"access_token":      true,
-		"refresh_token":     true,
-		"secret":            true,
-		"api_key":           true,
-		"private_key":       true,
+		"password":      true,
+		"old_password":  true,
+		"new_password":  true,
+		"access_token":  true,
+		"refresh_token": true,
+		"secret":        true,
+		"api_key":       true,
+		"private_key":   true,
 	}
 
 	result := make(map[string]interface{})

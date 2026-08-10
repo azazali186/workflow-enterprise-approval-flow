@@ -14,7 +14,7 @@ type Workflow struct {
 	Category    string          `gorm:"size:100;index" json:"category"`
 	Version     int             `gorm:"default:1" json:"version"`
 	IsActive    bool            `gorm:"default:true;index" json:"is_active"`
-	Steps       json.RawMessage `gorm:"type:jsonb" json:"steps,omitempty"`
+	Steps       json.RawMessage `gorm:"type:jsonb" json:"steps,omitempty" swaggertype:"array,object"`
 }
 
 // WorkflowStep represents a step in a workflow

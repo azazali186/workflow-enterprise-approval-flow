@@ -40,7 +40,9 @@ func (h *TemplateHandler) GetTemplates(ctx context.Context, c *app.RequestContex
 		response.Error(c, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.Limit <= 0 { req.Limit = 10 }
+	if req.Limit <= 0 {
+		req.Limit = 10
+	}
 	templates, err := h.svc.GetAllTemplates(ctx, req.Limit, 0)
 	if err != nil {
 		h.cfg.Error("failed to get templates", zap.Error(err))

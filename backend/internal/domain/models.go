@@ -14,10 +14,12 @@ import (
 
 // Base contains common fields for all entities
 type Base struct {
-	ID        uuid.UUID             `gorm:"type:uuid;primary_key" json:"id"`
-	CreatedAt time.Time             `json:"created_at"`
-	UpdatedAt time.Time             `json:"updated_at"`
-	DeletedAt soft_delete.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID        uuid.UUID `gorm:"type:uuid;primary_key" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	// swaggertype keeps swag from resolving the gorm soft_delete package
+	// (which it cannot parse); the flag is a plain integer in the schema.
+	DeletedAt soft_delete.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,integer"`
 }
 
 // BeforeCreate generates UUID v7 before creating a record

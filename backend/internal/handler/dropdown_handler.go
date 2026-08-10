@@ -50,7 +50,7 @@ func NewDropdownHandler(db *gorm.DB, cfg *config.Config) *DropdownHandler {
 // @Produce      json
 // @Param        request body validation.DropdownListRequest true "Entity types to fetch"
 // @Success      200 {object} map[string][]DropdownOption
-// @Failure      400 {object} response.ErrorResponse
+// @Failure      400 {object} response.Response
 // @Router       /api/v1/dropdowns [post]
 func (h *DropdownHandler) ListDropdowns(ctx context.Context, c *app.RequestContext) {
 	var req validation.DropdownListRequest

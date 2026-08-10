@@ -1,4 +1,4 @@
-.PHONY: run build test test-race test-coverage test-integration proto-gen lint fmt clean deps help migrate migrate-down migrate-version seed swagger
+.PHONY: run build test test-race test-coverage test-integration proto-gen lint fmt clean deps help migrate migrate-down migrate-version seed swagger swagger-gen
 
 APP_NAME := approval-flow
 PORT := 8080
@@ -111,6 +111,12 @@ seed:
 swagger:
 	@echo "Swagger docs served at /docs/swagger.json"
 
+# Regenerate Swagger docs from handler annotations.
+# --parseInternal is required: response/validation types live in internal packages,
+# and without it swag fails on json.RawMessage and gorm soft_delete types.
+swagger-gen:
+	swag init -g cmd/server/main.go --parseInternal --outputTypes json,yaml,go --output docs
+
 # Production
 install-golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -159,5 +165,6 @@ help:
 	@echo "  dev              - Run in development mode"
 	@echo "  seed             - Seed database"
 	@echo "  swagger          - Show swagger docs info"
+	@echo "  swagger-gen      - Regenerate swagger docs (swag init --parseInternal)"
 	@echo ""
 	@echo "  install-tools    - Install development tools"

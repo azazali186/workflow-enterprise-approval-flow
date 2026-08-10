@@ -118,11 +118,11 @@ type cacheEntry struct {
 
 // CacheStats holds cache statistics
 type CacheStats struct {
-	Hits        int64
-	Misses      int64
-	Sets        int64
-	Deletes     int64
-	Evictions   int64
+	Hits      int64
+	Misses    int64
+	Sets      int64
+	Deletes   int64
+	Evictions int64
 }
 
 // GetStats returns cache statistics

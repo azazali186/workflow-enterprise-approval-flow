@@ -56,21 +56,21 @@ func (p *PaginationRequest) Validate() {
 
 // PaginationResponse represents the pagination metadata
 type PaginationResponse struct {
-	NextCursor   string `json:"next_cursor,omitempty"`
+	NextCursor     string `json:"next_cursor,omitempty"`
 	PreviousCursor string `json:"previous_cursor,omitempty"`
-	HasMore      bool   `json:"has_more"`
-	HasPrevious  bool   `json:"has_previous"`
-	TotalCount   int64  `json:"total_count"`
-	Page         int    `json:"page"`
-	PageSize     int    `json:"page_size"`
-	TotalPages   int    `json:"total_pages"`
+	HasMore        bool   `json:"has_more"`
+	HasPrevious    bool   `json:"has_previous"`
+	TotalCount     int64  `json:"total_count"`
+	Page           int    `json:"page"`
+	PageSize       int    `json:"page_size"`
+	TotalPages     int    `json:"total_pages"`
 }
 
 // ListResponse represents a generic list response with pagination
 type ListResponse struct {
-	Data       interface{}        `json:"data"`
+	Data       interface{}         `json:"data"`
 	Pagination *PaginationResponse `json:"pagination"`
-	Summary    interface{}        `json:"summary,omitempty"`
+	Summary    interface{}         `json:"summary,omitempty"`
 }
 
 // NewPaginationResponse creates a new pagination response
@@ -79,13 +79,13 @@ func NewPaginationResponse(totalCount int64, page, pageSize int) *PaginationResp
 	if int(totalCount)%pageSize > 0 {
 		totalPages++
 	}
-	
+
 	return &PaginationResponse{
-		TotalCount: totalCount,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: totalPages,
-		HasMore:    page < totalPages,
+		TotalCount:  totalCount,
+		Page:        page,
+		PageSize:    pageSize,
+		TotalPages:  totalPages,
+		HasMore:     page < totalPages,
 		HasPrevious: page > 1,
 	}
 }

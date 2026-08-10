@@ -7,10 +7,10 @@ import (
 
 // RetryConfig holds retry configuration
 type RetryConfig struct {
-	MaxRetries  int
-	BaseDelay   time.Duration
-	MaxDelay    time.Duration
-	Multiplier  float64
+	MaxRetries int
+	BaseDelay  time.Duration
+	MaxDelay   time.Duration
+	Multiplier float64
 }
 
 // DefaultRetryConfig returns default retry configuration

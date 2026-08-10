@@ -10,7 +10,7 @@ import (
 // ParseQuery parses pagination parameters from request query
 func ParseQuery(c *app.RequestContext) *PaginationRequest {
 	cursor := c.Query("cursor")
-	
+
 	limitStr := c.Query("limit")
 	limit := 10
 	if limitStr != "" {
@@ -32,7 +32,7 @@ func ParseQuery(c *app.RequestContext) *PaginationRequest {
 func ParseSortQuery(c *app.RequestContext) *SortRequest {
 	sortBy := c.Query("sort_by")
 	sortOrder := c.Query("sort_order")
-	
+
 	if sortBy == "" {
 		sortBy = "created_at"
 	}
@@ -49,27 +49,27 @@ func ParseSortQuery(c *app.RequestContext) *SortRequest {
 // ParseFilterQuery parses filter parameters from request query
 func ParseFilterQuery(c *app.RequestContext) map[string]string {
 	filters := make(map[string]string)
-	
+
 	// Common filter parameters
 	filterKeys := []string{
 		"status", "priority", "category", "type", "channel",
 		"search", "workflow_id", "template_id", "applicant_id",
 		"approver_id", "application_id", "decision", "is_active",
 	}
-	
+
 	for _, key := range filterKeys {
 		if value := c.Query(key); value != "" {
 			filters[key] = value
 		}
 	}
-	
+
 	return filters
 }
 
 // ParseDateRangeQuery parses date range parameters from request query
 func ParseDateRangeQuery(c *app.RequestContext) *DateRangeFilter {
 	var startDate, endDate *time.Time
-	
+
 	if start := c.Query("start_date"); start != "" {
 		if t, err := time.Parse("2006-01-02", start); err == nil {
 			startDate = &t
@@ -80,7 +80,7 @@ func ParseDateRangeQuery(c *app.RequestContext) *DateRangeFilter {
 			endDate = &t
 		}
 	}
-	
+
 	return &DateRangeFilter{
 		Start: startDate,
 		End:   endDate,

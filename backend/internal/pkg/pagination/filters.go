@@ -12,8 +12,8 @@ type DateRangeFilter struct {
 
 // SearchFilter represents a search filter
 type SearchFilter struct {
-	Query     string   `json:"query"`
-	Fields    []string `json:"fields"`
+	Query  string   `json:"query"`
+	Fields []string `json:"fields"`
 }
 
 // StatusFilter represents a status filter
@@ -28,12 +28,12 @@ type IDFilter struct {
 
 // CommonFilters represents common filter parameters
 type CommonFilters struct {
-	Search      *SearchFilter      `json:"search"`
-	Status      *StatusFilter      `json:"status"`
-	DateRange   *DateRangeFilter   `json:"date_range"`
-	CreatedBy   *IDFilter          `json:"created_by"`
-	SortBy      string             `json:"sort_by"`
-	SortOrder   string             `json:"sort_order"`
+	Search    *SearchFilter    `json:"search"`
+	Status    *StatusFilter    `json:"status"`
+	DateRange *DateRangeFilter `json:"date_range"`
+	CreatedBy *IDFilter        `json:"created_by"`
+	SortBy    string           `json:"sort_by"`
+	SortOrder string           `json:"sort_order"`
 }
 
 // ValidateSortOrder validates and returns the sort order
@@ -85,10 +85,10 @@ type WorkflowFilters struct {
 // NotificationFilters represents notification-specific filters
 type NotificationFilters struct {
 	CommonFilters
-	UserID  string   `json:"user_id"`
-	Type    string   `json:"type"`
-	Channel string   `json:"channel"`
-	ReadAt  *bool    `json:"read_at"`
+	UserID  string `json:"user_id"`
+	Type    string `json:"type"`
+	Channel string `json:"channel"`
+	ReadAt  *bool  `json:"read_at"`
 }
 
 // UserFilters represents user-specific filters

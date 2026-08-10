@@ -3,8 +3,8 @@ package middleware
 import (
 	"context"
 
-	"github.com/cloudwego/hertz/pkg/app"
 	pkguuid "github.com/aeroxe/approval-flow/internal/pkg/uuid"
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 const (

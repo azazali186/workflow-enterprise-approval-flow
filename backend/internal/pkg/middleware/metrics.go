@@ -15,24 +15,24 @@ type Metrics struct {
 	mu sync.RWMutex
 
 	// Request metrics
-	TotalRequests      int64
-	RequestsByMethod   map[string]int64
-	RequestsByStatus   map[string]int64
-	RequestsByPath     map[string]int64
+	TotalRequests    int64
+	RequestsByMethod map[string]int64
+	RequestsByStatus map[string]int64
+	RequestsByPath   map[string]int64
 
 	// Latency metrics
-	RequestLatencies   []time.Duration
-	AverageLatency     time.Duration
+	RequestLatencies []time.Duration
+	AverageLatency   time.Duration
 
 	// Error metrics
-	TotalErrors        int64
-	ErrorsByType       map[string]int64
+	TotalErrors  int64
+	ErrorsByType map[string]int64
 
 	// Active connections
-	ActiveConnections  int64
+	ActiveConnections int64
 
 	// Start time
-	StartTime          time.Time
+	StartTime time.Time
 }
 
 var (

@@ -43,10 +43,14 @@ func (h *AnalyticsHandler) GetApprovalStats(ctx context.Context, c *app.RequestC
 	startDate := time.Now().AddDate(0, -1, 0)
 	endDate := time.Now()
 	if req.StartDate != "" {
-		if t, err := time.Parse("2006-01-02", req.StartDate); err == nil { startDate = t }
+		if t, err := time.Parse("2006-01-02", req.StartDate); err == nil {
+			startDate = t
+		}
 	}
 	if req.EndDate != "" {
-		if t, err := time.Parse("2006-01-02", req.EndDate); err == nil { endDate = t }
+		if t, err := time.Parse("2006-01-02", req.EndDate); err == nil {
+			endDate = t
+		}
 	}
 	stats, err := h.svc.GetApprovalStats(ctx, startDate, endDate)
 	if err != nil {
@@ -129,10 +133,14 @@ func (h *AnalyticsHandler) GetEscalationMetrics(ctx context.Context, c *app.Requ
 	startDate := time.Now().AddDate(0, -1, 0)
 	endDate := time.Now()
 	if req.StartDate != "" {
-		if t, err := time.Parse("2006-01-02", req.StartDate); err == nil { startDate = t }
+		if t, err := time.Parse("2006-01-02", req.StartDate); err == nil {
+			startDate = t
+		}
 	}
 	if req.EndDate != "" {
-		if t, err := time.Parse("2006-01-02", req.EndDate); err == nil { endDate = t }
+		if t, err := time.Parse("2006-01-02", req.EndDate); err == nil {
+			endDate = t
+		}
 	}
 	metrics, err := h.svc.GetEscalationMetrics(ctx, startDate, endDate)
 	if err != nil {

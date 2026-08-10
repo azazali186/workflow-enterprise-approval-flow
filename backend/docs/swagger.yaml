@@ -10,6 +10,9 @@ definitions:
       data:
         $ref: '#/definitions/domain.JSONMap'
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       id:
         type: string
@@ -20,6 +23,8 @@ definitions:
       submitted_at:
         type: string
       template_id:
+        type: string
+      title:
         type: string
       updated_at:
         type: string
@@ -41,6 +46,9 @@ definitions:
       decision:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       escalation_level:
         type: integer
@@ -62,6 +70,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       escalated_at:
         type: string
@@ -92,6 +103,9 @@ definitions:
       data:
         $ref: '#/definitions/domain.JSONMap'
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       id:
         type: string
@@ -113,6 +127,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       id:
         type: string
@@ -134,6 +151,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       description:
         type: string
@@ -157,6 +177,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       id:
         type: string
@@ -178,6 +201,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       email:
         type: string
@@ -203,6 +229,9 @@ definitions:
       created_at:
         type: string
       deleted_at:
+        description: |-
+          swaggertype keeps swag from resolving the gorm soft_delete package
+          (which it cannot parse); the flag is a plain integer in the schema.
         type: integer
       description:
         type: string
@@ -213,828 +242,13 @@ definitions:
       name:
         type: string
       steps:
-        $ref: '#/definitions/domain.JSONMap'
+        items:
+          type: object
+        type: array
       updated_at:
         type: string
       version:
         type: integer
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_response.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      message:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.AssignPermissionToRoleRequest:
-    properties:
-      permission_id:
-        type: string
-      role_id:
-        type: string
-    required:
-    - permission_id
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.AssignRoleToUserRequest:
-    properties:
-      role_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - role_id
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ChangePasswordRequest:
-    properties:
-      new_password:
-        minLength: 8
-        type: string
-      old_password:
-        type: string
-    required:
-    - new_password
-    - old_password
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreateApprovalRequest:
-    properties:
-      application_id:
-        type: string
-      approver_id:
-        type: string
-      workflow_step_id:
-        type: string
-    required:
-    - application_id
-    - approver_id
-    - workflow_step_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreateEscalationRequest:
-    properties:
-      approval_id:
-        type: string
-      escalated_to:
-        type: string
-      level:
-        maximum: 10
-        minimum: 0
-        type: integer
-      reason:
-        type: string
-    required:
-    - approval_id
-    - escalated_to
-    - level
-    - reason
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreatePermissionRequest:
-    properties:
-      method:
-        enum:
-        - POST
-        - PATCH
-        - DELETE
-        type: string
-      name:
-        type: string
-      path:
-        type: string
-      route:
-        type: string
-      service:
-        type: string
-    required:
-    - method
-    - name
-    - path
-    - route
-    - service
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreateRoleRequest:
-    properties:
-      description:
-        maxLength: 500
-        type: string
-      is_default:
-        type: boolean
-      name:
-        maxLength: 50
-        minLength: 2
-        type: string
-    required:
-    - name
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreateTemplateRequest:
-    properties:
-      category:
-        type: string
-      name:
-        type: string
-      schema:
-        additionalProperties: true
-        type: object
-      ui:
-        additionalProperties: true
-        type: object
-    required:
-    - category
-    - name
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.CreateWorkflowRequest:
-    properties:
-      category:
-        type: string
-      description:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        type: string
-    required:
-    - category
-    - name
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DecideApprovalRequest:
-    properties:
-      approval_id:
-        type: string
-      comment:
-        type: string
-      decision:
-        enum:
-        - approved
-        - rejected
-        - escalated
-        type: string
-    required:
-    - approval_id
-    - decision
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApplicationRequest:
-    properties:
-      application_id:
-        type: string
-    required:
-    - application_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApprovalRequest:
-    properties:
-      approval_id:
-        type: string
-    required:
-    - approval_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeletePermissionRequest:
-    properties:
-      permission_id:
-        type: string
-    required:
-    - permission_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteRoleRequest:
-    properties:
-      role_id:
-        type: string
-    required:
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteTemplateRequest:
-    properties:
-      template_id:
-        type: string
-    required:
-    - template_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteUserRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteWorkflowRequest:
-    properties:
-      workflow_id:
-        type: string
-    required:
-    - workflow_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetApplicationRequest:
-    properties:
-      application_id:
-        type: string
-    required:
-    - application_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalRequest:
-    properties:
-      approval_id:
-        type: string
-    required:
-    - approval_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalStatsRequest:
-    properties:
-      end_date:
-        type: string
-      start_date:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetApproverPerformanceRequest:
-    properties:
-      approver_id:
-        type: string
-    required:
-    - approver_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetCommentsRequest:
-    properties:
-      approval_id:
-        type: string
-      cursor:
-        type: string
-      limit:
-        type: integer
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    required:
-    - approval_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetDocumentsRequest:
-    properties:
-      application_id:
-        type: string
-      cursor:
-        type: string
-      limit:
-        type: integer
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    required:
-    - application_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationMetricsRequest:
-    properties:
-      end_date:
-        type: string
-      start_date:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationRequest:
-    properties:
-      escalation_id:
-        type: string
-    required:
-    - escalation_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryByEmailRequest:
-    properties:
-      email:
-        type: string
-      limit:
-        type: integer
-    required:
-    - email
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryRequest:
-    properties:
-      limit:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginLogsRequest:
-    properties:
-      email:
-        type: string
-      end_date:
-        type: string
-      limit:
-        type: integer
-      page:
-        type: integer
-      start_date:
-        type: string
-      status:
-        type: string
-      user_id:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginStatsRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationStatsRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationsRequest:
-    properties:
-      channel:
-        type: string
-      cursor:
-        type: string
-      end_date:
-        type: string
-      is_read:
-        type: boolean
-      limit:
-        type: integer
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-      type:
-        type: string
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetPendingApprovalsRequest:
-    properties:
-      approver_id:
-        type: string
-      cursor:
-        type: string
-      limit:
-        type: integer
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    required:
-    - approver_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetPermissionRequest:
-    properties:
-      permission_id:
-        type: string
-    required:
-    - permission_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetProfileRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetRolePermissionsRequest:
-    properties:
-      role_id:
-        type: string
-    required:
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetRoleRequest:
-    properties:
-      role_id:
-        type: string
-    required:
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetStatusesRequest:
-    properties:
-      entity_type:
-        type: string
-    required:
-    - entity_type
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetTemplateRequest:
-    properties:
-      template_id:
-        type: string
-    required:
-    - template_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetUnreadNotificationsRequest:
-    properties:
-      cursor:
-        type: string
-      limit:
-        type: integer
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRolesRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowPerformanceRequest:
-    properties:
-      workflow_id:
-        type: string
-    required:
-    - workflow_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowRequest:
-    properties:
-      workflow_id:
-        type: string
-    required:
-    - workflow_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListApplicationsRequest:
-    properties:
-      applicant_id:
-        type: string
-      cursor:
-        type: string
-      end_date:
-        type: string
-      limit:
-        type: integer
-      priority:
-        type: string
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-      status:
-        type: string
-      workflow_id:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListApprovalsRequest:
-    properties:
-      application_id:
-        type: string
-      approver_id:
-        type: string
-      cursor:
-        type: string
-      decision:
-        type: string
-      end_date:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-      status:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListEscalationsRequest:
-    properties:
-      approval_id:
-        type: string
-      cursor:
-        type: string
-      end_date:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListPermissionsRequest:
-    properties:
-      cursor:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListRolesRequest:
-    properties:
-      cursor:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListTemplatesRequest:
-    properties:
-      category:
-        type: string
-      cursor:
-        type: string
-      end_date:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListUsersRequest:
-    properties:
-      cursor:
-        type: string
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ListWorkflowsRequest:
-    properties:
-      category:
-        type: string
-      cursor:
-        type: string
-      end_date:
-        type: string
-      is_active:
-        type: boolean
-      limit:
-        type: integer
-      search:
-        type: string
-      sort_by:
-        type: string
-      sort_order:
-        type: string
-      start_date:
-        type: string
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.LogoutRequest:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.MarkNotificationReadRequest:
-    properties:
-      notification_id:
-        type: string
-    required:
-    - notification_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.RefreshTokenRequest:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.RegisterRequest:
-    properties:
-      email:
-        type: string
-      name:
-        maxLength: 100
-        minLength: 2
-        type: string
-      password:
-        minLength: 8
-        type: string
-    required:
-    - email
-    - name
-    - password
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.RemovePermissionFromRoleRequest:
-    properties:
-      permission_id:
-        type: string
-      role_id:
-        type: string
-    required:
-    - permission_id
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.RemoveRoleFromUserRequest:
-    properties:
-      role_id:
-        type: string
-      user_id:
-        type: string
-    required:
-    - role_id
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.ResolveEscalationRequest:
-    properties:
-      escalation_id:
-        type: string
-    required:
-    - escalation_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.SendNotificationRequest:
-    properties:
-      body:
-        type: string
-      channel:
-        type: string
-      data:
-        additionalProperties: true
-        type: object
-      title:
-        type: string
-      type:
-        type: string
-      user_id:
-        type: string
-    required:
-    - body
-    - channel
-    - title
-    - type
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.SubmitApplicationRequest:
-    properties:
-      applicant_id:
-        type: string
-      data:
-        additionalProperties: true
-        type: object
-      description:
-        type: string
-      priority:
-        enum:
-        - low
-        - medium
-        - high
-        - urgent
-        type: string
-      template_id:
-        type: string
-      title:
-        type: string
-      workflow_id:
-        type: string
-    required:
-    - applicant_id
-    - priority
-    - template_id
-    - title
-    - workflow_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApplicationRequest:
-    properties:
-      application_id:
-        type: string
-      data:
-        additionalProperties: true
-        type: object
-      priority:
-        type: string
-      status:
-        type: string
-    required:
-    - application_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApprovalRequest:
-    properties:
-      approval_id:
-        type: string
-      comment:
-        type: string
-      status:
-        type: string
-    required:
-    - approval_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdatePermissionRequest:
-    properties:
-      method:
-        type: string
-      name:
-        type: string
-      path:
-        type: string
-      permission_id:
-        type: string
-      route:
-        type: string
-      service:
-        type: string
-    required:
-    - permission_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateRoleRequest:
-    properties:
-      description:
-        type: string
-      is_default:
-        type: boolean
-      name:
-        type: string
-      role_id:
-        type: string
-    required:
-    - role_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateTemplateRequest:
-    properties:
-      category:
-        type: string
-      name:
-        type: string
-      schema:
-        additionalProperties: true
-        type: object
-      template_id:
-        type: string
-      ui:
-        additionalProperties: true
-        type: object
-    required:
-    - template_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateUserRequest:
-    properties:
-      email:
-        type: string
-      name:
-        type: string
-      status:
-        type: string
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
-  github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateWorkflowRequest:
-    properties:
-      category:
-        type: string
-      description:
-        type: string
-      is_active:
-        type: boolean
-      name:
-        type: string
-      workflow_id:
-        type: string
-    required:
-    - workflow_id
     type: object
   handler.DetailedHealthStatus:
     properties:
@@ -1047,6 +261,13 @@ definitions:
       system:
         $ref: '#/definitions/handler.SystemHealth'
       timestamp:
+        type: string
+    type: object
+  handler.DropdownOption:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   handler.ServiceHealth:
@@ -1082,6 +303,864 @@ definitions:
       version:
         type: string
     type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  validation.AssignPermissionToRoleRequest:
+    properties:
+      permission_id:
+        type: string
+      role_id:
+        type: string
+    required:
+    - permission_id
+    - role_id
+    type: object
+  validation.AssignRoleToUserRequest:
+    properties:
+      role_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - role_id
+    - user_id
+    type: object
+  validation.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  validation.CreateApprovalRequest:
+    properties:
+      application_id:
+        type: string
+      approver_id:
+        type: string
+      workflow_step_id:
+        type: string
+    required:
+    - application_id
+    - approver_id
+    - workflow_step_id
+    type: object
+  validation.CreateEscalationRequest:
+    properties:
+      approval_id:
+        type: string
+      escalated_to:
+        type: string
+      level:
+        maximum: 10
+        minimum: 0
+        type: integer
+      reason:
+        type: string
+    required:
+    - approval_id
+    - escalated_to
+    - reason
+    type: object
+  validation.CreatePermissionRequest:
+    properties:
+      method:
+        enum:
+        - POST
+        - PATCH
+        - DELETE
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      route:
+        type: string
+      service:
+        type: string
+    required:
+    - method
+    - name
+    - path
+    - route
+    - service
+    type: object
+  validation.CreateRoleRequest:
+    properties:
+      description:
+        maxLength: 500
+        type: string
+      is_default:
+        type: boolean
+      name:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    type: object
+  validation.CreateTemplateRequest:
+    properties:
+      category:
+        type: string
+      name:
+        type: string
+      schema:
+        additionalProperties: true
+        type: object
+      ui:
+        additionalProperties: true
+        type: object
+    required:
+    - category
+    - name
+    type: object
+  validation.CreateWorkflowRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      steps:
+        items:
+          $ref: '#/definitions/validation.WorkflowStepInput'
+        type: array
+    required:
+    - category
+    - name
+    type: object
+  validation.DecideApprovalRequest:
+    properties:
+      approval_id:
+        type: string
+      comment:
+        type: string
+      decision:
+        enum:
+        - approved
+        - rejected
+        - escalated
+        type: string
+    required:
+    - approval_id
+    - decision
+    type: object
+  validation.DeleteApplicationRequest:
+    properties:
+      application_id:
+        type: string
+    required:
+    - application_id
+    type: object
+  validation.DeleteApprovalRequest:
+    properties:
+      approval_id:
+        type: string
+    required:
+    - approval_id
+    type: object
+  validation.DeletePermissionRequest:
+    properties:
+      permission_id:
+        type: string
+    required:
+    - permission_id
+    type: object
+  validation.DeleteRoleRequest:
+    properties:
+      role_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  validation.DeleteTemplateRequest:
+    properties:
+      template_id:
+        type: string
+    required:
+    - template_id
+    type: object
+  validation.DeleteUserRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.DeleteWorkflowRequest:
+    properties:
+      workflow_id:
+        type: string
+    required:
+    - workflow_id
+    type: object
+  validation.DropdownListRequest:
+    properties:
+      entities:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      include_inactive:
+        type: boolean
+      statuses:
+        items:
+          type: string
+        type: array
+      workflow_id:
+        description: |-
+          WorkflowID optionally scopes the "workflow_steps" entity to a single
+          workflow, so callers can offer steps for the selected application's
+          workflow instead of the full cross-workflow list.
+        type: string
+    required:
+    - entities
+    type: object
+  validation.GetApplicationRequest:
+    properties:
+      application_id:
+        type: string
+    required:
+    - application_id
+    type: object
+  validation.GetApprovalRequest:
+    properties:
+      approval_id:
+        type: string
+    required:
+    - approval_id
+    type: object
+  validation.GetApprovalStatsRequest:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
+  validation.GetApproverPerformanceRequest:
+    properties:
+      approver_id:
+        type: string
+    required:
+    - approver_id
+    type: object
+  validation.GetCommentsRequest:
+    properties:
+      approval_id:
+        type: string
+      cursor:
+        type: string
+      limit:
+        type: integer
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    required:
+    - approval_id
+    type: object
+  validation.GetDocumentsRequest:
+    properties:
+      application_id:
+        type: string
+      cursor:
+        type: string
+      limit:
+        type: integer
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    required:
+    - application_id
+    type: object
+  validation.GetEscalationMetricsRequest:
+    properties:
+      end_date:
+        type: string
+      start_date:
+        type: string
+    type: object
+  validation.GetEscalationRequest:
+    properties:
+      escalation_id:
+        type: string
+    required:
+    - escalation_id
+    type: object
+  validation.GetLoginHistoryByEmailRequest:
+    properties:
+      email:
+        type: string
+      limit:
+        type: integer
+    required:
+    - email
+    type: object
+  validation.GetLoginHistoryRequest:
+    properties:
+      limit:
+        type: integer
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.GetLoginLogsRequest:
+    properties:
+      email:
+        type: string
+      end_date:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+      start_date:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
+  validation.GetLoginStatsRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.GetNotificationStatsRequest:
+    properties:
+      user_id:
+        description: optional; the authenticated user is used
+        type: string
+    type: object
+  validation.GetNotificationsRequest:
+    properties:
+      channel:
+        type: string
+      cursor:
+        type: string
+      end_date:
+        type: string
+      is_read:
+        type: boolean
+      limit:
+        type: integer
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+      type:
+        type: string
+      user_id:
+        description: optional; the authenticated user is used
+        type: string
+    type: object
+  validation.GetPendingApprovalsRequest:
+    properties:
+      approver_id:
+        type: string
+      cursor:
+        type: string
+      limit:
+        type: integer
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    required:
+    - approver_id
+    type: object
+  validation.GetPermissionRequest:
+    properties:
+      permission_id:
+        type: string
+    required:
+    - permission_id
+    type: object
+  validation.GetProfileRequest:
+    properties:
+      user_id:
+        type: string
+    type: object
+  validation.GetRolePermissionsRequest:
+    properties:
+      role_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  validation.GetRoleRequest:
+    properties:
+      role_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  validation.GetStatusesRequest:
+    properties:
+      entity_type:
+        type: string
+    required:
+    - entity_type
+    type: object
+  validation.GetTemplateRequest:
+    properties:
+      template_id:
+        type: string
+    required:
+    - template_id
+    type: object
+  validation.GetUnreadNotificationsRequest:
+    properties:
+      cursor:
+        type: string
+      limit:
+        type: integer
+      user_id:
+        description: optional; the authenticated user is used
+        type: string
+    type: object
+  validation.GetUserRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.GetUserRolesRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.GetWorkflowPerformanceRequest:
+    properties:
+      workflow_id:
+        type: string
+    required:
+    - workflow_id
+    type: object
+  validation.GetWorkflowRequest:
+    properties:
+      workflow_id:
+        type: string
+    required:
+    - workflow_id
+    type: object
+  validation.ListApplicationsRequest:
+    properties:
+      applicant_id:
+        type: string
+      cursor:
+        type: string
+      end_date:
+        type: string
+      limit:
+        type: integer
+      priority:
+        type: string
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+      workflow_id:
+        type: string
+    type: object
+  validation.ListApprovalsRequest:
+    properties:
+      application_id:
+        type: string
+      approver_id:
+        type: string
+      cursor:
+        type: string
+      decision:
+        type: string
+      end_date:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+    type: object
+  validation.ListEscalationsRequest:
+    properties:
+      approval_id:
+        type: string
+      cursor:
+        type: string
+      end_date:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+    type: object
+  validation.ListPermissionsRequest:
+    properties:
+      cursor:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    type: object
+  validation.ListRolesRequest:
+    properties:
+      cursor:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    type: object
+  validation.ListTemplatesRequest:
+    properties:
+      category:
+        type: string
+      cursor:
+        type: string
+      end_date:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+    type: object
+  validation.ListUsersRequest:
+    properties:
+      cursor:
+        type: string
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+    type: object
+  validation.ListWorkflowsRequest:
+    properties:
+      category:
+        type: string
+      cursor:
+        type: string
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      limit:
+        type: integer
+      search:
+        type: string
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      start_date:
+        type: string
+    type: object
+  validation.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  validation.LogoutRequest:
+    properties:
+      user_id:
+        type: string
+    type: object
+  validation.MarkNotificationReadRequest:
+    properties:
+      notification_id:
+        type: string
+    required:
+    - notification_id
+    type: object
+  validation.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  validation.RegisterRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  validation.RemovePermissionFromRoleRequest:
+    properties:
+      permission_id:
+        type: string
+      role_id:
+        type: string
+    required:
+    - permission_id
+    - role_id
+    type: object
+  validation.RemoveRoleFromUserRequest:
+    properties:
+      role_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - role_id
+    - user_id
+    type: object
+  validation.ResolveEscalationRequest:
+    properties:
+      escalation_id:
+        type: string
+    required:
+    - escalation_id
+    type: object
+  validation.SendNotificationRequest:
+    properties:
+      body:
+        type: string
+      channel:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      title:
+        type: string
+      type:
+        type: string
+      user_id:
+        type: string
+    required:
+    - body
+    - channel
+    - title
+    - type
+    - user_id
+    type: object
+  validation.SubmitApplicationRequest:
+    properties:
+      applicant_id:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      description:
+        type: string
+      priority:
+        enum:
+        - low
+        - medium
+        - high
+        - urgent
+        type: string
+      template_id:
+        type: string
+      title:
+        type: string
+      workflow_id:
+        type: string
+    required:
+    - applicant_id
+    - priority
+    - template_id
+    - title
+    - workflow_id
+    type: object
+  validation.UpdateApplicationRequest:
+    properties:
+      application_id:
+        type: string
+      data:
+        additionalProperties: true
+        type: object
+      priority:
+        type: string
+      status:
+        type: string
+    required:
+    - application_id
+    type: object
+  validation.UpdateApprovalRequest:
+    properties:
+      approval_id:
+        type: string
+      comment:
+        type: string
+      status:
+        type: string
+    required:
+    - approval_id
+    type: object
+  validation.UpdatePermissionRequest:
+    properties:
+      method:
+        type: string
+      name:
+        type: string
+      path:
+        type: string
+      permission_id:
+        type: string
+      route:
+        type: string
+      service:
+        type: string
+    required:
+    - permission_id
+    type: object
+  validation.UpdateRoleRequest:
+    properties:
+      description:
+        type: string
+      is_default:
+        type: boolean
+      name:
+        type: string
+      role_id:
+        type: string
+    required:
+    - role_id
+    type: object
+  validation.UpdateTemplateRequest:
+    properties:
+      category:
+        type: string
+      name:
+        type: string
+      schema:
+        additionalProperties: true
+        type: object
+      template_id:
+        type: string
+      ui:
+        additionalProperties: true
+        type: object
+    required:
+    - template_id
+    type: object
+  validation.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  validation.UpdateWorkflowRequest:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      steps:
+        items:
+          $ref: '#/definitions/validation.WorkflowStepInput'
+        type: array
+      workflow_id:
+        type: string
+    required:
+    - workflow_id
+    type: object
+  validation.WorkflowStepInput:
+    properties:
+      action:
+        type: string
+      approver_id:
+        type: string
+      approver_role:
+        type: string
+      is_required:
+        type: boolean
+      name:
+        type: string
+      step_order:
+        type: integer
+      timeout_hours:
+        type: integer
+    required:
+    - name
+    type: object
 info:
   contact: {}
 paths:
@@ -1096,18 +1175,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListPermissionsRequest'
+          $ref: '#/definitions/validation.ListPermissionsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: List permissions
@@ -1124,7 +1203,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreatePermissionRequest'
+          $ref: '#/definitions/validation.CreatePermissionRequest'
       produces:
       - application/json
       responses:
@@ -1132,7 +1211,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Permission'
@@ -1140,7 +1219,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Create permission
@@ -1157,18 +1236,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeletePermissionRequest'
+          $ref: '#/definitions/validation.DeletePermissionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Delete permission
@@ -1185,7 +1264,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetPermissionRequest'
+          $ref: '#/definitions/validation.GetPermissionRequest'
       produces:
       - application/json
       responses:
@@ -1193,7 +1272,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Permission'
@@ -1201,7 +1280,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get permission
@@ -1218,7 +1297,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdatePermissionRequest'
+          $ref: '#/definitions/validation.UpdatePermissionRequest'
       produces:
       - application/json
       responses:
@@ -1226,7 +1305,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Permission'
@@ -1234,7 +1313,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Update permission
@@ -1251,18 +1330,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListRolesRequest'
+          $ref: '#/definitions/validation.ListRolesRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: List roles
@@ -1279,7 +1358,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateRoleRequest'
+          $ref: '#/definitions/validation.CreateRoleRequest'
       produces:
       - application/json
       responses:
@@ -1287,7 +1366,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Role'
@@ -1295,7 +1374,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Create role
@@ -1312,18 +1391,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteRoleRequest'
+          $ref: '#/definitions/validation.DeleteRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Delete role
@@ -1340,7 +1419,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetRoleRequest'
+          $ref: '#/definitions/validation.GetRoleRequest'
       produces:
       - application/json
       responses:
@@ -1348,7 +1427,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Role'
@@ -1356,7 +1435,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get role
@@ -1373,7 +1452,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetRolePermissionsRequest'
+          $ref: '#/definitions/validation.GetRolePermissionsRequest'
       produces:
       - application/json
       responses:
@@ -1381,7 +1460,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   items:
@@ -1391,7 +1470,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get role permissions
@@ -1408,18 +1487,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.AssignPermissionToRoleRequest'
+          $ref: '#/definitions/validation.AssignPermissionToRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Assign permission to role
@@ -1436,18 +1515,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RemovePermissionFromRoleRequest'
+          $ref: '#/definitions/validation.RemovePermissionFromRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Remove permission from role
@@ -1464,7 +1543,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateRoleRequest'
+          $ref: '#/definitions/validation.UpdateRoleRequest'
       produces:
       - application/json
       responses:
@@ -1472,7 +1551,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Role'
@@ -1480,7 +1559,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Update role
@@ -1497,18 +1576,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListUsersRequest'
+          $ref: '#/definitions/validation.ListUsersRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: List users
@@ -1525,18 +1604,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteUserRequest'
+          $ref: '#/definitions/validation.DeleteUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Delete user
@@ -1553,7 +1632,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRequest'
+          $ref: '#/definitions/validation.GetUserRequest'
       produces:
       - application/json
       responses:
@@ -1561,7 +1640,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.User'
@@ -1569,7 +1648,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get user
@@ -1586,7 +1665,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRolesRequest'
+          $ref: '#/definitions/validation.GetUserRolesRequest'
       produces:
       - application/json
       responses:
@@ -1594,7 +1673,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   items:
@@ -1604,7 +1683,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get user roles
@@ -1621,18 +1700,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.AssignRoleToUserRequest'
+          $ref: '#/definitions/validation.AssignRoleToUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Assign role to user
@@ -1649,18 +1728,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RemoveRoleFromUserRequest'
+          $ref: '#/definitions/validation.RemoveRoleFromUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Remove role from user
@@ -1677,7 +1756,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateUserRequest'
+          $ref: '#/definitions/validation.UpdateUserRequest'
       produces:
       - application/json
       responses:
@@ -1685,7 +1764,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.User'
@@ -1693,7 +1772,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Update user
@@ -1710,18 +1789,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginLogsRequest'
+          $ref: '#/definitions/validation.GetLoginLogsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get login logs (admin)
@@ -1738,22 +1817,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalStatsRequest'
+          $ref: '#/definitions/validation.GetApprovalStatsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get approval stats
       tags:
       - Analytics
@@ -1768,22 +1847,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApproverPerformanceRequest'
+          $ref: '#/definitions/validation.GetApproverPerformanceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get approver performance
       tags:
       - Analytics
@@ -1798,22 +1877,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationMetricsRequest'
+          $ref: '#/definitions/validation.GetEscalationMetricsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get escalation metrics
       tags:
       - Analytics
@@ -1828,22 +1907,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowPerformanceRequest'
+          $ref: '#/definitions/validation.GetWorkflowPerformanceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get workflow performance
       tags:
       - Analytics
@@ -1858,14 +1937,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListApplicationsRequest'
+          $ref: '#/definitions/validation.ListApplicationsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: List applications
@@ -1882,18 +1961,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApplicationRequest'
+          $ref: '#/definitions/validation.DeleteApplicationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Delete application
@@ -1910,7 +1989,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApplicationRequest'
+          $ref: '#/definitions/validation.GetApplicationRequest'
       produces:
       - application/json
       responses:
@@ -1918,7 +1997,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Application'
@@ -1926,7 +2005,7 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get application
@@ -1943,7 +2022,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.SubmitApplicationRequest'
+          $ref: '#/definitions/validation.SubmitApplicationRequest'
       produces:
       - application/json
       responses:
@@ -1951,7 +2030,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Application'
@@ -1959,7 +2038,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Submit application
@@ -1976,7 +2055,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApplicationRequest'
+          $ref: '#/definitions/validation.UpdateApplicationRequest'
       produces:
       - application/json
       responses:
@@ -1984,7 +2063,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Application'
@@ -1992,7 +2071,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Update application
@@ -2009,22 +2088,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListApprovalsRequest'
+          $ref: '#/definitions/validation.ListApprovalsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: List approvals
       tags:
       - Approvals
@@ -2039,7 +2118,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateApprovalRequest'
+          $ref: '#/definitions/validation.CreateApprovalRequest'
       produces:
       - application/json
       responses:
@@ -2047,7 +2126,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Approval'
@@ -2055,7 +2134,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Create approval
       tags:
       - Approvals
@@ -2070,7 +2149,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DecideApprovalRequest'
+          $ref: '#/definitions/validation.DecideApprovalRequest'
       produces:
       - application/json
       responses:
@@ -2078,7 +2157,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Approval'
@@ -2086,11 +2165,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Decide approval
       tags:
       - Approvals
@@ -2105,18 +2184,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApprovalRequest'
+          $ref: '#/definitions/validation.DeleteApprovalRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Delete approval
       tags:
       - Approvals
@@ -2131,7 +2210,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalRequest'
+          $ref: '#/definitions/validation.GetApprovalRequest'
       produces:
       - application/json
       responses:
@@ -2139,7 +2218,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Approval'
@@ -2147,11 +2226,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get approval
       tags:
       - Approvals
@@ -2159,30 +2238,31 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get pending approvals for a specific approver
+      description: |-
+        Get the authenticated user's pending approvals. Identity is
+        taken from the token; the legacy body is tolerated but ignored.
       parameters:
-      - description: Approver ID
+      - description: Legacy body (ignored)
         in: body
         name: request
-        required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetPendingApprovalsRequest'
+          $ref: '#/definitions/validation.GetPendingApprovalsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
-      summary: Get pending approvals
+            $ref: '#/definitions/response.Response'
+      summary: Get my pending approvals
       tags:
       - Approvals
   /api/v1/approvals/update:
@@ -2196,7 +2276,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApprovalRequest'
+          $ref: '#/definitions/validation.UpdateApprovalRequest'
       produces:
       - application/json
       responses:
@@ -2204,7 +2284,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Approval'
@@ -2212,7 +2292,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Update approval
       tags:
       - Approvals
@@ -2227,18 +2307,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.LoginRequest'
+          $ref: '#/definitions/validation.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: User login
       tags:
       - Authentication
@@ -2253,18 +2333,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryRequest'
+          $ref: '#/definitions/validation.GetLoginHistoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get login history
@@ -2281,18 +2361,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryByEmailRequest'
+          $ref: '#/definitions/validation.GetLoginHistoryByEmailRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get login history by email
@@ -2309,18 +2389,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginStatsRequest'
+          $ref: '#/definitions/validation.GetLoginStatsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get login stats
@@ -2337,18 +2417,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RefreshTokenRequest'
+          $ref: '#/definitions/validation.RefreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Refresh access token
       tags:
       - Authentication
@@ -2363,18 +2443,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RegisterRequest'
+          $ref: '#/definitions/validation.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: User registration
       tags:
       - Authentication
@@ -2389,23 +2469,54 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ChangePasswordRequest'
+          $ref: '#/definitions/validation.ChangePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Change password
       tags:
       - Authentication
+  /api/v1/dropdowns:
+    post:
+      consumes:
+      - application/json
+      description: Returns id/name pairs for dropdown menus (users, workflows, templates,
+        roles, workflow_steps, etc.)
+      parameters:
+      - description: Entity types to fetch
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/validation.DropdownListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/handler.DropdownOption'
+              type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List dropdown options
+      tags:
+      - Dropdowns
   /api/v1/escalations:
     post:
       consumes:
@@ -2417,22 +2528,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListEscalationsRequest'
+          $ref: '#/definitions/validation.ListEscalationsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: List escalations
       tags:
       - Escalations
@@ -2447,7 +2558,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateEscalationRequest'
+          $ref: '#/definitions/validation.CreateEscalationRequest'
       produces:
       - application/json
       responses:
@@ -2455,7 +2566,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Escalation'
@@ -2463,7 +2574,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Create escalation
       tags:
       - Escalations
@@ -2478,7 +2589,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationRequest'
+          $ref: '#/definitions/validation.GetEscalationRequest'
       produces:
       - application/json
       responses:
@@ -2486,7 +2597,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Escalation'
@@ -2494,11 +2605,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get escalation
       tags:
       - Escalations
@@ -2513,22 +2624,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ResolveEscalationRequest'
+          $ref: '#/definitions/validation.ResolveEscalationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Resolve escalation
       tags:
       - Escalations
@@ -2543,18 +2654,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.LogoutRequest'
+          $ref: '#/definitions/validation.LogoutRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: User logout
@@ -2571,22 +2682,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationsRequest'
+          $ref: '#/definitions/validation.GetNotificationsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: List notifications
       tags:
       - Notifications
@@ -2601,22 +2712,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.MarkNotificationReadRequest'
+          $ref: '#/definitions/validation.MarkNotificationReadRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Mark notification as read
       tags:
       - Notifications
@@ -2631,7 +2742,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.SendNotificationRequest'
+          $ref: '#/definitions/validation.SendNotificationRequest'
       produces:
       - application/json
       responses:
@@ -2639,7 +2750,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Notification'
@@ -2647,7 +2758,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Send notification
       tags:
       - Notifications
@@ -2662,18 +2773,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationStatsRequest'
+          $ref: '#/definitions/validation.GetNotificationStatsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get notification stats
       tags:
       - Notifications
@@ -2688,22 +2799,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUnreadNotificationsRequest'
+          $ref: '#/definitions/validation.GetUnreadNotificationsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get unread notifications
       tags:
       - Notifications
@@ -2718,18 +2829,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetProfileRequest'
+          $ref: '#/definitions/validation.GetProfileRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -2746,22 +2857,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetCommentsRequest'
+          $ref: '#/definitions/validation.GetCommentsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get comments
       tags:
       - Reports
@@ -2776,22 +2887,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetDocumentsRequest'
+          $ref: '#/definitions/validation.GetDocumentsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get documents
       tags:
       - Reports
@@ -2806,22 +2917,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetStatusesRequest'
+          $ref: '#/definitions/validation.GetStatusesRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get statuses
       tags:
       - Reports
@@ -2836,22 +2947,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListTemplatesRequest'
+          $ref: '#/definitions/validation.ListTemplatesRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: List templates
       tags:
       - Templates
@@ -2866,7 +2977,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateTemplateRequest'
+          $ref: '#/definitions/validation.CreateTemplateRequest'
       produces:
       - application/json
       responses:
@@ -2874,7 +2985,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Template'
@@ -2882,11 +2993,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Create template
       tags:
       - Templates
@@ -2901,18 +3012,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteTemplateRequest'
+          $ref: '#/definitions/validation.DeleteTemplateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Delete template
       tags:
       - Templates
@@ -2927,7 +3038,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetTemplateRequest'
+          $ref: '#/definitions/validation.GetTemplateRequest'
       produces:
       - application/json
       responses:
@@ -2935,7 +3046,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Template'
@@ -2943,11 +3054,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get template
       tags:
       - Templates
@@ -2962,7 +3073,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateTemplateRequest'
+          $ref: '#/definitions/validation.UpdateTemplateRequest'
       produces:
       - application/json
       responses:
@@ -2970,7 +3081,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Template'
@@ -2978,7 +3089,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Update template
       tags:
       - Templates
@@ -2993,22 +3104,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListWorkflowsRequest'
+          $ref: '#/definitions/validation.ListWorkflowsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: List workflows
       tags:
       - Workflows
@@ -3023,7 +3134,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateWorkflowRequest'
+          $ref: '#/definitions/validation.CreateWorkflowRequest'
       produces:
       - application/json
       responses:
@@ -3031,7 +3142,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Workflow'
@@ -3039,11 +3150,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Create workflow
       tags:
       - Workflows
@@ -3058,18 +3169,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteWorkflowRequest'
+          $ref: '#/definitions/validation.DeleteWorkflowRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Delete workflow
       tags:
       - Workflows
@@ -3084,7 +3195,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowRequest'
+          $ref: '#/definitions/validation.GetWorkflowRequest'
       produces:
       - application/json
       responses:
@@ -3092,7 +3203,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Workflow'
@@ -3100,11 +3211,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Get workflow
       tags:
       - Workflows
@@ -3119,7 +3230,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateWorkflowRequest'
+          $ref: '#/definitions/validation.UpdateWorkflowRequest'
       produces:
       - application/json
       responses:
@@ -3127,7 +3238,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/domain.Workflow'
@@ -3135,7 +3246,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Update workflow
       tags:
       - Workflows
@@ -3150,7 +3261,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Health check
       tags:
       - Health
@@ -3166,7 +3277,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/handler.DetailedHealthStatus'
@@ -3185,7 +3296,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Liveness check
       tags:
       - Health
@@ -3200,33 +3311,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            $ref: '#/definitions/response.Response'
       summary: Readiness check
-      tags:
-      - Health
-  /metrics:
-    post:
-      consumes:
-      - application/json
-      description: Returns Prometheus-style metrics
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
-      summary: Prometheus metrics
       tags:
       - Health
   /version:
@@ -3241,7 +3331,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response'
+            - $ref: '#/definitions/response.Response'
             - properties:
                 data:
                   $ref: '#/definitions/handler.VersionInfo'

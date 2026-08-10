@@ -40,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListPermissionsRequest"
+                            "$ref": "#/definitions/validation.ListPermissionsRequest"
                         }
                     }
                 ],
@@ -48,13 +48,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -85,7 +85,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreatePermissionRequest"
+                            "$ref": "#/definitions/validation.CreatePermissionRequest"
                         }
                     }
                 ],
@@ -95,7 +95,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -111,7 +111,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -142,7 +142,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeletePermissionRequest"
+                            "$ref": "#/definitions/validation.DeletePermissionRequest"
                         }
                     }
                 ],
@@ -150,13 +150,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -187,7 +187,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetPermissionRequest"
+                            "$ref": "#/definitions/validation.GetPermissionRequest"
                         }
                     }
                 ],
@@ -197,7 +197,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -213,7 +213,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -244,7 +244,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdatePermissionRequest"
+                            "$ref": "#/definitions/validation.UpdatePermissionRequest"
                         }
                     }
                 ],
@@ -254,7 +254,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -270,7 +270,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -301,7 +301,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListRolesRequest"
+                            "$ref": "#/definitions/validation.ListRolesRequest"
                         }
                     }
                 ],
@@ -309,13 +309,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -346,7 +346,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateRoleRequest"
+                            "$ref": "#/definitions/validation.CreateRoleRequest"
                         }
                     }
                 ],
@@ -356,7 +356,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -372,7 +372,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -403,7 +403,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteRoleRequest"
+                            "$ref": "#/definitions/validation.DeleteRoleRequest"
                         }
                     }
                 ],
@@ -411,13 +411,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -448,7 +448,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetRoleRequest"
+                            "$ref": "#/definitions/validation.GetRoleRequest"
                         }
                     }
                 ],
@@ -458,7 +458,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -474,7 +474,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -505,7 +505,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetRolePermissionsRequest"
+                            "$ref": "#/definitions/validation.GetRolePermissionsRequest"
                         }
                     }
                 ],
@@ -515,7 +515,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -534,7 +534,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -565,7 +565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.AssignPermissionToRoleRequest"
+                            "$ref": "#/definitions/validation.AssignPermissionToRoleRequest"
                         }
                     }
                 ],
@@ -573,13 +573,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -610,7 +610,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RemovePermissionFromRoleRequest"
+                            "$ref": "#/definitions/validation.RemovePermissionFromRoleRequest"
                         }
                     }
                 ],
@@ -618,13 +618,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -655,7 +655,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateRoleRequest"
+                            "$ref": "#/definitions/validation.UpdateRoleRequest"
                         }
                     }
                 ],
@@ -665,7 +665,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -681,7 +681,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -712,7 +712,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListUsersRequest"
+                            "$ref": "#/definitions/validation.ListUsersRequest"
                         }
                     }
                 ],
@@ -720,13 +720,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -757,7 +757,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteUserRequest"
+                            "$ref": "#/definitions/validation.DeleteUserRequest"
                         }
                     }
                 ],
@@ -765,13 +765,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -802,7 +802,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRequest"
+                            "$ref": "#/definitions/validation.GetUserRequest"
                         }
                     }
                 ],
@@ -812,7 +812,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -828,7 +828,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -859,7 +859,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRolesRequest"
+                            "$ref": "#/definitions/validation.GetUserRolesRequest"
                         }
                     }
                 ],
@@ -869,7 +869,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -888,7 +888,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -919,7 +919,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.AssignRoleToUserRequest"
+                            "$ref": "#/definitions/validation.AssignRoleToUserRequest"
                         }
                     }
                 ],
@@ -927,13 +927,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -964,7 +964,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RemoveRoleFromUserRequest"
+                            "$ref": "#/definitions/validation.RemoveRoleFromUserRequest"
                         }
                     }
                 ],
@@ -972,13 +972,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1009,7 +1009,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateUserRequest"
+                            "$ref": "#/definitions/validation.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1019,7 +1019,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1035,7 +1035,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1066,7 +1066,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginLogsRequest"
+                            "$ref": "#/definitions/validation.GetLoginLogsRequest"
                         }
                     }
                 ],
@@ -1074,13 +1074,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1106,7 +1106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalStatsRequest"
+                            "$ref": "#/definitions/validation.GetApprovalStatsRequest"
                         }
                     }
                 ],
@@ -1114,19 +1114,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1152,7 +1152,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApproverPerformanceRequest"
+                            "$ref": "#/definitions/validation.GetApproverPerformanceRequest"
                         }
                     }
                 ],
@@ -1160,19 +1160,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1198,7 +1198,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationMetricsRequest"
+                            "$ref": "#/definitions/validation.GetEscalationMetricsRequest"
                         }
                     }
                 ],
@@ -1206,19 +1206,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1244,7 +1244,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowPerformanceRequest"
+                            "$ref": "#/definitions/validation.GetWorkflowPerformanceRequest"
                         }
                     }
                 ],
@@ -1252,19 +1252,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1295,7 +1295,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListApplicationsRequest"
+                            "$ref": "#/definitions/validation.ListApplicationsRequest"
                         }
                     }
                 ],
@@ -1303,7 +1303,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1334,7 +1334,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApplicationRequest"
+                            "$ref": "#/definitions/validation.DeleteApplicationRequest"
                         }
                     }
                 ],
@@ -1342,13 +1342,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1379,7 +1379,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApplicationRequest"
+                            "$ref": "#/definitions/validation.GetApplicationRequest"
                         }
                     }
                 ],
@@ -1389,7 +1389,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1405,7 +1405,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1436,7 +1436,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.SubmitApplicationRequest"
+                            "$ref": "#/definitions/validation.SubmitApplicationRequest"
                         }
                     }
                 ],
@@ -1446,7 +1446,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1462,7 +1462,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1493,7 +1493,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApplicationRequest"
+                            "$ref": "#/definitions/validation.UpdateApplicationRequest"
                         }
                     }
                 ],
@@ -1503,7 +1503,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1519,7 +1519,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1545,7 +1545,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListApprovalsRequest"
+                            "$ref": "#/definitions/validation.ListApprovalsRequest"
                         }
                     }
                 ],
@@ -1553,19 +1553,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1591,7 +1591,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateApprovalRequest"
+                            "$ref": "#/definitions/validation.CreateApprovalRequest"
                         }
                     }
                 ],
@@ -1601,7 +1601,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1617,7 +1617,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1643,7 +1643,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DecideApprovalRequest"
+                            "$ref": "#/definitions/validation.DecideApprovalRequest"
                         }
                     }
                 ],
@@ -1653,7 +1653,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1669,13 +1669,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1701,7 +1701,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApprovalRequest"
+                            "$ref": "#/definitions/validation.DeleteApprovalRequest"
                         }
                     }
                 ],
@@ -1709,13 +1709,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1741,7 +1741,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalRequest"
+                            "$ref": "#/definitions/validation.GetApprovalRequest"
                         }
                     }
                 ],
@@ -1751,7 +1751,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1767,13 +1767,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1781,7 +1781,7 @@ const docTemplate = `{
         },
         "/api/v1/approvals/pending": {
             "post": {
-                "description": "Get pending approvals for a specific approver",
+                "description": "Get the authenticated user's pending approvals. Identity is\ntaken from the token; the legacy body is tolerated but ignored.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1791,15 +1791,14 @@ const docTemplate = `{
                 "tags": [
                     "Approvals"
                 ],
-                "summary": "Get pending approvals",
+                "summary": "Get my pending approvals",
                 "parameters": [
                     {
-                        "description": "Approver ID",
+                        "description": "Legacy body (ignored)",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetPendingApprovalsRequest"
+                            "$ref": "#/definitions/validation.GetPendingApprovalsRequest"
                         }
                     }
                 ],
@@ -1807,19 +1806,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1845,7 +1844,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApprovalRequest"
+                            "$ref": "#/definitions/validation.UpdateApprovalRequest"
                         }
                     }
                 ],
@@ -1855,7 +1854,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -1871,7 +1870,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1897,7 +1896,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.LoginRequest"
+                            "$ref": "#/definitions/validation.LoginRequest"
                         }
                     }
                 ],
@@ -1905,13 +1904,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1942,7 +1941,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryRequest"
+                            "$ref": "#/definitions/validation.GetLoginHistoryRequest"
                         }
                     }
                 ],
@@ -1950,13 +1949,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -1987,7 +1986,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryByEmailRequest"
+                            "$ref": "#/definitions/validation.GetLoginHistoryByEmailRequest"
                         }
                     }
                 ],
@@ -1995,13 +1994,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2032,7 +2031,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginStatsRequest"
+                            "$ref": "#/definitions/validation.GetLoginStatsRequest"
                         }
                     }
                 ],
@@ -2040,13 +2039,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2072,7 +2071,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RefreshTokenRequest"
+                            "$ref": "#/definitions/validation.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -2080,13 +2079,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2112,7 +2111,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.RegisterRequest"
+                            "$ref": "#/definitions/validation.RegisterRequest"
                         }
                     }
                 ],
@@ -2120,13 +2119,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2157,7 +2156,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ChangePasswordRequest"
+                            "$ref": "#/definitions/validation.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -2165,13 +2164,59 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/dropdowns": {
+            "post": {
+                "description": "Returns id/name pairs for dropdown menus (users, workflows, templates, roles, workflow_steps, etc.)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dropdowns"
+                ],
+                "summary": "List dropdown options",
+                "parameters": [
+                    {
+                        "description": "Entity types to fetch",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/validation.DropdownListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/handler.DropdownOption"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2197,7 +2242,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListEscalationsRequest"
+                            "$ref": "#/definitions/validation.ListEscalationsRequest"
                         }
                     }
                 ],
@@ -2205,19 +2250,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2243,7 +2288,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateEscalationRequest"
+                            "$ref": "#/definitions/validation.CreateEscalationRequest"
                         }
                     }
                 ],
@@ -2253,7 +2298,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -2269,7 +2314,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2295,7 +2340,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationRequest"
+                            "$ref": "#/definitions/validation.GetEscalationRequest"
                         }
                     }
                 ],
@@ -2305,7 +2350,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -2321,13 +2366,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2353,7 +2398,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ResolveEscalationRequest"
+                            "$ref": "#/definitions/validation.ResolveEscalationRequest"
                         }
                     }
                 ],
@@ -2361,19 +2406,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2404,7 +2449,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.LogoutRequest"
+                            "$ref": "#/definitions/validation.LogoutRequest"
                         }
                     }
                 ],
@@ -2412,13 +2457,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2444,7 +2489,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationsRequest"
+                            "$ref": "#/definitions/validation.GetNotificationsRequest"
                         }
                     }
                 ],
@@ -2452,19 +2497,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2490,7 +2535,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.MarkNotificationReadRequest"
+                            "$ref": "#/definitions/validation.MarkNotificationReadRequest"
                         }
                     }
                 ],
@@ -2498,19 +2543,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2536,7 +2581,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.SendNotificationRequest"
+                            "$ref": "#/definitions/validation.SendNotificationRequest"
                         }
                     }
                 ],
@@ -2546,7 +2591,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -2562,7 +2607,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2588,7 +2633,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationStatsRequest"
+                            "$ref": "#/definitions/validation.GetNotificationStatsRequest"
                         }
                     }
                 ],
@@ -2596,13 +2641,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2628,7 +2673,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetUnreadNotificationsRequest"
+                            "$ref": "#/definitions/validation.GetUnreadNotificationsRequest"
                         }
                     }
                 ],
@@ -2636,19 +2681,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2679,7 +2724,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetProfileRequest"
+                            "$ref": "#/definitions/validation.GetProfileRequest"
                         }
                     }
                 ],
@@ -2687,13 +2732,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2719,7 +2764,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetCommentsRequest"
+                            "$ref": "#/definitions/validation.GetCommentsRequest"
                         }
                     }
                 ],
@@ -2727,19 +2772,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2765,7 +2810,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetDocumentsRequest"
+                            "$ref": "#/definitions/validation.GetDocumentsRequest"
                         }
                     }
                 ],
@@ -2773,19 +2818,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2811,7 +2856,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetStatusesRequest"
+                            "$ref": "#/definitions/validation.GetStatusesRequest"
                         }
                     }
                 ],
@@ -2819,19 +2864,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2857,7 +2902,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListTemplatesRequest"
+                            "$ref": "#/definitions/validation.ListTemplatesRequest"
                         }
                     }
                 ],
@@ -2865,19 +2910,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2903,7 +2948,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateTemplateRequest"
+                            "$ref": "#/definitions/validation.CreateTemplateRequest"
                         }
                     }
                 ],
@@ -2913,7 +2958,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -2929,13 +2974,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -2961,7 +3006,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteTemplateRequest"
+                            "$ref": "#/definitions/validation.DeleteTemplateRequest"
                         }
                     }
                 ],
@@ -2969,13 +3014,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3001,7 +3046,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetTemplateRequest"
+                            "$ref": "#/definitions/validation.GetTemplateRequest"
                         }
                     }
                 ],
@@ -3011,7 +3056,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3027,13 +3072,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3059,7 +3104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateTemplateRequest"
+                            "$ref": "#/definitions/validation.UpdateTemplateRequest"
                         }
                     }
                 ],
@@ -3069,7 +3114,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3085,7 +3130,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3111,7 +3156,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.ListWorkflowsRequest"
+                            "$ref": "#/definitions/validation.ListWorkflowsRequest"
                         }
                     }
                 ],
@@ -3119,19 +3164,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3157,7 +3202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.CreateWorkflowRequest"
+                            "$ref": "#/definitions/validation.CreateWorkflowRequest"
                         }
                     }
                 ],
@@ -3167,7 +3212,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3183,13 +3228,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3215,7 +3260,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteWorkflowRequest"
+                            "$ref": "#/definitions/validation.DeleteWorkflowRequest"
                         }
                     }
                 ],
@@ -3223,13 +3268,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3255,7 +3300,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowRequest"
+                            "$ref": "#/definitions/validation.GetWorkflowRequest"
                         }
                     }
                 ],
@@ -3265,7 +3310,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3281,13 +3326,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3313,7 +3358,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateWorkflowRequest"
+                            "$ref": "#/definitions/validation.UpdateWorkflowRequest"
                         }
                     }
                 ],
@@ -3323,7 +3368,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3339,7 +3384,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3362,7 +3407,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3387,7 +3432,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3420,7 +3465,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3443,49 +3488,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics": {
-            "post": {
-                "description": "Returns Prometheus-style metrics",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Prometheus metrics",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -3510,7 +3519,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_aeroxe_approval-flow_internal_pkg_response.Response"
+                                    "$ref": "#/definitions/response.Response"
                                 },
                                 {
                                     "type": "object",
@@ -3544,6 +3553,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/domain.JSONMap"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "id": {
@@ -3559,6 +3569,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "template_id": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -3591,6 +3604,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "escalation_level": {
@@ -3623,6 +3637,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "escalated_at": {
@@ -3668,6 +3683,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/domain.JSONMap"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "id": {
@@ -3700,6 +3716,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "id": {
@@ -3732,6 +3749,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "description": {
@@ -3767,6 +3785,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "id": {
@@ -3799,6 +3818,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "email": {
@@ -3837,6 +3857,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted_at": {
+                    "description": "swaggertype keeps swag from resolving the gorm soft_delete package\n(which it cannot parse); the flag is a plain integer in the schema.",
                     "type": "integer"
                 },
                 "description": {
@@ -3852,1247 +3873,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "steps": {
-                    "$ref": "#/definitions/domain.JSONMap"
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "version": {
                     "type": "integer"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_response.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.AssignPermissionToRoleRequest": {
-            "type": "object",
-            "required": [
-                "permission_id",
-                "role_id"
-            ],
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.AssignRoleToUserRequest": {
-            "type": "object",
-            "required": [
-                "role_id",
-                "user_id"
-            ],
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "old_password": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreateApprovalRequest": {
-            "type": "object",
-            "required": [
-                "application_id",
-                "approver_id",
-                "workflow_step_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                },
-                "approver_id": {
-                    "type": "string"
-                },
-                "workflow_step_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreateEscalationRequest": {
-            "type": "object",
-            "required": [
-                "approval_id",
-                "escalated_to",
-                "level",
-                "reason"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                },
-                "escalated_to": {
-                    "type": "string"
-                },
-                "level": {
-                    "type": "integer",
-                    "maximum": 10,
-                    "minimum": 0
-                },
-                "reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreatePermissionRequest": {
-            "type": "object",
-            "required": [
-                "method",
-                "name",
-                "path",
-                "route",
-                "service"
-            ],
-            "properties": {
-                "method": {
-                    "type": "string",
-                    "enum": [
-                        "POST",
-                        "PATCH",
-                        "DELETE"
-                    ]
-                },
-                "name": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "route": {
-                    "type": "string"
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreateRoleRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "is_default": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 2
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreateTemplateRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "name"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "ui": {
-                    "type": "object",
-                    "additionalProperties": true
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.CreateWorkflowRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "name"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DecideApprovalRequest": {
-            "type": "object",
-            "required": [
-                "approval_id",
-                "decision"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "decision": {
-                    "type": "string",
-                    "enum": [
-                        "approved",
-                        "rejected",
-                        "escalated"
-                    ]
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApplicationRequest": {
-            "type": "object",
-            "required": [
-                "application_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteApprovalRequest": {
-            "type": "object",
-            "required": [
-                "approval_id"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeletePermissionRequest": {
-            "type": "object",
-            "required": [
-                "permission_id"
-            ],
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteRoleRequest": {
-            "type": "object",
-            "required": [
-                "role_id"
-            ],
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteTemplateRequest": {
-            "type": "object",
-            "required": [
-                "template_id"
-            ],
-            "properties": {
-                "template_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteUserRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.DeleteWorkflowRequest": {
-            "type": "object",
-            "required": [
-                "workflow_id"
-            ],
-            "properties": {
-                "workflow_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetApplicationRequest": {
-            "type": "object",
-            "required": [
-                "application_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalRequest": {
-            "type": "object",
-            "required": [
-                "approval_id"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetApprovalStatsRequest": {
-            "type": "object",
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetApproverPerformanceRequest": {
-            "type": "object",
-            "required": [
-                "approver_id"
-            ],
-            "properties": {
-                "approver_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetCommentsRequest": {
-            "type": "object",
-            "required": [
-                "approval_id"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetDocumentsRequest": {
-            "type": "object",
-            "required": [
-                "application_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationMetricsRequest": {
-            "type": "object",
-            "properties": {
-                "end_date": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetEscalationRequest": {
-            "type": "object",
-            "required": [
-                "escalation_id"
-            ],
-            "properties": {
-                "escalation_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryByEmailRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginHistoryRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginLogsRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetLoginStatsRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationStatsRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetNotificationsRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "channel": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_read": {
-                    "type": "boolean"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetPendingApprovalsRequest": {
-            "type": "object",
-            "required": [
-                "approver_id"
-            ],
-            "properties": {
-                "approver_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetPermissionRequest": {
-            "type": "object",
-            "required": [
-                "permission_id"
-            ],
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetProfileRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetRolePermissionsRequest": {
-            "type": "object",
-            "required": [
-                "role_id"
-            ],
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetRoleRequest": {
-            "type": "object",
-            "required": [
-                "role_id"
-            ],
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetStatusesRequest": {
-            "type": "object",
-            "required": [
-                "entity_type"
-            ],
-            "properties": {
-                "entity_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetTemplateRequest": {
-            "type": "object",
-            "required": [
-                "template_id"
-            ],
-            "properties": {
-                "template_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetUnreadNotificationsRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetUserRolesRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowPerformanceRequest": {
-            "type": "object",
-            "required": [
-                "workflow_id"
-            ],
-            "properties": {
-                "workflow_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.GetWorkflowRequest": {
-            "type": "object",
-            "required": [
-                "workflow_id"
-            ],
-            "properties": {
-                "workflow_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListApplicationsRequest": {
-            "type": "object",
-            "properties": {
-                "applicant_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "workflow_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListApprovalsRequest": {
-            "type": "object",
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                },
-                "approver_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "decision": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListEscalationsRequest": {
-            "type": "object",
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListPermissionsRequest": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListRolesRequest": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListTemplatesRequest": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListUsersRequest": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ListWorkflowsRequest": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "cursor": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "search": {
-                    "type": "string"
-                },
-                "sort_by": {
-                    "type": "string"
-                },
-                "sort_order": {
-                    "type": "string"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.LoginRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.LogoutRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.MarkNotificationReadRequest": {
-            "type": "object",
-            "required": [
-                "notification_id"
-            ],
-            "properties": {
-                "notification_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.RefreshTokenRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "name",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 2
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.RemovePermissionFromRoleRequest": {
-            "type": "object",
-            "required": [
-                "permission_id",
-                "role_id"
-            ],
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.RemoveRoleFromUserRequest": {
-            "type": "object",
-            "required": [
-                "role_id",
-                "user_id"
-            ],
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.ResolveEscalationRequest": {
-            "type": "object",
-            "required": [
-                "escalation_id"
-            ],
-            "properties": {
-                "escalation_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.SendNotificationRequest": {
-            "type": "object",
-            "required": [
-                "body",
-                "channel",
-                "title",
-                "type",
-                "user_id"
-            ],
-            "properties": {
-                "body": {
-                    "type": "string"
-                },
-                "channel": {
-                    "type": "string"
-                },
-                "data": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.SubmitApplicationRequest": {
-            "type": "object",
-            "required": [
-                "applicant_id",
-                "priority",
-                "template_id",
-                "title",
-                "workflow_id"
-            ],
-            "properties": {
-                "applicant_id": {
-                    "type": "string"
-                },
-                "data": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "description": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "medium",
-                        "high",
-                        "urgent"
-                    ]
-                },
-                "template_id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "workflow_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApplicationRequest": {
-            "type": "object",
-            "required": [
-                "application_id"
-            ],
-            "properties": {
-                "application_id": {
-                    "type": "string"
-                },
-                "data": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateApprovalRequest": {
-            "type": "object",
-            "required": [
-                "approval_id"
-            ],
-            "properties": {
-                "approval_id": {
-                    "type": "string"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdatePermissionRequest": {
-            "type": "object",
-            "required": [
-                "permission_id"
-            ],
-            "properties": {
-                "method": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "permission_id": {
-                    "type": "string"
-                },
-                "route": {
-                    "type": "string"
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateRoleRequest": {
-            "type": "object",
-            "required": [
-                "role_id"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "is_default": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateTemplateRequest": {
-            "type": "object",
-            "required": [
-                "template_id"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "template_id": {
-                    "type": "string"
-                },
-                "ui": {
-                    "type": "object",
-                    "additionalProperties": true
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateUserRequest": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_aeroxe_approval-flow_internal_pkg_validation.UpdateWorkflowRequest": {
-            "type": "object",
-            "required": [
-                "workflow_id"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "workflow_id": {
-                    "type": "string"
                 }
             }
         },
@@ -5112,6 +3902,17 @@ const docTemplate = `{
                     "$ref": "#/definitions/handler.SystemHealth"
                 },
                 "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.DropdownOption": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -5164,6 +3965,1296 @@ const docTemplate = `{
                 },
                 "version": {
                     "type": "string"
+                }
+            }
+        },
+        "response.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.AssignPermissionToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_id",
+                "role_id"
+            ],
+            "properties": {
+                "permission_id": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.AssignRoleToUserRequest": {
+            "type": "object",
+            "required": [
+                "role_id",
+                "user_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.CreateApprovalRequest": {
+            "type": "object",
+            "required": [
+                "application_id",
+                "approver_id",
+                "workflow_step_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "approver_id": {
+                    "type": "string"
+                },
+                "workflow_step_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.CreateEscalationRequest": {
+            "type": "object",
+            "required": [
+                "approval_id",
+                "escalated_to",
+                "reason"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                },
+                "escalated_to": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 0
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.CreatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "method",
+                "name",
+                "path",
+                "route",
+                "service"
+            ],
+            "properties": {
+                "method": {
+                    "type": "string",
+                    "enum": [
+                        "POST",
+                        "PATCH",
+                        "DELETE"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "route": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "is_default": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2
+                }
+            }
+        },
+        "validation.CreateTemplateRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ui": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "validation.CreateWorkflowRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/validation.WorkflowStepInput"
+                    }
+                }
+            }
+        },
+        "validation.DecideApprovalRequest": {
+            "type": "object",
+            "required": [
+                "approval_id",
+                "decision"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "decision": {
+                    "type": "string",
+                    "enum": [
+                        "approved",
+                        "rejected",
+                        "escalated"
+                    ]
+                }
+            }
+        },
+        "validation.DeleteApplicationRequest": {
+            "type": "object",
+            "required": [
+                "application_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeleteApprovalRequest": {
+            "type": "object",
+            "required": [
+                "approval_id"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeletePermissionRequest": {
+            "type": "object",
+            "required": [
+                "permission_id"
+            ],
+            "properties": {
+                "permission_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeleteRoleRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeleteTemplateRequest": {
+            "type": "object",
+            "required": [
+                "template_id"
+            ],
+            "properties": {
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeleteUserRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DeleteWorkflowRequest": {
+            "type": "object",
+            "required": [
+                "workflow_id"
+            ],
+            "properties": {
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.DropdownListRequest": {
+            "type": "object",
+            "required": [
+                "entities"
+            ],
+            "properties": {
+                "entities": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "include_inactive": {
+                    "type": "boolean"
+                },
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "workflow_id": {
+                    "description": "WorkflowID optionally scopes the \"workflow_steps\" entity to a single\nworkflow, so callers can offer steps for the selected application's\nworkflow instead of the full cross-workflow list.",
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetApplicationRequest": {
+            "type": "object",
+            "required": [
+                "application_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetApprovalRequest": {
+            "type": "object",
+            "required": [
+                "approval_id"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetApprovalStatsRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetApproverPerformanceRequest": {
+            "type": "object",
+            "required": [
+                "approver_id"
+            ],
+            "properties": {
+                "approver_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetCommentsRequest": {
+            "type": "object",
+            "required": [
+                "approval_id"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetDocumentsRequest": {
+            "type": "object",
+            "required": [
+                "application_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetEscalationMetricsRequest": {
+            "type": "object",
+            "properties": {
+                "end_date": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetEscalationRequest": {
+            "type": "object",
+            "required": [
+                "escalation_id"
+            ],
+            "properties": {
+                "escalation_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetLoginHistoryByEmailRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                }
+            }
+        },
+        "validation.GetLoginHistoryRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetLoginLogsRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetLoginStatsRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetNotificationStatsRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "description": "optional; the authenticated user is used",
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetNotificationsRequest": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "optional; the authenticated user is used",
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetPendingApprovalsRequest": {
+            "type": "object",
+            "required": [
+                "approver_id"
+            ],
+            "properties": {
+                "approver_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetPermissionRequest": {
+            "type": "object",
+            "required": [
+                "permission_id"
+            ],
+            "properties": {
+                "permission_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetProfileRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetRolePermissionsRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetRoleRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetStatusesRequest": {
+            "type": "object",
+            "required": [
+                "entity_type"
+            ],
+            "properties": {
+                "entity_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetTemplateRequest": {
+            "type": "object",
+            "required": [
+                "template_id"
+            ],
+            "properties": {
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetUnreadNotificationsRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "description": "optional; the authenticated user is used",
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetUserRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetUserRolesRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetWorkflowPerformanceRequest": {
+            "type": "object",
+            "required": [
+                "workflow_id"
+            ],
+            "properties": {
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.GetWorkflowRequest": {
+            "type": "object",
+            "required": [
+                "workflow_id"
+            ],
+            "properties": {
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListApplicationsRequest": {
+            "type": "object",
+            "properties": {
+                "applicant_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListApprovalsRequest": {
+            "type": "object",
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "approver_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListEscalationsRequest": {
+            "type": "object",
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListPermissionsRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListRolesRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListTemplatesRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListUsersRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ListWorkflowsRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "cursor": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "sort_by": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.LogoutRequest": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.MarkNotificationReadRequest": {
+            "type": "object",
+            "required": [
+                "notification_id"
+            ],
+            "properties": {
+                "notification_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "validation.RemovePermissionFromRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_id",
+                "role_id"
+            ],
+            "properties": {
+                "permission_id": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.RemoveRoleFromUserRequest": {
+            "type": "object",
+            "required": [
+                "role_id",
+                "user_id"
+            ],
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.ResolveEscalationRequest": {
+            "type": "object",
+            "required": [
+                "escalation_id"
+            ],
+            "properties": {
+                "escalation_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.SendNotificationRequest": {
+            "type": "object",
+            "required": [
+                "body",
+                "channel",
+                "title",
+                "type",
+                "user_id"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "channel": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.SubmitApplicationRequest": {
+            "type": "object",
+            "required": [
+                "applicant_id",
+                "priority",
+                "template_id",
+                "title",
+                "workflow_id"
+            ],
+            "properties": {
+                "applicant_id": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                    ]
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdateApplicationRequest": {
+            "type": "object",
+            "required": [
+                "application_id"
+            ],
+            "properties": {
+                "application_id": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdateApprovalRequest": {
+            "type": "object",
+            "required": [
+                "approval_id"
+            ],
+            "properties": {
+                "approval_id": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdatePermissionRequest": {
+            "type": "object",
+            "required": [
+                "permission_id"
+            ],
+            "properties": {
+                "method": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permission_id": {
+                    "type": "string"
+                },
+                "route": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdateRoleRequest": {
+            "type": "object",
+            "required": [
+                "role_id"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_default": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdateTemplateRequest": {
+            "type": "object",
+            "required": [
+                "template_id"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "ui": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "validation.UpdateUserRequest": {
+            "type": "object",
+            "required": [
+                "user_id"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.UpdateWorkflowRequest": {
+            "type": "object",
+            "required": [
+                "workflow_id"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/validation.WorkflowStepInput"
+                    }
+                },
+                "workflow_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "validation.WorkflowStepInput": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "approver_id": {
+                    "type": "string"
+                },
+                "approver_role": {
+                    "type": "string"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "step_order": {
+                    "type": "integer"
+                },
+                "timeout_hours": {
+                    "type": "integer"
                 }
             }
         }
